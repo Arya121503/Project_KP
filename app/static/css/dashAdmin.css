@@ -1335,7 +1335,8 @@ main {
     }
 }
 
-/* Section navigation indicator */
+/* Section navigation indicator - DISABLED */
+/*
 .section-nav-indicator {
     position: fixed;
     right: 2rem;
@@ -1372,8 +1373,10 @@ main {
     background: var(--telkom-red);
     transform: scale(1.1);
 }
+*/
 
-/* Tooltip for section indicators */
+/* Tooltip for section indicators - DISABLED */
+/*
 .section-indicator::before {
     content: attr(data-title);
     position: absolute;
@@ -1397,6 +1400,7 @@ main {
     visibility: visible;
     right: 30px;
 }
+*/
 
 /* Scroll progress bar */
 .scroll-progress {
