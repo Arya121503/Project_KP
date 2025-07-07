@@ -1849,16 +1849,22 @@ function generateCustomChart(ctx, type, dataSource, groupBy, metric) {
 // SECTION NAVIGATION INDICATORS & SCROLL PROGRESS
 // ===================================
 
-// Create section navigation indicators
+// Create section navigation indicators - DISABLED
+/*
 function createSectionIndicators() {
   // Feature removed - section indicators disabled
   console.log('Section indicators feature disabled');
 }
 
+<<<<<<< HEAD
 // Update section indicators  
+=======
+// Update section indicators - DISABLED
+>>>>>>> b3d1da4730292a9816063ec160e83f56f3ea499a
 function updateSectionIndicators(activeSectionId) {
   // Feature removed - section indicators disabled
 }
+*/
 
 // Create scroll progress bar
 function createScrollProgressBar() {
@@ -1932,7 +1938,11 @@ function initializeScrollEnhancements() {
 document.addEventListener('DOMContentLoaded', function() {
   // Wait a bit for DOM to fully load
   setTimeout(() => {
+<<<<<<< HEAD
     // createSectionIndicators(); // Disabled - feature removed
+=======
+    // createSectionIndicators(); // Disabled - section indicators removed
+>>>>>>> b3d1da4730292a9816063ec160e83f56f3ea499a
     createScrollProgressBar();
     initializeScrollEnhancements();
     
