@@ -7,7 +7,27 @@ class AssetDataProcessor:
     def __init__(self, csv_path: str = None):
         """Initialize the processor with CSV data"""
         if csv_path is None:
-            csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'Dataset_Bangunan_Surabaya.csv')
+            # Try multiple possible dataset files
+            possible_files = [
+                'Dataset_Bangunan_Surabaya_Final_Revisi_.csv',
+                'Dataset_Bangunan_Surabaya.csv',
+                'Dataset_Tanah_Surabaya_Final_Revisi_.csv',
+                'Dataset_Tanah_Surabaya.csv'
+            ]
+            
+            base_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
+            csv_path = None
+            
+            for filename in possible_files:
+                full_path = os.path.join(base_path, filename)
+                if os.path.exists(full_path):
+                    csv_path = full_path
+                    print(f"✅ Using dataset: {filename}")
+                    break
+            
+            if csv_path is None:
+                print("⚠️  No dataset file found, using dummy data")
+                csv_path = "dummy"
         
         self.csv_path = csv_path
         self.df = None
@@ -16,6 +36,19 @@ class AssetDataProcessor:
     def load_data(self):
         """Load and clean the CSV data"""
         try:
+            if self.csv_path == "dummy":
+                # Create dummy dataframe if no dataset found
+                self.df = pd.DataFrame({
+                    'Kecamatan': ['Sample Kecamatan'],
+                    'Price': [1000000000],
+                    'Luas Tanah': [100],
+                    'Luas Bangunan': [80],
+                    'Kamar Tidur': [3],
+                    'Kamar Mandi': [2]
+                })
+                print("ℹ️  Using dummy data - upload real dataset to data/raw/ folder")
+                return
+            
             # Read CSV with comma separator
             self.df = pd.read_csv(self.csv_path, sep=',', encoding='utf-8')
             
