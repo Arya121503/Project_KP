@@ -423,14 +423,137 @@ function checkPasswordMatch() {
     }
 }
 
-// Initialize password validation if on edit profile page
-if (document.getElementById('new_password')) {
-    document.getElementById('new_password').addEventListener('input', function() {
+// Password visibility toggle function
+window.togglePassword = function(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (passwordField && icon) {
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+};
+
+// Password strength validation and matching
+const newPasswordField = document.getElementById('new_password');
+const confirmPasswordField = document.getElementById('confirm_password');
+const strengthBar = document.getElementById('password_strength');
+const strengthText = document.getElementById('password_strength_text');
+const matchMessage = document.getElementById('password_match_message');
+const submitBtn = document.getElementById('submitBtn');
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    let strengthLabel = '';
+    
+    if (password.length >= 8) strength += 1;
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    switch (strength) {
+        case 0:
+        case 1:
+            strengthLabel = 'Sangat Lemah';
+            break;
+        case 2:
+            strengthLabel = 'Lemah';
+            break;
+        case 3:
+            strengthLabel = 'Sedang';
+            break;
+        case 4:
+            strengthLabel = 'Kuat';
+            break;
+        case 5:
+            strengthLabel = 'Sangat Kuat';
+            break;
+    }
+    
+    return { strength, strengthLabel };
+}
+
+function updatePasswordStrength() {
+    if (!newPasswordField || !strengthBar || !strengthText) return;
+    
+    const password = newPasswordField.value;
+    const { strength, strengthLabel } = checkPasswordStrength(password);
+    
+    if (password.length === 0) {
+        strengthBar.style.width = '0%';
+        strengthBar.className = 'progress-bar';
+        strengthText.textContent = 'Masukkan password untuk melihat kekuatan';
+        strengthText.className = 'text-muted';
+        return;
+    }
+    
+    const percentage = (strength / 5) * 100;
+    strengthBar.style.width = percentage + '%';
+    strengthText.textContent = strengthLabel;
+    
+    // Color coding
+    if (strength <= 1) {
+        strengthBar.className = 'progress-bar bg-danger';
+        strengthText.className = 'text-danger';
+    } else if (strength <= 2) {
+        strengthBar.className = 'progress-bar bg-warning';
+        strengthText.className = 'text-warning';
+    } else if (strength <= 3) {
+        strengthBar.className = 'progress-bar bg-info';
+        strengthText.className = 'text-info';
+    } else {
+        strengthBar.className = 'progress-bar bg-success';
+        strengthText.className = 'text-success';
+    }
+}
+
+function checkPasswordMatch() {
+    if (!newPasswordField || !confirmPasswordField || !matchMessage || !submitBtn) return;
+    
+    const newPassword = newPasswordField.value;
+    const confirmPassword = confirmPasswordField.value;
+    
+    if (confirmPassword.length === 0) {
+        matchMessage.textContent = '';
+        matchMessage.className = 'form-text';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    if (newPassword === confirmPassword) {
+        matchMessage.textContent = '✓ Password cocok';
+        matchMessage.className = 'form-text text-success';
+        
+        // Enable submit button if password is strong enough
+        const { strength } = checkPasswordStrength(newPassword);
+        submitBtn.disabled = strength < 3; // Minimal "Sedang"
+    } else {
+        matchMessage.textContent = '✗ Password tidak cocok';
+        matchMessage.className = 'form-text text-danger';
+        submitBtn.disabled = true;
+    }
+}
+
+// Attach event listeners for password validation
+if (newPasswordField) {
+    newPasswordField.addEventListener('input', function() {
         updatePasswordStrength();
         checkPasswordMatch();
     });
 }
 
-if (document.getElementById('confirm_password')) {
-    document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+if (confirmPasswordField) {
+    confirmPasswordField.addEventListener('input', checkPasswordMatch);
 }
+
+// Initialize password validation on page load
+updatePasswordStrength();
+checkPasswordMatch();

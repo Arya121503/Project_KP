@@ -1,4 +1,4 @@
-/* Dashboard User CSS - Telkom Aset */
+﻿/* Dashboard User CSS - Telkom Aset */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 /* Smooth scrolling setup */
@@ -432,8 +432,9 @@ b {
     background-color: var(--color-light);
 }
 
-/* Sidebar toggle button - always visible on desktop */
+/* Sidebar toggle button - hidden by default, shown on desktop */
 .sidebar-toggle {
+    display: none;
     background: none;
     border: none;
     color: var(--color-dark);
@@ -443,7 +444,6 @@ b {
     border-radius: var(--border-radius-1);
     transition: background-color 0.3s ease;
     margin-right: 0.5rem;
-    display: block;
 }
 
 .sidebar-toggle:hover {
@@ -500,28 +500,6 @@ b {
 /* Dark mode override for profile info */
 .dark-mode-variables .navbar-right .profile .info small {
     color: var(--color-dark-variant);
-}
-
-/* Sidebar toggle button */
-.sidebar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--color-dark);
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--border-radius-1);
-    transition: all 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-    background-color: var(--color-light);
-    color: var(--telkom-red);
-}
-
-.sidebar-toggle .material-icons-sharp {
-    font-size: 1.4rem;
 }
 
 /* Dark mode support for navbar */
@@ -881,13 +859,6 @@ aside {
     color: var(--color-dark) !important;
 }
 
-@media screen and (max-width: 768px) {
-    .menu-toggle {
-        display: block;
-        order: -1;
-    }
-}
-
 /* Loading spinner */
 .spinner-border.text-danger {
     color: var(--telkom-red) !important;
@@ -1030,28 +1001,6 @@ span.user-name,
     display: flex;
     align-items: center;
     gap: 1.5rem;
-}
-
-/* Sidebar toggle button */
-.sidebar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--color-dark);
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--border-radius-1);
-    transition: all 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-    background-color: var(--color-light);
-    color: var(--telkom-red);
-}
-
-.sidebar-toggle .material-icons-sharp {
-    font-size: 1.4rem;
 }
 
 /* Show sidebar toggle on desktop */
@@ -1255,134 +1204,3 @@ span.user-name,
 }
 
 /* ========== END DROPDOWN FORCE VISIBLE ========== */
-
-/* RESPONSIVE DESIGN - User Dashboard */
-@media screen and (max-width: 1200px) {
-    .container {
-        width: 95%;
-        grid-template-columns: 10rem 1fr;
-    }
-    
-    .navbar-content {
-        padding: 0 1.5rem;
-    }
-}
-
-@media screen and (max-width: 992px) {
-    .container {
-        grid-template-columns: 10rem auto;
-    }
-    
-    aside .sidebar a {
-        margin-left: 1rem;
-    }
-    
-    aside .sidebar a h3 {
-        font-size: 0.8rem;
-    }
-}
-
-@media screen and (max-width: 768px) {
-    .container {
-        width: 100%;
-        grid-template-columns: 1fr;
-        padding: 0 1rem;
-    }
-    
-    .navbar-content {
-        padding: 0 1rem;
-    }
-    
-    .menu-toggle {
-        display: block;
-        order: -1;
-    }
-    
-    .sidebar-toggle {
-        display: none;
-    }
-    
-    aside {
-        position: fixed;
-        left: -100%;
-        z-index: 999;
-        width: 280px;
-        height: calc(100vh - 70px);
-        top: 70px;
-        background: var(--color-white);
-        transition: left 0.3s ease;
-    }
-    
-    aside.show {
-        left: 0;
-    }
-    
-    .sidebar-content .close {
-        display: block;
-    }
-    
-    main {
-        padding: 1rem;
-        margin-top: 0;
-    }
-    
-    .navbar-left {
-        gap: 0.5rem;
-    }
-    
-    .navbar-right {
-        gap: 1rem;
-    }
-    
-    .dark-mode {
-        width: 3.5rem;
-        height: 1.4rem;
-    }
-    
-    .dark-mode span {
-        font-size: 1rem;
-    }
-    
-    .navbar-brand, .navbar-logo {
-        gap: 0.25rem;
-    }
-    
-    .navbar-brand img, .navbar-logo img {
-        width: 32px !important;
-        height: 32px !important;
-    }
-    
-    .navbar-brand h2, .navbar-logo h2 {
-        font-size: 1.2rem !important;
-    }
-    
-    .navbar .profile-photo, .navbar-right .profile .profile-photo {
-        width: 32px !important;
-        height: 32px !important;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .navbar-brand img, .navbar-logo img {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    
-    .navbar-brand h2, .navbar-logo h2 {
-        font-size: 1rem !important;
-    }
-    
-    .navbar .profile-photo, .navbar-right .profile .profile-photo {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    
-    .dark-mode {
-        width: 3rem;
-        height: 1.2rem;
-    }
-    
-    .dark-mode span {
-        font-size: 0.9rem;
-    }
-}
