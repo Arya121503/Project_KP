@@ -114,7 +114,7 @@ def user_dashboard():
         return redirect(url_for('main.login'))
     
     stats = data_processor.get_statistics()
-    return render_template('dashboard_user_bootstrap.html', stats=stats)
+    return render_template('dashboard_user.html', stats=stats)
 
 @main.route('/logout')
 def logout_user():
@@ -754,3 +754,135 @@ def api_all_data_bangunan():
         'data': data,
         'total': len(data)
     })
+
+@main.route('/edit-profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        flash('Silakan login terlebih dahulu.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        user_name = request.form.get('user_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        company = request.form.get('company')
+        address = request.form.get('address')
+        
+        # Validasi input
+        if not user_name or not email:
+            flash('Nama dan email wajib diisi.', 'error')
+            return render_template('edit_profile.html')
+        
+        try:
+            cur = mysql.connection.cursor()
+            
+            # Cek apakah email sudah digunakan oleh user lain
+            cur.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, session['user_id']))
+            existing_user = cur.fetchone()
+            
+            if existing_user:
+                flash('Email sudah digunakan oleh user lain.', 'error')
+                cur.close()
+                return render_template('edit_profile.html')
+            
+            # Update data user
+            cur.execute("""
+                UPDATE users 
+                SET name = %s, email = %s, phone = %s, company = %s, address = %s 
+                WHERE id = %s
+            """, (user_name, email, phone, company, address, session['user_id']))
+            
+            mysql.connection.commit()
+            cur.close()
+            
+            # Update session data
+            session['user_name'] = user_name
+            session['user_email'] = email
+            session['user_phone'] = phone
+            session['user_company'] = company
+            session['user_address'] = address
+            
+            flash('Profil berhasil diperbarui.', 'success')
+            return redirect(url_for('main.edit_profile'))
+            
+        except Exception as e:
+            flash(f'Terjadi kesalahan: {str(e)}', 'error')
+            return render_template('edit_profile.html')
+    
+    # GET request - ambil data user dari database
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT name, email, phone, company, address FROM users WHERE id = %s", (session['user_id'],))
+        user_data = cur.fetchone()
+        cur.close()
+        
+        if user_data:
+            session['user_name'] = user_data[0] or session.get('user_name', '')
+            session['user_email'] = user_data[1] or ''
+            session['user_phone'] = user_data[2] or ''
+            session['user_company'] = user_data[3] or ''
+            session['user_address'] = user_data[4] or ''
+    except Exception as e:
+        flash(f'Error mengambil data: {str(e)}', 'error')
+    
+    return render_template('edit_profile.html')
+
+@main.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    if 'user_id' not in session:
+        flash('Silakan login terlebih dahulu.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Validasi input
+        if not current_password or not new_password or not confirm_password:
+            flash('Semua field wajib diisi.', 'error')
+            return render_template('change_password.html')
+        
+        if new_password != confirm_password:
+            flash('Password baru dan konfirmasi password tidak cocok.', 'error')
+            return render_template('change_password.html')
+        
+        if len(new_password) < 8:
+            flash('Password baru minimal 8 karakter.', 'error')
+            return render_template('change_password.html')
+        
+        try:
+            cur = mysql.connection.cursor()
+            
+            # Ambil password lama dari database
+            cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
+            user_data = cur.fetchone()
+            
+            if not user_data:
+                flash('User tidak ditemukan.', 'error')
+                cur.close()
+                return render_template('change_password.html')
+            
+            # Verifikasi password lama
+            if not check_password_hash(user_data[0], current_password):
+                flash('Password saat ini salah.', 'error')
+                cur.close()
+                return render_template('change_password.html')
+            
+            # Hash password baru
+            new_password_hash = generate_password_hash(new_password)
+            
+            # Update password di database
+            cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password_hash, session['user_id']))
+            mysql.connection.commit()
+            cur.close()
+            
+            flash('Password berhasil diubah. Silakan login ulang.', 'success')
+            session.clear()  # Logout user setelah ubah password
+            return redirect(url_for('main.login'))
+            
+        except Exception as e:
+            flash(f'Terjadi kesalahan: {str(e)}', 'error')
+            return render_template('change_password.html')
+    
+    return render_template('change_password.html')

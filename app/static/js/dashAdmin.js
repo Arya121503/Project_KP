@@ -1091,6 +1091,50 @@ function scheduleReport() {
   console.log('Report scheduling completed');
 }
 
+// Function to show specific section (for user dashboard)
+function showSection(targetId) {
+  // Hide all content sections
+  const contentSections = document.querySelectorAll(".content-section");
+  contentSections.forEach(section => {
+    section.classList.remove("active");
+  });
+  
+  // Show target section
+  const targetSection = document.getElementById(targetId);
+  if (targetSection) {
+    targetSection.classList.add("active");
+  }
+  
+  // Update active menu item
+  const menuLinks = document.querySelectorAll(".menu-link");
+  menuLinks.forEach(link => {
+    link.classList.remove("active");
+    if (link.getAttribute("data-target") === targetId) {
+      link.classList.add("active");
+    }
+  });
+  
+  // Close sidebar on mobile after selection
+  if (window.innerWidth <= 768) {
+    const sidebar = document.querySelector("aside");
+    if (sidebar) {
+      sidebar.classList.remove("show");
+    }
+  }
+  
+  // Scroll to top of main content
+  const mainContent = document.querySelector("main");
+  if (mainContent) {
+    mainContent.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+// Global function for button navigation
+window.showSection = showSection;
+
 // Utility functions
 function getMetricLabel(metric) {
   const labels = {
@@ -1856,11 +1900,7 @@ function createSectionIndicators() {
   console.log('Section indicators feature disabled');
 }
 
-<<<<<<< HEAD
-// Update section indicators  
-=======
 // Update section indicators - DISABLED
->>>>>>> b3d1da4730292a9816063ec160e83f56f3ea499a
 function updateSectionIndicators(activeSectionId) {
   // Feature removed - section indicators disabled
 }
@@ -1938,11 +1978,7 @@ function initializeScrollEnhancements() {
 document.addEventListener('DOMContentLoaded', function() {
   // Wait a bit for DOM to fully load
   setTimeout(() => {
-<<<<<<< HEAD
-    // createSectionIndicators(); // Disabled - feature removed
-=======
     // createSectionIndicators(); // Disabled - section indicators removed
->>>>>>> b3d1da4730292a9816063ec160e83f56f3ea499a
     createScrollProgressBar();
     initializeScrollEnhancements();
     

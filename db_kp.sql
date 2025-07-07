@@ -134,6 +134,20 @@ INSERT INTO `users` VALUES (1,'Admin','admin@telkom.co.id','pbkdf2:sha256:600000
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
+
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+ADD COLUMN IF NOT EXISTS company VARCHAR(255),
+ADD COLUMN IF NOT EXISTS address TEXT,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- Update existing records jika diperlukan
+UPDATE users SET 
+    phone = COALESCE(phone, ''),
+    company = COALESCE(company, ''),
+    address = COALESCE(address, '')
+WHERE phone IS NULL OR company IS NULL OR address IS NULL;
 --
 -- Dumping routines for database 'db_kp'
 --
