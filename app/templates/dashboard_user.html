@@ -36,50 +36,6 @@
       margin-bottom: 2rem;
     }
     
-    .asset-card {
-      transition: all 0.3s ease;
-      border: 1px solid #e0e0e0;
-    }
-    
-    .asset-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(220, 20, 60, 0.15);
-      border-color: var(--telkom-red);
-    }
-    
-    .asset-type-badge {
-      background: var(--telkom-light);
-      color: var(--telkom-red);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    
-    .price-tag {
-      background: var(--telkom-red);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: var(--border-radius-1);
-      font-weight: bold;
-    }
-    
-    .status-available {
-      background: #28a745;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 15px;
-      font-size: 0.8rem;
-    }
-    
-    .status-rented {
-      background: #ffc107;
-      color: #000;
-      padding: 0.25rem 0.75rem;
-      border-radius: 15px;
-      font-size: 0.8rem;
-    }
-    
     .quick-action-card {
       background: white;
       border: 2px solid #f1f1f1;
@@ -92,11 +48,40 @@
       transform: translateY(-2px);
     }
     
-    .filter-section {
-      background: #f8f9fa;
-      padding: 1.5rem;
-      border-radius: var(--border-radius-1);
-      margin-bottom: 2rem;
+    .asset-card {
+      transition: all 0.3s ease;
+    }
+    
+    .asset-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(220, 20, 60, 0.15);
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .text-danger {
+      color: var(--telkom-red) !important;
+    }
+    
+    .btn-outline-danger {
+      border-color: var(--telkom-red);
+      color: var(--telkom-red);
+    }
+    
+    .btn-outline-danger:hover {
+      background-color: var(--telkom-red);
+      border-color: var(--telkom-red);
+    }
+    
+    .bg-danger {
+      background-color: var(--telkom-red) !important;
     }
   </style>
 </head>
@@ -164,26 +149,6 @@
             <span class="material-icons-sharp">dashboard</span>
             <h3>Dashboard</h3>
           </a>
-          <a href="#" class="menu-link" data-target="aset-sewa">
-            <span class="material-icons-sharp">apartment</span>
-            <h3>Aset Tersedia</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="favorit">
-            <span class="material-icons-sharp">favorite</span>
-            <h3>Favorit Saya</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="riwayat">
-            <span class="material-icons-sharp">history</span>
-            <h3>Riwayat Sewa</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="kalkulator">
-            <span class="material-icons-sharp">calculate</span>
-            <h3>Kalkulator Sewa</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="bantuan">
-            <span class="material-icons-sharp">help</span>
-            <h3>Bantuan</h3>
-          </a>
           <a href="{{ url_for('main.logout_user') }}">
             <span class="material-icons-sharp">logout</span>
             <h3>Logout</h3>
@@ -203,418 +168,66 @@
         
         <!-- Quick Actions -->
         <div class="row g-4 mb-4">
-          <div class="col-md-3">
+          <div class="col-md-6">
             <div class="quick-action-card card text-center p-3">
               <div class="card-body">
                 <i class="fas fa-map-marked-alt fa-3x text-danger mb-3"></i>
-                <h5>Cari Tanah</h5>
-                <p class="small text-muted">Temukan lahan untuk investasi</p>
-                <button class="btn btn-outline-danger btn-sm" data-target="aset-sewa" data-filter="tanah">
-                  Lihat Tanah
+                <h5>Prediksi Harga Tanah</h5>
+                <p class="small text-muted">Hitung estimasi harga tanah</p>
+                <button class="btn btn-outline-danger btn-sm" onclick="window.location.href='/prediksi_tanah'">
+                  Prediksi Tanah
                 </button>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-6">
             <div class="quick-action-card card text-center p-3">
               <div class="card-body">
                 <i class="fas fa-building fa-3x text-warning mb-3"></i>
-                <h5>Cari Bangunan</h5>
-                <p class="small text-muted">Gedung dan fasilitas komersial</p>
-                <button class="btn btn-outline-danger btn-sm" data-target="aset-sewa" data-filter="bangunan">
-                  Lihat Bangunan
+                <h5>Prediksi Harga Bangunan</h5>
+                <p class="small text-muted">Hitung estimasi harga bangunan</p>
+                <button class="btn btn-outline-danger btn-sm" onclick="window.location.href='/prediksi_bangunan_tanah'">
+                  Prediksi Bangunan
                 </button>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="quick-action-card card text-center p-3">
-              <div class="card-body">
-                <i class="fas fa-calculator fa-3x text-info mb-3"></i>
-                <h5>Kalkulator</h5>
-                <p class="small text-muted">Hitung estimasi biaya sewa</p>
-                <button class="btn btn-outline-danger btn-sm" data-target="kalkulator">
-                  Buka Kalkulator
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="quick-action-card card text-center p-3">
-              <div class="card-body">
-                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
-                <h5>Trend Harga</h5>
-                <p class="small text-muted">Analisis pasar properti</p>
-                <a href="{{ url_for('main.visualization') }}" class="btn btn-outline-danger btn-sm">
-                  Lihat Trend
-                </a>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Featured Assets -->
-        <div class="card">
+        
+        <!-- Aset Tersedia -->
+        <div class="card mt-4">
           <div class="card-header bg-danger text-white">
-            <h5 class="mb-0"><i class="fas fa-star me-2"></i>Aset Unggulan</h5>
+            <h5 class="mb-0">
+              <i class="fas fa-building me-2"></i>Aset Tersedia untuk Disewa
+            </h5>
           </div>
           <div class="card-body">
-            <div class="row g-4">
-              <!-- Sample Asset Card - Tanah -->
-              <div class="col-md-6 col-lg-4">
-                <div class="asset-card card h-100">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="asset-type-badge">Tanah</span>
-                      <span class="status-available">Tersedia</span>
-                    </div>
-                    <h6 class="card-title">Lahan Komersial Jl. Raya Darmo</h6>
-                    <p class="text-muted small mb-2">
-                      <i class="fas fa-map-marker-alt me-1"></i>Darmo, Surabaya
-                    </p>
-                    <p class="text-muted small">
-                      <i class="fas fa-expand-arrows-alt me-1"></i>500 m² 
-                      <span class="ms-3"><i class="fas fa-road me-1"></i>Lebar Jalan 12m</span>
-                    </p>
-                    <div class="price-tag mb-3">
-                      Rp 15.000.000/bulan
-                    </div>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-outline-danger btn-sm flex-fill">
-                        <i class="fas fa-eye me-1"></i>Detail
-                      </button>
-                      <button class="btn btn-danger btn-sm">
-                        <i class="fas fa-heart"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <select class="form-select form-select-sm" id="filterJenis">
+                  <option value="">Semua Jenis</option>
+                  <option value="tanah">Tanah</option>
+                  <option value="tanah_bangunan">Tanah + Bangunan</option>
+                </select>
               </div>
-
-              <!-- Sample Asset Card - Bangunan -->
-              <div class="col-md-6 col-lg-4">
-                <div class="asset-card card h-100">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="asset-type-badge">Tanah + Bangunan</span>
-                      <span class="status-available">Tersedia</span>
-                    </div>
-                    <h6 class="card-title">Gedung Perkantoran Jl. HR Muhammad</h6>
-                    <p class="text-muted small mb-2">
-                      <i class="fas fa-map-marker-alt me-1"></i>Sukolilo, Surabaya
-                    </p>
-                    <p class="text-muted small">
-                      <i class="fas fa-building me-1"></i>3 Lantai, 800 m²
-                      <span class="ms-2"><i class="fas fa-car me-1"></i>Parkir 20 mobil</span>
-                    </p>
-                    <div class="price-tag mb-3">
-                      Rp 45.000.000/bulan
-                    </div>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-outline-danger btn-sm flex-fill">
-                        <i class="fas fa-eye me-1"></i>Detail
-                      </button>
-                      <button class="btn btn-danger btn-sm">
-                        <i class="fas fa-heart"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div class="col-md-4">
+                <select class="form-select form-select-sm" id="filterKecamatan">
+                  <option value="">Semua Kecamatan</option>
+                </select>
               </div>
-
-              <!-- Sample Asset Card - Warehouse -->
-              <div class="col-md-6 col-lg-4">
-                <div class="asset-card card h-100">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="asset-type-badge">Gudang</span>
-                      <span class="status-rented">Disewa</span>
-                    </div>
-                    <h6 class="card-title">Gudang Industri Jl. Margomulyo</h6>
-                    <p class="text-muted small mb-2">
-                      <i class="fas fa-map-marker-alt me-1"></i>Benowo, Surabaya
-                    </p>
-                    <p class="text-muted small">
-                      <i class="fas fa-warehouse me-1"></i>1.200 m²
-                      <span class="ms-3"><i class="fas fa-truck me-1"></i>Akses Container</span>
-                    </p>
-                    <div class="price-tag mb-3">
-                      Rp 25.000.000/bulan
-                    </div>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-outline-secondary btn-sm flex-fill" disabled>
-                        <i class="fas fa-clock me-1"></i>Tidak Tersedia
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" disabled>
-                        <i class="fas fa-heart"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div class="col-md-4">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData()">
+                  <i class="fas fa-search me-1"></i>Cari
+                </button>
               </div>
             </div>
             
-            <div class="text-center mt-4">
-              <button class="btn btn-danger btn-lg" data-target="aset-sewa">
-                <i class="fas fa-search me-2"></i>Lihat Semua Aset
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Aset Sewa Section -->
-      <section id="aset-sewa" class="content-section">
-        <h1>Aset Tersedia untuk Disewa</h1>
-        <p class="text-muted mb-4">Temukan aset properti terbaik sesuai kebutuhan bisnis Anda</p>
-        
-        <!-- Filter Section -->
-        <div class="filter-section">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Jenis Aset</label>
-              <select class="form-select" id="assetTypeFilter">
-                <option value="">Semua Jenis</option>
-                <option value="tanah">Tanah</option>
-                <option value="bangunan">Tanah + Bangunan</option>
-                <option value="gudang">Gudang</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Kecamatan</label>
-              <select class="form-select" id="locationFilter">
-                <option value="">Semua Kecamatan</option>
-                <option value="darmo">Darmo</option>
-                <option value="sukolilo">Sukolilo</option>
-                <option value="benowo">Benowo</option>
-                <option value="wonokromo">Wonokromo</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Rentang Harga (juta/bulan)</label>
-              <select class="form-select" id="priceFilter">
-                <option value="">Semua Harga</option>
-                <option value="0-10">0 - 10 Juta</option>
-                <option value="10-25">10 - 25 Juta</option>
-                <option value="25-50">25 - 50 Juta</option>
-                <option value="50+">50+ Juta</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Status</label>
-              <select class="form-select" id="statusFilter">
-                <option value="">Semua Status</option>
-                <option value="available">Tersedia</option>
-                <option value="rented">Disewa</option>
-              </select>
-            </div>
-          </div>
-          <div class="row mt-3">
-            <div class="col-12">
-              <button class="btn btn-danger me-2" id="applyFilter">
-                <i class="fas fa-filter me-2"></i>Terapkan Filter
-              </button>
-              <button class="btn btn-outline-secondary" id="resetFilter">
-                <i class="fas fa-refresh me-2"></i>Reset
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Asset Grid -->
-        <div class="row g-4" id="assetGrid">
-          <!-- Assets will be loaded here dynamically -->
-          <div class="col-12 text-center">
-            <div class="spinner-border text-danger" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-3">Memuat data aset...</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Favorit Section -->
-      <section id="favorit" class="content-section">
-        <h1>Aset Favorit Saya</h1>
-        <p class="text-muted mb-4">Aset yang telah Anda tandai sebagai favorit</p>
-        
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <i class="fas fa-heart fa-4x text-muted mb-3"></i>
-            <h4>Belum ada aset favorit</h4>
-            <p class="text-muted">Tandai aset sebagai favorit untuk memudahkan akses di kemudian hari</p>
-            <button class="btn btn-danger" data-target="aset-sewa">
-              <i class="fas fa-search me-2"></i>Cari Aset
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Riwayat Section -->
-      <section id="riwayat" class="content-section">
-        <h1>Riwayat Sewa</h1>
-        <p class="text-muted mb-4">Riwayat transaksi dan kontrak sewa Anda</p>
-        
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <i class="fas fa-history fa-4x text-muted mb-3"></i>
-            <h4>Belum ada riwayat sewa</h4>
-            <p class="text-muted">Riwayat transaksi dan kontrak sewa akan ditampilkan di sini</p>
-            <button class="btn btn-danger" data-target="aset-sewa">
-              <i class="fas fa-search me-2"></i>Mulai Sewa Aset
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Kalkulator Section -->
-      <section id="kalkulator" class="content-section">
-        <h1>Kalkulator Sewa</h1>
-        <p class="text-muted mb-4">Hitung estimasi biaya sewa dan investasi properti</p>
-        
-        <div class="row">
-          <div class="col-md-8">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0">Estimasi Biaya Sewa</h5>
-              </div>
-              <div class="card-body">
-                <form id="calculatorForm">
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <label class="form-label">Jenis Aset</label>
-                      <select class="form-select" id="calcAssetType" required>
-                        <option value="">Pilih Jenis Aset</option>
-                        <option value="tanah">Tanah</option>
-                        <option value="bangunan">Tanah + Bangunan</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Lokasi</label>
-                      <select class="form-select" id="calcLocation" required>
-                        <option value="">Pilih Kecamatan</option>
-                        <option value="darmo">Darmo</option>
-                        <option value="sukolilo">Sukolilo</option>
-                        <option value="benowo">Benowo</option>
-                        <option value="wonokromo">Wonokromo</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Luas (m²)</label>
-                      <input type="number" class="form-control" id="calcArea" placeholder="Contoh: 500" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Durasi Sewa (bulan)</label>
-                      <input type="number" class="form-control" id="calcDuration" placeholder="Contoh: 12" required>
-                    </div>
-                  </div>
-                  <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-danger btn-lg">
-                      <i class="fas fa-calculator me-2"></i>Hitung Estimasi
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card">
-              <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Hasil Estimasi</h5>
-              </div>
-              <div class="card-body">
-                <div id="calculationResult">
-                  <div class="text-center text-muted py-4">
-                    <i class="fas fa-calculator fa-3x mb-3"></i>
-                    <p>Isi form untuk melihat estimasi biaya</p>
-                  </div>
+            <div id="asetContainer" class="row g-3">
+              <div class="col-12 text-center">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Bantuan Section -->
-      <section id="bantuan" class="content-section">
-        <h1>Bantuan & Dukungan</h1>
-        <p class="text-muted mb-4">Kami siap membantu Anda dalam proses sewa properti</p>
-        
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="card text-center">
-              <div class="card-body">
-                <i class="fas fa-phone fa-3x text-danger mb-3"></i>
-                <h5>Telepon</h5>
-                <p>+62 21 1234 5678</p>
-                <small class="text-muted">Senin - Jumat, 08:00 - 17:00</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card text-center">
-              <div class="card-body">
-                <i class="fas fa-envelope fa-3x text-danger mb-3"></i>
-                <h5>Email</h5>
-                <p>aset@telkom.co.id</p>
-                <small class="text-muted">Respon dalam 24 jam</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card text-center">
-              <div class="card-body">
-                <i class="fas fa-comments fa-3x text-danger mb-3"></i>
-                <h5>Live Chat</h5>
-                <p>Chat langsung dengan tim</p>
-                <button class="btn btn-danger btn-sm">Mulai Chat</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- FAQ Section -->
-        <div class="card mt-4">
-          <div class="card-header">
-            <h5 class="mb-0">Pertanyaan Umum (FAQ)</h5>
-          </div>
-          <div class="card-body">
-            <div class="accordion" id="faqAccordion">
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                    Bagaimana cara menyewa aset properti?
-                  </button>
-                </h2>
-                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body">
-                    Anda dapat mencari aset yang diinginkan melalui menu "Aset Tersedia", kemudian hubungi tim kami untuk proses negosiasi dan kontrak.
-                  </div>
-                </div>
-              </div>
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                    Apa saja persyaratan untuk menyewa?
-                  </button>
-                </h2>
-                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body">
-                    Persyaratan meliputi: KTP/identitas perusahaan, NPWP, surat keterangan usaha, dan deposit sesuai ketentuan.
-                  </div>
-                </div>
-              </div>
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                    Bagaimana sistem pembayaran sewa?
-                  </button>
-                </h2>
-                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body">
-                    Pembayaran dapat dilakukan bulanan, triwulan, atau tahunan sesuai kesepakatan. Tersedia berbagai metode pembayaran.
-                  </div>
-                </div>
+                <p class="mt-2 text-muted">Memuat data aset...</p>
               </div>
             </div>
           </div>
@@ -632,228 +245,228 @@
   <!-- User Dashboard Specific JS -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Additional user-specific functionality
-    
-    // Calculator form handling
-    const calculatorForm = document.getElementById('calculatorForm');
-    if (calculatorForm) {
-      calculatorForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        calculateRentalEstimate();
-      });
-    }
-    
-    // Quick action buttons
-    document.querySelectorAll('.quick-action-card button[data-target]').forEach(button => {
-      button.addEventListener('click', function() {
-        const target = this.getAttribute('data-target');
-        const filter = this.getAttribute('data-filter');
-        
-        // Switch to target section
-        showSection(target);
-        
-        // Apply filter if specified
-        if (filter && target === 'aset-sewa') {
-          document.getElementById('assetTypeFilter').value = filter;
-          applyFilters();
-        }
-      });
-    });
-    
-    // Filter functionality
-    document.getElementById('applyFilter')?.addEventListener('click', applyFilters);
-    document.getElementById('resetFilter')?.addEventListener('click', resetFilters);
-    
-    // Load initial asset data
-    loadAssetData();
+    // Load aset data on page load
+    loadAsetData();
+    loadKecamatanOptions();
   });
-  
-  function calculateRentalEstimate() {
-    const assetType = document.getElementById('calcAssetType').value;
-    const location = document.getElementById('calcLocation').value;
-    const area = parseFloat(document.getElementById('calcArea').value);
-    const duration = parseInt(document.getElementById('calcDuration').value);
-    
-    if (!assetType || !location || !area || !duration) {
-      alert('Mohon lengkapi semua field');
-      return;
-    }
-    
-    // Simple estimation logic (in real app, this would call backend API)
-    let basePrice = 0;
-    
-    // Base price per m² per month based on asset type and location
-    const priceMatrix = {
-      'tanah': {
-        'darmo': 30000,
-        'sukolilo': 25000,
-        'benowo': 15000,
-        'wonokromo': 20000
-      },
-      'bangunan': {
-        'darmo': 80000,
-        'sukolilo': 70000,
-        'benowo': 40000,
-        'wonokromo': 50000
-      }
-    };
-    
-    basePrice = priceMatrix[assetType][location] || 20000;
-    const monthlyRent = basePrice * area;
-    const totalCost = monthlyRent * duration;
-    const deposit = monthlyRent * 2; // 2 months deposit
-    const totalInitial = monthlyRent + deposit;
-    
-    const resultHTML = `
-      <div class="text-center">
-        <h6 class="text-danger">Estimasi Biaya</h6>
-        <hr>
-        <div class="mb-2">
-          <small class="text-muted">Sewa per bulan</small>
-          <div class="h5">Rp ${monthlyRent.toLocaleString('id-ID')}</div>
-        </div>
-        <div class="mb-2">
-          <small class="text-muted">Deposit (2 bulan)</small>
-          <div class="h6">Rp ${deposit.toLocaleString('id-ID')}</div>
-        </div>
-        <div class="mb-2">
-          <small class="text-muted">Biaya awal</small>
-          <div class="h5 text-danger">Rp ${totalInitial.toLocaleString('id-ID')}</div>
-        </div>
-        <hr>
-        <div class="mb-2">
-          <small class="text-muted">Total ${duration} bulan</small>
-          <div class="h4 text-success">Rp ${totalCost.toLocaleString('id-ID')}</div>
-        </div>
-        <small class="text-muted">*Estimasi, harga dapat berubah</small>
-      </div>
-    `;
-    
-    document.getElementById('calculationResult').innerHTML = resultHTML;
-  }
-  
-  function loadAssetData() {
-    // Simulate loading assets (in real app, this would fetch from API)
-    setTimeout(() => {
-      const sampleAssets = [
-        {
-          id: 1,
-          type: 'tanah',
-          title: 'Lahan Komersial Jl. Raya Darmo',
-          location: 'Darmo, Surabaya',
-          area: 500,
-          price: 15000000,
-          status: 'available',
-          details: 'Lebar Jalan 12m'
-        },
-        {
-          id: 2,
-          type: 'bangunan',
-          title: 'Gedung Perkantoran Jl. HR Muhammad',
-          location: 'Sukolilo, Surabaya',
-          area: 800,
-          price: 45000000,
-          status: 'available',
-          details: '3 Lantai, Parkir 20 mobil'
-        },
-        {
-          id: 3,
-          type: 'gudang',
-          title: 'Gudang Industri Jl. Margomulyo',
-          location: 'Benowo, Surabaya',
-          area: 1200,
-          price: 25000000,
-          status: 'rented',
-          details: 'Akses Container'
-        }
-      ];
+
+  async function loadAsetData() {
+    try {
+      const filterJenis = document.getElementById('filterJenis').value;
+      const filterKecamatan = document.getElementById('filterKecamatan').value;
       
-      renderAssets(sampleAssets);
-    }, 1000);
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      
+      const response = await fetch(`/api/aset-tersedia?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayAsetData(data.data);
+      } else {
+        showError('Gagal memuat data aset');
+      }
+    } catch (error) {
+      console.error('Error loading aset data:', error);
+      showError('Terjadi kesalahan saat memuat data');
+    }
   }
-  
-  function renderAssets(assets) {
-    const grid = document.getElementById('assetGrid');
-    if (!grid) return;
+
+  async function loadKecamatanOptions() {
+    try {
+      const response = await fetch('/api/kecamatan-list');
+      const data = await response.json();
+      
+      if (data.success) {
+        const select = document.getElementById('filterKecamatan');
+        select.innerHTML = '<option value="">Semua Kecamatan</option>';
+        data.data.forEach(kecamatan => {
+          select.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
+        });
+      }
+    } catch (error) {
+      console.error('Error loading kecamatan options:', error);
+    }
+  }
+
+  function displayAsetData(asetList) {
+    const container = document.getElementById('asetContainer');
     
-    if (assets.length === 0) {
-      grid.innerHTML = `
+    if (asetList.length === 0) {
+      container.innerHTML = `
         <div class="col-12 text-center">
-          <div class="card">
-            <div class="card-body py-5">
-              <i class="fas fa-search fa-4x text-muted mb-3"></i>
-              <h4>Tidak ada aset ditemukan</h4>
-              <p class="text-muted">Coba ubah filter pencarian Anda</p>
-            </div>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Tidak ada aset yang tersedia saat ini
           </div>
         </div>
       `;
       return;
     }
     
-    const assetHTML = assets.map(asset => `
-      <div class="col-md-6 col-lg-4">
-        <div class="asset-card card h-100">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <span class="asset-type-badge">${getAssetTypeLabel(asset.type)}</span>
-              <span class="status-${asset.status}">${getStatusLabel(asset.status)}</span>
+    let html = '';
+    asetList.forEach(aset => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card asset-card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <span class="badge bg-warning text-dark rounded-pill">
+                  ${aset.status || 'Tersedia'}
+                </span>
+              </div>
+              
+              <h6 class="card-title text-truncate">${aset.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${aset.kecamatan || 'Kecamatan tidak tersedia'}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${aset.luas_tanah || 0} m²</strong>
+                </div>
+                ${aset.jenis === 'tanah_bangunan' ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${aset.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(aset.harga_sewa || 0)}/bulan
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="showAsetDetail(${aset.id})">
+                  <i class="fas fa-eye me-1"></i>Lihat Detail
+                </button>
+              </div>
             </div>
-            <h6 class="card-title">${asset.title}</h6>
-            <p class="text-muted small mb-2">
-              <i class="fas fa-map-marker-alt me-1"></i>${asset.location}
-            </p>
-            <p class="text-muted small">
-              <i class="fas fa-expand-arrows-alt me-1"></i>${asset.area} m² 
-              <span class="ms-3">${asset.details}</span>
-            </p>
-            <div class="price-tag mb-3">
-              Rp ${asset.price.toLocaleString('id-ID')}/bulan
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function showAsetDetail(id) {
+    // Create modal for showing asset detail
+    fetch(`/api/aset-detail/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showDetailModal(data.data);
+        } else {
+          alert('Gagal memuat detail aset: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memuat detail aset');
+      });
+  }
+
+  function showDetailModal(aset) {
+    const modalHTML = `
+      <div class="modal fade" id="asetDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">
+                <i class="fas fa-${aset.jenis === 'tanah' ? 'map-marked-alt' : 'building'} me-2"></i>
+                Detail ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-danger btn-sm flex-fill" ${asset.status === 'rented' ? 'disabled' : ''}>
-                <i class="fas fa-eye me-1"></i>Detail
-              </button>
-              <button class="btn ${asset.status === 'rented' ? 'btn-outline-secondary' : 'btn-danger'} btn-sm" ${asset.status === 'rented' ? 'disabled' : ''}>
-                <i class="fas fa-heart"></i>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="text-danger">Informasi Lokasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Alamat:</strong></td><td>${aset.alamat}</td></tr>
+                    <tr><td><strong>Kecamatan:</strong></td><td>${aset.kecamatan}</td></tr>
+                    <tr><td><strong>Kelurahan:</strong></td><td>${aset.kelurahan}</td></tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h6 class="text-danger">Spesifikasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Luas Tanah:</strong></td><td>${aset.luas_tanah} m²</td></tr>
+                    ${aset.luas_bangunan ? `<tr><td><strong>Luas Bangunan:</strong></td><td>${aset.luas_bangunan} m²</td></tr>` : ''}
+                    ${aset.kamar_tidur ? `<tr><td><strong>Kamar Tidur:</strong></td><td>${aset.kamar_tidur}</td></tr>` : ''}
+                    ${aset.kamar_mandi ? `<tr><td><strong>Kamar Mandi:</strong></td><td>${aset.kamar_mandi}</td></tr>` : ''}
+                    ${aset.jumlah_lantai ? `<tr><td><strong>Jumlah Lantai:</strong></td><td>${aset.jumlah_lantai}</td></tr>` : ''}
+                  </table>
+                </div>
+              </div>
+              
+              <div class="row mt-3">
+                <div class="col-12">
+                  <h6 class="text-danger">Informasi Harga</h6>
+                  <div class="card bg-light">
+                    <div class="card-body text-center">
+                      <h4 class="text-danger mb-2">Rp ${formatCurrency(aset.harga_sewa)}/bulan</h4>
+                      <small class="text-muted">
+                        Estimasi berdasarkan nilai properti: Rp ${formatCurrency(aset.harga_prediksi)}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+              <button type="button" class="btn btn-danger" onclick="contactAdmin('${aset.id}')">
+                <i class="fas fa-phone me-1"></i>Hubungi Admin
               </button>
             </div>
           </div>
         </div>
       </div>
-    `).join('');
+    `;
     
-    grid.innerHTML = assetHTML;
+    // Remove existing modal if any
+    const existingModal = document.getElementById('asetDetailModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('asetDetailModal'));
+    modal.show();
   }
-  
-  function getAssetTypeLabel(type) {
-    const labels = {
-      'tanah': 'Tanah',
-      'bangunan': 'Tanah + Bangunan',
-      'gudang': 'Gudang'
-    };
-    return labels[type] || type;
+
+  function contactAdmin(asetId) {
+    alert(`Menghubungi admin untuk aset ${asetId}.\n\nAnda akan diarahkan ke halaman kontak atau form inquiry.`);
+    // Di sini bisa diarahkan ke halaman kontak atau membuka form inquiry
   }
-  
-  function getStatusLabel(status) {
-    const labels = {
-      'available': 'Tersedia',
-      'rented': 'Disewa'
-    };
-    return labels[status] || status;
+
+  function formatCurrency(number) {
+    return new Intl.NumberFormat('id-ID').format(number);
   }
-  
-  function applyFilters() {
-    // In real app, this would filter the asset data
-    console.log('Applying filters...');
-    loadAssetData(); // Reload with filters
-  }
-  
-  function resetFilters() {
-    document.querySelectorAll('#assetTypeFilter, #locationFilter, #priceFilter, #statusFilter').forEach(select => {
-      select.value = '';
-    });
-    loadAssetData();
+
+  function showError(message) {
+    const container = document.getElementById('asetContainer');
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
   }
   </script>
 </body>

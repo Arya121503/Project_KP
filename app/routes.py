@@ -896,3 +896,237 @@ def change_password():
     # Untuk POST request, tetap redirect tapi dengan pesan yang lebih spesifik
     flash('Silakan gunakan form edit profil untuk mengubah password.', 'info')
     return redirect(url_for('main.edit_profile'))
+
+# API Routes untuk Dashboard User
+@main.route('/api/aset-tersedia')
+def api_aset_tersedia():
+    """
+    API endpoint untuk mendapatkan daftar aset yang tersedia untuk disewa
+    """
+    try:
+        # Get filter parameters
+        jenis = request.args.get('jenis', '')
+        kecamatan = request.args.get('kecamatan', '')
+        
+        cur = mysql.connection.cursor()
+        
+        aset_list = []
+        
+        # Get data tanah
+        if not jenis or jenis == 'tanah':
+            tanah_query = """
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, 
+                       harga_prediksi_tanah, created_at
+                FROM prediksi_properti_tanah 
+                WHERE 1=1
+            """
+            tanah_params = []
+            
+            if kecamatan:
+                tanah_query += " AND kecamatan = %s"
+                tanah_params.append(kecamatan)
+                
+            tanah_query += " ORDER BY created_at DESC LIMIT 10"
+            
+            cur.execute(tanah_query, tanah_params)
+            tanah_data = cur.fetchall()
+            
+            for tanah in tanah_data:
+                # Calculate estimated rental price (assume 0.5% of property value per month)
+                harga_sewa = int(tanah[4] * 0.005) if tanah[4] else 0
+                
+                aset_list.append({
+                    'id': f"tanah_{tanah[0]}",
+                    'alamat': f"{tanah[2]}, {tanah[1]}" if tanah[2] else tanah[1],
+                    'kecamatan': tanah[1],
+                    'luas_tanah': tanah[3],
+                    'luas_bangunan': 0,
+                    'harga_sewa': harga_sewa,
+                    'jenis': 'tanah',
+                    'status': 'Tersedia'
+                })
+        
+        # Get data bangunan
+        if not jenis or jenis == 'tanah_bangunan':
+            bangunan_query = """
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2,
+                       harga_prediksi_bangunan_tanah, created_at
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE 1=1
+            """
+            bangunan_params = []
+            
+            if kecamatan:
+                bangunan_query += " AND kecamatan = %s"
+                bangunan_params.append(kecamatan)
+                
+            bangunan_query += " ORDER BY created_at DESC LIMIT 10"
+            
+            cur.execute(bangunan_query, bangunan_params)
+            bangunan_data = cur.fetchall()
+            
+            for bangunan in bangunan_data:
+                # Calculate estimated rental price (assume 0.5% of property value per month)
+                harga_sewa = int(bangunan[5] * 0.005) if bangunan[5] else 0
+                
+                aset_list.append({
+                    'id': f"bangunan_{bangunan[0]}",
+                    'alamat': f"{bangunan[2]}, {bangunan[1]}" if bangunan[2] else bangunan[1],
+                    'kecamatan': bangunan[1],
+                    'luas_tanah': bangunan[3],
+                    'luas_bangunan': bangunan[4],
+                    'harga_sewa': harga_sewa,
+                    'jenis': 'tanah_bangunan',
+                    'status': 'Tersedia'
+                })
+        
+        cur.close()
+        
+        # Sort by latest first (since we can't sort by created_at due to potential differences)
+        aset_list.reverse()
+        
+        return jsonify({
+            'success': True,
+            'data': aset_list[:20],  # Limit to 20 results
+            'total': len(aset_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/kecamatan-list')
+def api_kecamatan_list():
+    """
+    API endpoint untuk mendapatkan daftar kecamatan yang tersedia
+    """
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get kecamatan from both tables
+        kecamatan_set = set()
+        
+        # From tanah table
+        cur.execute("SELECT DISTINCT kecamatan FROM prediksi_properti_tanah WHERE kecamatan IS NOT NULL")
+        tanah_kecamatan = cur.fetchall()
+        for kec in tanah_kecamatan:
+            kecamatan_set.add(kec[0])
+        
+        # From bangunan table
+        cur.execute("SELECT DISTINCT kecamatan FROM prediksi_properti_bangunan_tanah WHERE kecamatan IS NOT NULL")
+        bangunan_kecamatan = cur.fetchall()
+        for kec in bangunan_kecamatan:
+            kecamatan_set.add(kec[0])
+        
+        cur.close()
+        
+        kecamatan_list = sorted(list(kecamatan_set))
+        
+        return jsonify({
+            'success': True,
+            'data': kecamatan_list
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/aset-detail/<aset_id>')
+def api_aset_detail(aset_id):
+    """
+    API endpoint untuk mendapatkan detail aset berdasarkan ID
+    """
+    try:
+        # Parse aset_id to get type and actual id
+        if aset_id.startswith('tanah_'):
+            actual_id = aset_id.replace('tanah_', '')
+            table = 'prediksi_properti_tanah'
+            jenis = 'tanah'
+        elif aset_id.startswith('bangunan_'):
+            actual_id = aset_id.replace('bangunan_', '')
+            table = 'prediksi_properti_bangunan_tanah'
+            jenis = 'tanah_bangunan'
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid aset ID format'
+            }), 400
+        
+        cur = mysql.connection.cursor()
+        
+        if jenis == 'tanah':
+            cur.execute("""
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, njop_tanah_per_m2,
+                       zona_nilai_tanah, kelas_tanah, jenis_sertifikat,
+                       harga_prediksi_tanah, harga_per_m2_tanah
+                FROM prediksi_properti_tanah 
+                WHERE id = %s
+            """, (actual_id,))
+        else:
+            cur.execute("""
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2,
+                       jumlah_kamar_tidur, jumlah_kamar_mandi, jumlah_lantai,
+                       harga_prediksi_bangunan_tanah, harga_per_m2_bangunan
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE id = %s
+            """, (actual_id,))
+        
+        aset_data = cur.fetchone()
+        cur.close()
+        
+        if not aset_data:
+            return jsonify({
+                'success': False,
+                'error': 'Aset tidak ditemukan'
+            }), 404
+        
+        if jenis == 'tanah':
+            harga_sewa = int(aset_data[8] * 0.005) if aset_data[8] else 0
+            aset_detail = {
+                'id': aset_id,
+                'jenis': jenis,
+                'alamat': f"{aset_data[2]}, {aset_data[1]}",
+                'kecamatan': aset_data[1],
+                'kelurahan': aset_data[2],
+                'luas_tanah': aset_data[3],
+                'luas_bangunan': 0,
+                'njop_tanah': aset_data[4],
+                'zona_nilai': aset_data[5],
+                'kelas_tanah': aset_data[6],
+                'sertifikat': aset_data[7],
+                'harga_prediksi': aset_data[8],
+                'harga_per_m2': aset_data[9],
+                'harga_sewa': harga_sewa
+            }
+        else:
+            harga_sewa = int(aset_data[8] * 0.005) if aset_data[8] else 0
+            aset_detail = {
+                'id': aset_id,
+                'jenis': jenis,
+                'alamat': f"{aset_data[2]}, {aset_data[1]}",
+                'kecamatan': aset_data[1],
+                'kelurahan': aset_data[2],
+                'luas_tanah': aset_data[3],
+                'luas_bangunan': aset_data[4],
+                'kamar_tidur': aset_data[5],
+                'kamar_mandi': aset_data[6],
+                'jumlah_lantai': aset_data[7],
+                'harga_prediksi': aset_data[8],
+                'harga_per_m2': aset_data[9],
+                'harga_sewa': harga_sewa
+            }
+        
+        return jsonify({
+            'success': True,
+            'data': aset_detail
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
