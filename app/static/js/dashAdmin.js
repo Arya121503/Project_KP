@@ -1849,7 +1849,8 @@ function generateCustomChart(ctx, type, dataSource, groupBy, metric) {
 // SECTION NAVIGATION INDICATORS & SCROLL PROGRESS
 // ===================================
 
-// Create section navigation indicators
+// Create section navigation indicators - DISABLED
+/*
 function createSectionIndicators() {
   // Remove existing indicators
   const existingIndicator = document.querySelector('.section-nav-indicator');
@@ -1894,7 +1895,7 @@ function createSectionIndicators() {
   document.body.appendChild(indicatorContainer);
 }
 
-// Update section indicators
+// Update section indicators - DISABLED
 function updateSectionIndicators(activeSectionId) {
   const indicators = document.querySelectorAll('.section-indicator');
   indicators.forEach(indicator => {
@@ -1904,6 +1905,7 @@ function updateSectionIndicators(activeSectionId) {
     }
   });
 }
+*/
 
 // Create scroll progress bar
 function createScrollProgressBar() {
@@ -1977,7 +1979,7 @@ function initializeScrollEnhancements() {
 document.addEventListener('DOMContentLoaded', function() {
   // Wait a bit for DOM to fully load
   setTimeout(() => {
-    createSectionIndicators();
+    // createSectionIndicators(); // Disabled - section indicators removed
     createScrollProgressBar();
     initializeScrollEnhancements();
     
