@@ -1851,58 +1851,13 @@ function generateCustomChart(ctx, type, dataSource, groupBy, metric) {
 
 // Create section navigation indicators
 function createSectionIndicators() {
-  // Remove existing indicators
-  const existingIndicator = document.querySelector('.section-nav-indicator');
-  if (existingIndicator) {
-    existingIndicator.remove();
-  }
-
-  const indicatorContainer = document.createElement('div');
-  indicatorContainer.className = 'section-nav-indicator';
-
-  // Create indicators for each section
-  const sectionData = [
-    { id: 'dashboard-home', title: 'Dashboard' },
-    { id: 'visualisasi', title: 'Visualisasi' },
-    { id: 'prediksi-properti', title: 'Prediksi' },
-    { id: 'manajemen-aset', title: 'Manajemen' },
-    { id: 'aset-sewa', title: 'Aset Sewa' },
-    { id: 'aset-jual', title: 'Aset Jual' },
-    { id: 'notifikasi', title: 'Notifikasi' }
-  ];
-
-  sectionData.forEach((section, index) => {
-    const indicator = document.createElement('span');
-    indicator.className = 'section-indicator';
-    indicator.setAttribute('data-title', section.title);
-    indicator.setAttribute('data-target', section.id);
-    
-    // Set first indicator as active
-    if (index === 0) {
-      indicator.classList.add('active');
-    }
-
-    // Click handler for indicators
-    indicator.addEventListener('click', () => {
-      smoothScrollToSection(section.id);
-      updateSectionIndicators(section.id);
-    });
-
-    indicatorContainer.appendChild(indicator);
-  });
-
-  document.body.appendChild(indicatorContainer);
+  // Feature removed - section indicators disabled
+  console.log('Section indicators feature disabled');
 }
 
-// Update section indicators
+// Update section indicators  
 function updateSectionIndicators(activeSectionId) {
-  const indicators = document.querySelectorAll('.section-indicator');
-  indicators.forEach(indicator => {
-    indicator.classList.remove('active');
-    if (indicator.getAttribute('data-target') === activeSectionId) {
-      indicator.classList.add('active');
-    }
-  });
+  // Feature removed - section indicators disabled
 }
 
 // Create scroll progress bar
@@ -1955,7 +1910,7 @@ function initializeScrollEnhancements() {
         const sectionId = entry.target.id;
         updateActiveMenuItem(sectionId);
         updateActiveSectionClass(sectionId);
-        updateSectionIndicators(sectionId);
+        // updateSectionIndicators(sectionId); // Disabled - feature removed
       }
     });
   }, {
@@ -1977,11 +1932,11 @@ function initializeScrollEnhancements() {
 document.addEventListener('DOMContentLoaded', function() {
   // Wait a bit for DOM to fully load
   setTimeout(() => {
-    createSectionIndicators();
+    // createSectionIndicators(); // Disabled - feature removed
     createScrollProgressBar();
     initializeScrollEnhancements();
     
-    console.log('Scroll navigation enhancements initialized');
+    console.log('Scroll navigation enhancements initialized (section indicators disabled)');
   }, 100);
 });
 

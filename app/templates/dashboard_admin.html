@@ -86,6 +86,8 @@
     .dropdown-toggle[aria-expanded="true"] .material-icons-sharp:last-child {
       transform: rotate(180deg);
     }
+    
+    .sidebar a {
       transition: all 0.3s ease;
       text-decoration: none;
       border-radius: var(--border-radius-1);
@@ -360,7 +362,7 @@
             <div class="status">
               <div class="info">
                 <h3>Total Prediksi</h3>
-                <h1>{{ stats.total_properties or 0 }}</h1>
+                <h1>{{ stats.total_properties if stats and stats.total_properties else 0 }}</h1>
                 <small>Data Properti</small>
               </div>
               <div class="progresss">
@@ -373,7 +375,7 @@
             <div class="status">
               <div class="info">
                 <h3>Harga Rata-rata</h3>
-                <h1>Rp {{ "{:,.0f}".format(stats.avg_price or 0) }}</h1>
+                <h1>Rp {{ "{:,.0f}".format(stats.avg_price if stats and stats.avg_price else 0) }}</h1>
                 <small>Per Properti</small>
               </div>
               <div class="progresss">
@@ -386,7 +388,7 @@
             <div class="status">
               <div class="info">
                 <h3>Total Kecamatan</h3>
-                <h1>{{ stats.total_locations or 0 }}</h1>
+                <h1>{{ stats.total_locations if stats and stats.total_locations else 0 }}</h1>
                 <small>Area Surabaya</small>
               </div>
               <div class="progresss">
