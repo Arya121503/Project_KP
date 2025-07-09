@@ -1,0 +1,1206 @@
+﻿/* Dashboard User CSS - Telkom Aset */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Smooth scrolling setup */
+html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y mandatory;
+    font-size: 14px;
+}
+
+body {
+    scroll-behavior: smooth;
+}
+
+:root{
+    --color-primary: #DC143C;
+    --color-danger: #DC143C;
+    --color-success: #1B9C85;
+    --color-warning: #F7D060;
+    --color-white: #fff;
+    --color-info-dark: #7d8da1;
+    --color-dark: #363949;
+    --color-light: rgba(220, 20, 60, 0.18);
+    --color-dark-variant: #677483;
+    --color-background: #f6f6f9;
+
+    --card-border-radius: 2rem;
+    --border-radius-1: 0.4rem;
+    --border-radius-2: 1.2rem;
+
+    --card-padding: 1.8rem;
+    --padding-1: 1.2rem;
+
+    --box-shadow: 0 2rem 3rem var(--color-light);
+
+    /* Telkom Branding Colors */
+    --telkom-red: #DC143C;
+    --telkom-light: rgba(220, 20, 60, 0.1);
+    --telkom-dark: #B71C1C;
+}
+
+.dark-mode-variables{
+    --color-background: #181a1e;
+    --color-white: #202528;
+    --color-dark: #edeffd;
+    --color-dark-variant: #a3bdcc;
+    --color-light: rgba(0, 0, 0, 0.4);
+    --box-shadow: 0 2rem 3rem var(--color-light);
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    outline: 0;
+    appearance: 0;
+    border: 0;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+html{
+    font-size: 14px;
+}
+
+body{
+    width: 100vw;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.88rem;
+    user-select: none;
+    overflow-x: hidden;
+    color: var(--color-dark);
+    background-color: var(--color-background);
+    padding-top: 70px; /* Space for fixed navbar */
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.container {
+    display: grid;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    gap: 1.8rem;
+    grid-template-columns: 12rem 1fr;
+    padding-top: 1rem;
+    padding-left: 0;
+    padding-right: 0;
+    transition: grid-template-columns 0.3s ease;
+    overflow-x: hidden;
+    min-height: calc(100vh - 90px);
+    align-items: start;
+}
+
+.container.sidebar-hidden {
+    grid-template-columns: 0rem 1fr;
+}
+
+/* SIDEBAR - Matching Admin Style */
+aside{
+    height: calc(100vh - 90px);
+    position: sticky;
+    top: 90px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: all 0.3s ease;
+    scroll-behavior: smooth;
+}
+
+aside.hidden {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar-content {
+    height: 100%;
+    position: relative;
+}
+
+.sidebar-content .close {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    cursor: pointer;
+    color: var(--color-dark);
+    z-index: 10;
+}
+
+aside .sidebar{
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-white);
+    box-shadow: var(--box-shadow);
+    border-radius: 15px;
+    height: 100%;
+    padding: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+aside .sidebar:hover{
+    box-shadow: none;
+}
+
+aside .sidebar a{
+    display: flex;
+    align-items: center;
+    color: var(--color-info-dark);
+    height: 3.7rem;
+    gap: 1rem;
+    position: relative;
+    margin-left: 2rem;
+    transition: all 0.3s ease;
+}
+
+aside .sidebar a:hover{
+    background: var(--color-light);
+    color: var(--color-primary) !important;
+    transform: translateX(4px);
+    border-radius: var(--border-radius-1);
+    margin-right: 1rem;
+}
+
+aside .sidebar a span{
+    font-size: 1.6rem;
+    transition: all 0.3s ease;
+}
+
+aside .sidebar a:last-child{
+    position: absolute;
+    bottom: 2rem;
+    width: 100%;
+}
+
+aside .sidebar a.active {
+  width: calc(100% - 2rem);
+  margin-left: 1rem;
+  color: var(--color-primary);
+  background-color: var(--color-light);
+  border-radius: var(--border-radius-1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  position: relative;
+}
+
+aside .sidebar a.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 50%;
+  background: var(--color-primary);
+  border-radius: 0 5px 5px 0;
+}
+
+aside .sidebar a.active span {
+  color: var(--color-primary);
+}
+
+aside .sidebar a.active:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+aside .sidebar a:hover span{
+    margin-left: 0.6rem;
+}
+
+aside .sidebar .message-count{
+    background-color: var(--color-danger);
+    padding: 2px 6px;
+    color: var(--color-white);
+    font-size: 11px;
+    border-radius: var(--border-radius-1);
+}
+
+/* Main content styling */
+main {
+    margin-top: 0;
+    padding: 20px 2rem;
+    background: var(--color-background);
+    min-height: calc(100vh - 70px);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    height: calc(100vh - 90px);
+    min-height: calc(100vh - 90px);
+    padding-right: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: sticky;
+    top: 90px;
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+aside::-webkit-scrollbar,
+main::-webkit-scrollbar {
+    width: 8px;
+}
+
+aside::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+    background: var(--color-background);
+    border-radius: 8px;
+}
+
+aside::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+    background: var(--color-light);
+    border-radius: 8px;
+}
+
+aside::-webkit-scrollbar-thumb:hover,
+main::-webkit-scrollbar-thumb:hover {
+    background: var(--color-dark-variant);
+}
+
+/* Firefox scrollbar styling */
+aside,
+main {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-light) var(--color-background);
+}
+
+/* Links and images */
+a {
+    color: var(--color-dark);
+    text-decoration: none;
+}
+
+img {
+    display: block;
+    width: 100%;
+    object-fit: cover;
+}
+
+/* Typography */
+h1 {
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--color-dark);
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 0.87rem;
+    font-weight: 500;
+}
+
+h4, h5, h6 {
+    font-weight: 600;
+}
+
+small {
+    font-size: 0.75rem;
+}
+
+p {
+    color: var(--color-dark-variant);
+}
+
+b {
+    color: var(--color-dark);
+}
+
+.text-muted {
+    color: var(--color-info-dark);
+}
+
+/* Dark mode override for text-muted */
+.dark-mode-variables .text-muted {
+    color: var(--color-dark-variant) !important;
+}
+
+/* Additional Bootstrap text-muted overrides for dark mode */
+.dark-mode-variables .text-muted,
+.dark-mode-variables small.text-muted,
+.dark-mode-variables p.text-muted {
+    color: var(--color-dark-variant) !important;
+}
+
+.primary {
+    color: var(--color-primary);
+}
+
+.danger {
+    color: var(--color-danger);
+}
+
+.success {
+    color: var(--color-success);
+}
+
+.warning {
+    color: var(--color-warning);
+}
+
+/* TOP NAVBAR - User Dashboard */
+.navbar, .top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background-color: var(--color-white);
+    box-shadow: var(--box-shadow);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-light);
+    padding: 0 !important;
+}
+
+.navbar.navbar-dark {
+    background-color: var(--color-white) !important;
+}
+
+.navbar .container-fluid, .navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    width: 100%;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Navbar Brand Styling */
+.navbar-brand, .navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--color-dark) !important;
+}
+
+.navbar-brand img, .navbar-logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.navbar-brand h2, .navbar-logo h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-dark) !important;
+    line-height: 1.2;
+}
+
+.navbar-brand .danger {
+    color: var(--telkom-red) !important;
+}
+
+/* Menu toggle button for mobile */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-dark);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--border-radius-1);
+    transition: background-color 0.3s ease;
+}
+
+.menu-toggle:hover {
+    background-color: var(--color-light);
+}
+
+/* Sidebar toggle button - hidden by default, shown on desktop */
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-dark);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--border-radius-1);
+    transition: background-color 0.3s ease;
+    margin-right: 0.5rem;
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--color-light);
+    color: var(--telkom-red);
+}
+
+.sidebar-toggle .material-icons-sharp {
+    font-size: 1.4rem;
+}
+
+/* Profile Photo Styling */
+.navbar .profile-photo, .navbar-right .profile .profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--color-light);
+    transition: all 0.3s ease;
+}
+
+.navbar .profile-photo img, .navbar-right .profile .profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.navbar .profile-photo:hover {
+    border-color: var(--telkom-red);
+    transform: scale(1.05);
+}
+
+/* Profile info in navbar */
+.navbar-right .profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-right .profile .info {
+    text-align: right;
+}
+
+.navbar-right .profile .info p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.navbar-right .profile .info small {
+    color: var(--color-info-dark);
+}
+
+/* Dark mode override for profile info */
+.dark-mode-variables .navbar-right .profile .info small {
+    color: var(--color-dark-variant);
+}
+
+/* Dark mode support for navbar */
+.dark-mode-variables .top-navbar,
+.dark-mode-variables .navbar {
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-light);
+}
+
+/* Links and images */
+a{
+    color: var(--color-dark);
+    text-decoration: none;
+}
+
+img{
+    display: block;
+    width: 100%;
+    object-fit: cover;
+}
+
+/* Main content styling */
+main{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    height: calc(100vh - 90px);
+    min-height: calc(100vh - 90px);
+    padding-right: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: sticky;
+    top: 90px;
+    scroll-behavior: smooth;
+    padding: 20px 2rem;
+    background: var(--color-background);
+}
+
+/* Smooth transitions for sidebar */
+aside {
+    transition: all 0.3s ease;
+}
+
+.container {
+    transition: grid-template-columns 0.3s ease;
+}
+
+/* Dark mode variables and styling */
+.dark-mode-variables {
+    --color-background: #181a1e;
+    --color-white: #202528;
+    --color-dark: #edeffd;
+    --color-dark-variant: #a3bdcc;
+    --color-light: rgba(0, 0, 0, 0.4);
+    --box-shadow: 0 2rem 3rem var(--color-light);
+}
+
+/* Dark mode navbar */
+.dark-mode-variables .navbar {
+    background-color: var(--color-white);
+    border-bottom-color: var(--color-light);
+}
+
+.dark-mode-variables .navbar-brand h2,
+.dark-mode-variables .navbar-brand {
+    color: var(--color-dark) !important;
+}
+
+.dark-mode-variables .sidebar-toggle,
+.dark-mode-variables .menu-toggle {
+    color: var(--color-dark) !important;
+}
+
+.dark-mode-variables .sidebar-toggle:hover,
+.dark-mode-variables .menu-toggle:hover {
+    background-color: var(--color-light);
+    color: var(--telkom-red) !important;
+}
+
+/* Dark mode dropdown */
+.dark-mode-variables .nav-link.dropdown-toggle,
+.dark-mode-variables .nav-link.dropdown-toggle .user-name,
+.dark-mode-variables .nav-link.dropdown-toggle .material-icons-sharp {
+    color: var(--color-dark) !important;
+}
+
+.dark-mode-variables .dropdown-menu {
+    background-color: var(--color-white);
+    border-color: var(--color-light);
+}
+
+.dark-mode-variables .dropdown-item {
+    color: var(--color-dark);
+}
+
+.dark-mode-variables .dropdown-item:hover {
+    background-color: var(--color-light);
+    color: var(--telkom-red);
+}
+
+/* Apply dark mode to body and main elements */
+.dark-mode-variables body {
+    background: var(--color-background);
+    color: var(--color-dark);
+}
+
+.dark-mode-variables main {
+    background: var(--color-background);
+    color: var(--color-dark);
+}
+
+/* Dark mode cards */
+.dark-mode-variables .card {
+    background-color: var(--color-white) !important;
+    border-color: var(--color-light);
+    color: var(--color-dark);
+}
+
+.dark-mode-variables .card-header {
+    background-color: var(--telkom-red) !important;
+    border-color: var(--color-light);
+    color: white !important;
+}
+
+.dark-mode-variables .card-body {
+    background-color: var(--color-white) !important;
+    color: var(--color-dark);
+}
+
+.dark-mode-variables .card-title {
+    color: var(--color-dark) !important;
+}
+
+/* Dark mode text elements */
+.dark-mode-variables h1, 
+.dark-mode-variables h2, 
+.dark-mode-variables h3, 
+.dark-mode-variables h4, 
+.dark-mode-variables h5, 
+.dark-mode-variables h6 {
+    color: var(--color-dark) !important;
+}
+
+.dark-mode-variables p {
+    color: var(--color-dark);
+}
+
+/* Dark mode user welcome section */
+.dark-mode-variables .user-welcome {
+    background: var(--color-white);
+    color: var(--color-dark);
+}
+
+.dark-mode-variables .user-welcome h1 {
+    color: var(--color-dark) !important;
+}
+
+.dark-mode-variables .user-welcome p {
+    color: var(--color-dark-variant) !important;
+}
+
+/* RESPONSIVE DESIGN - User Dashboard */
+@media screen and (max-width: 1200px) {
+    .container {
+        width: 95%;
+        grid-template-columns: 10rem 1fr;
+    }
+    
+    .navbar-content {
+        padding: 0 1.5rem;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .container {
+        grid-template-columns: 10rem auto;
+    }
+    
+    aside .sidebar a {
+        margin-left: 1rem;
+    }
+    
+    aside .sidebar a h3 {
+        font-size: 0.8rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        width: 100%;
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+    
+    .navbar-content {
+        padding: 0 1rem;
+    }
+    
+    .menu-toggle {
+        display: block;
+        order: -1;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+    
+    aside {
+        position: fixed;
+        left: -100%;
+        z-index: 999;
+        width: 280px;
+        height: calc(100vh - 70px);
+        top: 70px;
+        background: var(--color-white);
+        transition: left 0.3s ease;
+    }
+    
+    aside.show {
+        left: 0;
+    }
+    
+    .sidebar-content .close {
+        display: block;
+    }
+    
+    main {
+        padding: 1rem;
+        margin-top: 0;
+    }
+    
+    .navbar-left {
+        gap: 0.5rem;
+    }
+    
+    .navbar-right {
+        gap: 1rem;
+    }
+    
+    .dark-mode {
+        width: 3.5rem;
+        height: 1.4rem;
+    }
+    
+    .dark-mode span {
+        font-size: 1rem;
+    }
+    
+    .navbar-brand, .navbar-logo {
+        gap: 0.25rem;
+    }
+    
+    .navbar-brand img, .navbar-logo img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .navbar-brand h2, .navbar-logo h2 {
+        font-size: 1.2rem !important;
+    }
+    
+    .navbar .profile-photo, .navbar-right .profile .profile-photo {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .navbar-brand img, .navbar-logo img {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .navbar-brand h2, .navbar-logo h2 {
+        font-size: 1rem !important;
+    }
+    
+    .navbar .profile-photo, .navbar-right .profile .profile-photo {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .dark-mode {
+        width: 3rem;
+        height: 1.2rem;
+    }
+    
+    .dark-mode span {
+        font-size: 0.9rem;
+    }
+}
+
+/* Dark mode support */
+.dark-mode-variables aside .sidebar {
+    background-color: var(--color-white);
+}
+
+.dark-mode-variables aside .sidebar a {
+    color: var(--color-dark-variant);
+}
+
+.dark-mode-variables aside .sidebar a.active {
+    background-color: var(--color-light);
+    color: var(--color-primary);
+}
+
+.dark-mode-variables .user-welcome {
+    background: linear-gradient(135deg, var(--telkom-red), var(--telkom-dark));
+}
+
+/* Animation for smooth transitions */
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.content-section.active {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Menu toggle button for mobile */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-dark) !important;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--border-radius-1);
+    transition: background-color 0.3s ease;
+}
+
+.menu-toggle:hover {
+    background-color: var(--color-light) !important;
+    color: var(--color-dark) !important;
+}
+
+.menu-toggle .material-icons-sharp {
+    color: var(--color-dark) !important;
+}
+
+/* Loading spinner */
+.spinner-border.text-danger {
+    color: var(--telkom-red) !important;
+}
+
+/* Bootstrap override for better consistency */
+.btn-danger {
+    background-color: var(--telkom-red);
+    border-color: var(--telkom-red);
+}
+
+.btn-danger:hover {
+    background-color: var(--telkom-dark);
+    border-color: var(--telkom-dark);
+}
+
+.btn-outline-danger {
+    color: var(--telkom-red);
+    border-color: var(--telkom-red);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--telkom-red);
+    border-color: var(--telkom-red);
+    color: white;
+}
+
+/* Card enhancements */
+.card {
+    border: 1px solid var(--color-light);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.card-header.bg-danger {
+    background-color: var(--telkom-red) !important;
+    border-bottom: 1px solid var(--telkom-red);
+}
+
+/* Form enhancements */
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--telkom-red);
+    box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--color-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Accordion styling */
+.accordion-button:not(.collapsed) {
+    background-color: var(--telkom-light);
+    color: var(--telkom-red);
+}
+
+.accordion-button:focus {
+    border-color: var(--telkom-red);
+    box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+}
+
+/* Specific styling for user name span */
+.navbar #navbarDropdown .user-name,
+.navbar .nav-link.dropdown-toggle .user-name,
+.user-name {
+  color: var(--color-dark) !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline !important;
+  margin-left: 0.25rem !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Override any inherited text styles */
+.navbar #navbarDropdown .user-name:hover,
+.navbar #navbarDropdown .user-name:focus,
+.navbar #navbarDropdown .user-name:active {
+  color: var(--telkom-red) !important;
+  text-decoration: none !important;
+}
+
+/* Ensure dropdown toggle has proper flex layout for user name */
+.navbar #navbarDropdown {
+  gap: 0.5rem !important;
+}
+
+.navbar #navbarDropdown .material-icons-sharp {
+  flex-shrink: 0 !important;
+}
+
+.navbar #navbarDropdown .user-name {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Force visibility even with inline styles */
+.navbar .user-name[style] {
+  color: var(--color-dark) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Extra safety for user name visibility */
+span.user-name,
+.navbar span.user-name {
+  color: var(--color-dark) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline !important;
+}
+
+/* ========== SIDEBAR TOGGLE & NAVBAR LAYOUT ========== */
+
+/* Navbar layout updates */
+.navbar .container-fluid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    width: 100%;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Show sidebar toggle on desktop */
+@media screen and (min-width: 769px) {
+    .sidebar-toggle {
+        display: block;
+    }
+    
+    .menu-toggle {
+        display: none;
+    }
+}
+
+/* Dark mode toggle */
+.dark-mode, .navbar-right .dark-mode {
+    background-color: var(--color-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 1.6rem;
+    width: 4.2rem;
+    cursor: pointer;
+    border-radius: var(--border-radius-1);
+    padding: 0.2rem;
+    transition: all 0.3s ease;
+}
+
+.dark-mode span, .navbar-right .dark-mode span {
+    font-size: 1.2rem;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-2);
+    transition: all 0.3s ease;
+}
+
+.dark-mode span.active, .navbar-right .dark-mode span.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: var(--border-radius-1);
+}
+
+.dark-mode span:not(.active), .navbar-right .dark-mode span:not(.active) {
+    color: var(--color-info-dark);
+}
+
+/* ========== DROPDOWN NAVBAR USER - FORCE ALWAYS VISIBLE ========== */
+
+/* High-priority styles to override any Bootstrap hiding */
+.navbar .nav-item.dropdown,
+.navbar .nav-item.dropdown .dropdown-toggle,
+.navbar .nav-link.dropdown-toggle#navbarDropdown {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  color: var(--color-dark) !important;
+}
+
+/* Ensure dropdown toggle text and icon are always visible */
+.navbar .nav-link.dropdown-toggle#navbarDropdown * {
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: var(--color-dark) !important;
+}
+
+/* Force user name text to be visible with high specificity */
+.navbar .nav-link.dropdown-toggle#navbarDropdown,
+#navbarDropdown {
+  color: var(--color-dark) !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Ensure all text nodes inside dropdown toggle are visible */
+.navbar #navbarDropdown,
+.navbar #navbarDropdown:hover,
+.navbar #navbarDropdown:focus,
+.navbar #navbarDropdown:active,
+.navbar #navbarDropdown.show {
+  color: var(--color-dark) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force all child text to be dark and visible */
+.navbar #navbarDropdown span:not(.material-icons-sharp) {
+  color: var(--color-dark) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline !important;
+}
+
+/* Hover state for dropdown toggle */
+.navbar #navbarDropdown:hover,
+.navbar #navbarDropdown:focus,
+.navbar #navbarDropdown.show {
+  background-color: var(--color-light) !important;
+  color: var(--telkom-red) !important;
+}
+
+.navbar #navbarDropdown:hover .user-name,
+.navbar #navbarDropdown:focus .user-name,
+.navbar #navbarDropdown.show .user-name {
+  color: var(--telkom-red) !important;
+}
+
+/* Force dropdown menu to be properly positioned and functional */
+.navbar .dropdown-menu#navbarDropdown + .dropdown-menu,
+.navbar ul.dropdown-menu[aria-labelledby="navbarDropdown"] {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  z-index: 1050 !important;
+  background-color: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: var(--border-radius-1) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175) !important;
+  min-width: 220px !important;
+  padding: 0.5rem 0 !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Override any inline styles that might hide elements */
+.navbar .nav-item.dropdown[style*="display: none"] {
+  display: flex !important;
+}
+
+.navbar .dropdown-toggle[style*="display: none"] {
+  display: flex !important;
+}
+
+.navbar .dropdown-toggle[style*="visibility: hidden"] {
+  visibility: visible !important;
+}
+
+.navbar .dropdown-toggle[style*="opacity: 0"] {
+  opacity: 1 !important;
+}
+
+/* Extra specificity for user dropdown */
+.navbar #navbarDropdown {
+  color: white !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--border-radius-1) !important;
+  transition: all 0.3s ease !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+.navbar #navbarDropdown:hover,
+.navbar #navbarDropdown:focus,
+.navbar #navbarDropdown:active,
+.navbar #navbarDropdown.show {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  text-decoration: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force dropdown menu to show when needed */
+.navbar .dropdown.show .dropdown-menu,
+.navbar .dropdown-menu.show,
+.navbar #navbarDropdown.show + .dropdown-menu {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* Prevent any CSS from accidentally hiding the dropdown */
+.navbar .dropdown * {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Additional safety nets */
+.navbar .nav-item.dropdown::before,
+.navbar .nav-item.dropdown::after {
+  display: none !important;
+}
+
+/* Ensure proper stacking order */
+.navbar {
+  z-index: 1030 !important;
+}
+
+.navbar .dropdown-menu {
+  z-index: 1051 !important;
+}
+
+/* ========== END DROPDOWN FORCE VISIBLE ========== */

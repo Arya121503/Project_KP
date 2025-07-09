@@ -1,291 +1,1604 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard User | Telkom Aset</title>
 
-{% block title %}Dashbo                                <button id="selectAssetBtn" class="btn btn-danger" type="button" disabled>
-                                    <i class="fas fa-arrow-right me-2"></i>Pilih Aset
-                                </button> Pengguna - Pendayagunaan Aset{% endblock %}
+  <!-- Google Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet" />
 
-{% block content %}
-<!-- Navigation-->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
-    <div class="container px-4">
-        <a class="navbar-brand" href="#page-top">Pendayagunaan Aset</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- Custom Dashboard CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashUser.css') }}" />
+  
+  <!-- Custom Telkom Color Scheme -->
+  <style>
+    :root {
+      --telkom-red: #DC143C;
+      --telkom-dark: #8B0000;
+      --telkom-light: rgba(220, 20, 60, 0.1);
+      --color-info-dark: #7d8da1;
+      --border-radius-1: 0.4rem;
+    }
+    
+    /* User-specific styling */
+    .user-welcome {
+      background: linear-gradient(135deg, var(--telkom-red), var(--telkom-dark));
+      color: white !important;
+      padding: 1.5rem;
+      border-radius: var(--border-radius-1);
+      margin-bottom: 2rem;
+    }
+    
+    .user-welcome h1,
+    .user-welcome p,
+    .user-welcome * {
+      color: white !important;
+    }
+    
+    .quick-action-card {
+      background: white;
+      border: 2px solid #f1f1f1;
+      transition: all 0.3s ease;
+    }
+    
+    .quick-action-card:hover {
+      border-color: var(--telkom-red);
+      box-shadow: 0 4px 15px rgba(220, 20, 60, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .asset-card {
+      transition: all 0.3s ease;
+    }
+    
+    .asset-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(220, 20, 60, 0.15);
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .text-danger {
+      color: var(--telkom-red) !important;
+    }
+    
+    .btn-outline-danger {
+      border-color: var(--telkom-red);
+      color: var(--telkom-red);
+    }
+    
+    .btn-outline-danger:hover {
+      background-color: var(--telkom-red);
+      border-color: var(--telkom-red);
+    }
+    
+    .bg-danger {
+      background-color: var(--telkom-red) !important;
+    }
+    
+    /* Notification Badge Styling */
+    .notification-badge {
+      position: absolute;
+      top: 8px;
+      right: 15px;
+      background-color: var(--telkom-red);
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .menu-link {
+      position: relative;
+    }
+    
+    .notification-item {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .notification-item:hover {
+      background-color: var(--telkom-light);
+      transform: translateX(5px);
+    }
+    
+    .notification-unread {
+      border-left: 4px solid var(--telkom-red);
+      background-color: #fff8f8;
+    }
+    
+    .notification-type-info {
+      border-color: #17a2b8;
+    }
+    
+    .notification-type-warning {
+      border-color: #ffc107;
+    }
+    
+    .notification-type-success {
+      border-color: #28a745;
+    }
+    
+    .notification-type-danger {
+      border-color: var(--telkom-red);
+    }
+    
+    /* Favorite Badge Styling */
+    .favorite-count-badge {
+      position: absolute;
+      top: 8px;
+      right: 15px;
+      background-color: #e91e63;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .favorite-heart {
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+    }
+    
+    .favorite-heart:hover {
+      color: #e91e63;
+      transform: scale(1.1);
+    }
+    
+    .favorite-heart.favorited {
+      color: #e91e63;
+      animation: heartBeat 0.5s ease;
+    }
+    
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .favorite-item {
+      transition: all 0.3s ease;
+    }
+    
+    .favorite-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <div class="navbar-left">
+        <button class="menu-toggle" id="menu-btn">
+          <span class="material-icons-sharp">menu</span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#aset">Pilih Aset</a></li>
-                <li class="nav-item"><a class="nav-link" href="#layanan">Layanan</a></li>
-                <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="{{ url_for('main.logout_user') }}">
-                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                    </a>
-                </li>
+        <button id="sidebar-toggle" class="sidebar-toggle">
+          <span class="material-icons-sharp">menu_open</span>
+        </button>
+        <div class="navbar-brand">
+          <img src="{{ url_for('static', filename='img/telkomLogo.png') }}" alt="Telkom Logo" />
+          <h2>Telkom<span class="danger"> Aset</span></h2>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="dark-mode">
+          <span class="material-icons-sharp active">light_mode</span>
+          <span class="material-icons-sharp">dark_mode</span>
+        </div>
+        
+        <!-- Notification Bell -->
+        <div class="nav-item position-relative me-3">
+          <button class="btn btn-link text-white p-2 menu-link" data-target="notifikasi-user" style="border: none; background: none;">
+            <span class="material-icons-sharp">notifications</span>
+            <span class="notification-badge" id="navbarNotifBadge" style="display: none;">0</span>
+          </button>
+        </div>
+        
+        <div class="navbar-nav">
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+              <span class="material-icons-sharp">account_circle</span>
+              <span class="user-name">{{ session.get('user_name', 'User') }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}">
+                <i class="fas fa-user-edit me-2"></i>Edit Profil & Password
+              </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.logout_user') }}">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+              </a></li>
             </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- Header-->
-<header class="bg-danger bg-gradient text-white" id="page-top">
-    <div class="container px-4 text-center">
-        <h1 class="fw-bolder">Selamat Datang, {{ session.get('user_name', 'Pengguna') }}!</h1>
-        <p class="lead">Platform terpercaya untuk sewa dan beli aset properti</p>
-        <a class="btn btn-lg btn-light" href="#aset">Mulai Cari Aset!</a>
-    </div>
-</header>
-
-<!-- Asset Selection section-->
-<section id="aset">
-    <div class="container px-4">
-        <div class="row gx-4 justify-content-center">
-            <div class="col-lg-8">
-                <h2>Pilih Jenis Aset</h2>
-                <p class="lead">Silakan pilih jenis aset yang ingin Anda sewa/beli</p>
-                
-                <!-- Asset Dropdown -->
-                <div class="asset-selection-area mb-4">
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <div class="input-group input-group-lg">
-                                <select id="assetTypeSelect" class="form-select">
-                                    <option value="">-- Pilih Jenis Aset --</option>
-                                    <option value="tanah">🌍 Tanah</option>
-                                    <option value="tanah_bangunan">🏢 Tanah & Bangunan</option>
-                                </select>
-                                <button id="selectAssetBtn" class="btn btn-danger" type="button" disabled>
-                                    <i class="fas fa-arrow-right me-2"></i>Lanjutkan
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Asset Info Cards -->
-                <div class="row g-4 mt-3">
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm border-0">
-                            <div class="card-body text-center">
-                                <div class="display-4 text-success mb-3">
-                                    <i class="fas fa-map"></i>
-                                </div>
-                                <h4 class="card-title">Tanah</h4>
-                                <p class="card-text">Sewa atau beli lahan kosong untuk berbagai keperluan bisnis dan investasi</p>
-                                <ul class="list-unstyled text-start">
-                                    <li><i class="fas fa-check text-success me-2"></i>Lahan pertanian dan perkebunan</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Area pengembangan komersial</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Investasi jangka panjang</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Sewa bulanan atau tahunan</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm border-0">
-                            <div class="card-body text-center">
-                                <div class="display-4 text-warning mb-3">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                                <h4 class="card-title">Tanah & Bangunan</h4>
-                                <p class="card-text">Sewa atau beli paket lengkap tanah dengan bangunan siap pakai</p>
-                                <ul class="list-unstyled text-start">
-                                    <li><i class="fas fa-check text-success me-2"></i>Gedung perkantoran dan retail</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Warehouse dan gudang</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Fasilitas produksi</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Kontrak sewa fleksibel</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          </div>
+          
+          <div class="nav-item">
+            <div class="profile-photo">
+              <img src="{{ url_for('static', filename='img/profile.jpg') }}" />
             </div>
+          </div>
         </div>
+      </div>
     </div>
-</section>
+  </nav>
 
-<!-- Services section-->
-<section class="bg-light" id="layanan">
-    <div class="container px-4">
-        <div class="row gx-4 justify-content-center">
-            <div class="col-lg-8">
-                <h2>Layanan Tersedia</h2>
-                <p class="lead">Nikmati berbagai layanan terbaik untuk kebutuhan properti Anda</p>
-                
-                <div class="row g-4 mt-3">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="text-center">
-                            <div class="btn btn-danger btn-lg rounded-circle mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-search fa-2x"></i>
-                            </div>
-                            <h5>Cari Aset</h5>
-                            <p class="small">Temukan aset yang sesuai dengan kebutuhan Anda</p>
-                            <a href="{{ url_for('main.data') }}" class="btn btn-outline-danger btn-sm">Mulai Cari</a>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3">
-                        <div class="text-center">
-                            <div class="btn btn-danger btn-lg rounded-circle mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-chart-bar fa-2x"></i>
-                            </div>
-                            <h5>Harga Pasar</h5>
-                            <p class="small">Lihat trend harga dan analisis pasar properti</p>
-                            <a href="{{ url_for('main.visualization') }}" class="btn btn-outline-danger btn-sm">Lihat Harga</a>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3">
-                        <div class="text-center">
-                            <div class="btn btn-danger btn-lg rounded-circle mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-calculator fa-2x"></i>
-                            </div>
-                            <h5>Kalkulator Sewa</h5>
-                            <p class="small">Hitung estimasi biaya sewa atau investasi</p>
-                            <a href="{{ url_for('main.prediksi_tanah') }}" class="btn btn-outline-danger btn-sm">Kalkulator Sewa</a>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3">
-                        <div class="text-center">
-                            <div class="btn btn-danger btn-lg rounded-circle mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-file-contract fa-2x"></i>
-                            </div>
-                            <h5>Kontrak & Dokumen</h5>
-                            <p class="small">Kelola kontrak dan dokumen properti</p>
-                            <a href="#" class="btn btn-outline-danger btn-sm">Kelola Dokumen</a>
-                        </div>
-                    </div>
-                </div>
+  <div class="container">
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="sidebar-content">
+        <div class="close" id="close-btn">
+          <span class="material-icons-sharp">close</span>
+        </div>
+
+        <div class="sidebar">
+          <a href="#" class="menu-link active" data-target="dashboard-home">
+            <span class="material-icons-sharp">dashboard</span>
+            <h3>Dashboard</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="favorit-aset">
+            <span class="material-icons-sharp">favorite</span>
+            <h3>Favorit</h3>
+            <span class="favorite-count-badge" id="favoriteBadge" style="display: none;">0</span>
+          </a>
+          <a href="#" class="menu-link" data-target="histori-sewa">
+            <span class="material-icons-sharp">history</span>
+            <h3>Histori Sewa</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="notifikasi-user">
+            <span class="material-icons-sharp">notifications</span>
+            <h3>Notifikasi</h3>
+            <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
+          </a>
+          <a href="{{ url_for('main.logout_user') }}">
+            <span class="material-icons-sharp">logout</span>
+            <h3>Logout</h3>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <!-- Dashboard Utama -->
+      <section id="dashboard-home" class="content-section active">
+        <div class="user-welcome">
+          <h1><i class="fas fa-home me-3"></i>Selamat Datang, {{ session.get('user_name', 'User') }}!</h1>
+          <p class="mb-0">Temukan aset properti terbaik untuk disewa. Jelajahi berbagai pilihan tanah dan bangunan yang tersedia dari Telkom untuk kebutuhan bisnis Anda.</p>
+        </div>
+        
+        <!-- Aset Tersedia -->
+        <div class="card mt-4">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-building me-2"></i>Aset Tersedia untuk Disewa
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <select class="form-select form-select-sm" id="filterJenis">
+                  <option value="">Semua Jenis</option>
+                  <option value="tanah">Tanah</option>
+                  <option value="tanah_bangunan">Tanah + Bangunan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-select form-select-sm" id="filterKecamatan">
+                  <option value="">Semua Kecamatan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData()">
+                  <i class="fas fa-search me-1"></i>Cari
+                </button>
+              </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- Contact section-->
-<section id="kontak">
-    <div class="container px-4">
-        <div class="row gx-4 justify-content-center">
-            <div class="col-lg-8">
-                <h2>Bantuan & Dukungan</h2>
-                <p class="lead">Tim kami siap membantu Anda dalam proses sewa atau pembelian aset properti. Hubungi kami untuk konsultasi gratis!</p>
-                
-                <div class="row g-4 mt-3">
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-phone fa-3x text-danger mb-3"></i>
-                        <h5>Telepon</h5>
-                        <p>+62 21 1234 5678</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-envelope fa-3x text-danger mb-3"></i>
-                        <h5>Email</h5>
-                        <p>info@pendayagunaan-aset.co.id</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-clock fa-3x text-danger mb-3"></i>
-                        <h5>Jam Operasional</h5>
-                        <p>Senin - Jumat<br>08:00 - 17:00 WIB</p>
-                    </div>
+            
+            <div id="asetContainer" class="row g-3">
+              <div class="col-12 text-center">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
                 </div>
+                <p class="mt-2 text-muted">Memuat data aset...</p>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-</section>
+      </section>
 
-<!-- Footer-->
-<footer class="py-5 bg-dark">
-    <div class="container px-4">
-        <p class="m-0 text-center text-white">Copyright &copy; Sistem Pendayagunaan Aset 2025 - {{ session.get('user_name', 'Pengguna') }}</p>
-    </div>
-</footer>
+      <!-- Favorit Aset -->
+      <section id="favorit-aset" class="content-section">
+        <div class="user-welcome">
+          <h1><i class="fas fa-heart me-3"></i>Aset Favorit</h1>
+          <p class="mb-0">Koleksi aset properti pilihan Anda. Simpan aset yang menarik untuk disewa di kemudian hari.</p>
+        </div>
+        
+        <!-- Filter & Actions -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filter Favorit
+              </h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-light" onclick="clearAllFavorites()" title="Hapus Semua Favorit">
+                  <i class="fas fa-trash me-1"></i>Hapus Semua
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Jenis Aset</label>
+                <select class="form-select form-select-sm" id="filterJenisFavorit">
+                  <option value="">Semua Jenis</option>
+                  <option value="tanah">Tanah</option>
+                  <option value="tanah_bangunan">Tanah + Bangunan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Kecamatan</label>
+                <select class="form-select form-select-sm" id="filterKecamatanFavorit">
+                  <option value="">Semua Kecamatan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadFavoritData()">
+                  <i class="fas fa-search me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Favorit List -->
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-heart me-2"></i>Daftar Aset Favorit
+              <span class="badge bg-light text-dark ms-2" id="favoritCount">0</span>
+            </h5>
+          </div>
+          <div class="card-body">
+            <div id="favoritContainer" class="row g-3">
+              <div class="col-12 text-center">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Memuat favorit...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-<!-- Asset Selection Modal -->
-<div class="modal fade" id="assetModal" tabindex="-1" aria-labelledby="assetModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="assetModalLabel">Konfirmasi Pilihan Aset</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <!-- Histori Sewa -->
+      <section id="histori-sewa" class="content-section">
+        <div class="user-welcome">
+          <h1><i class="fas fa-history me-3"></i>Histori Sewa Aset</h1>
+          <p class="mb-0">Lihat riwayat aset yang pernah Anda sewa dari Telkom. Kelola dan lacak semua transaksi sewa Anda.</p>
+        </div>
+        
+        <!-- Filter Histori -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-filter me-2"></i>Filter Histori
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Status Sewa</label>
+                <select class="form-select form-select-sm" id="filterStatusHistori">
+                  <option value="">Semua Status</option>
+                  <option value="aktif">Sedang Aktif</option>
+                  <option value="berakhir">Berakhir</option>
+                  <option value="dibatalkan">Dibatalkan</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Jenis Aset</label>
+                <select class="form-select form-select-sm" id="filterJenisHistori">
+                  <option value="">Semua Jenis</option>
+                  <option value="tanah">Tanah</option>
+                  <option value="tanah_bangunan">Tanah + Bangunan</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Periode</label>
+                <select class="form-select form-select-sm" id="filterPeriode">
+                  <option value="">Semua Periode</option>
+                  <option value="6bulan">6 Bulan Terakhir</option>
+                  <option value="1tahun">1 Tahun Terakhir</option>
+                  <option value="semua">Semua Waktu</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadHistoriData()">
+                  <i class="fas fa-search me-1"></i>Cari
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tabel Histori -->
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-list me-2"></i>Daftar Histori Sewa
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>No</th>
+                    <th>Aset</th>
+                    <th>Jenis</th>
+                    <th>Periode Sewa</th>
+                    <th>Harga/Bulan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="historiSewaTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center py-4">
+                      <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <p class="mt-2 mb-0 text-muted">Memuat data histori sewa...</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifikasi User -->
+      <section id="notifikasi-user" class="content-section">
+        <div class="user-welcome">
+          <h1><i class="fas fa-bell me-3"></i>Notifikasi</h1>
+          <p class="mb-0">Dapatkan informasi terbaru tentang sewa aset, pembayaran, dan pembaruan sistem.</p>
+        </div>
+        
+        <!-- Filter & Actions -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filter Notifikasi
+              </h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-light" onclick="markAllAsRead()" title="Tandai Semua Telah Dibaca">
+                  <i class="fas fa-check-double me-1"></i>Tandai Dibaca
+                </button>
+                <button class="btn btn-light" onclick="clearAllNotifications()" title="Hapus Semua Notifikasi">
+                  <i class="fas fa-trash me-1"></i>Hapus Semua
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Jenis Notifikasi</label>
+                <select class="form-select form-select-sm" id="filterJenisNotif">
+                  <option value="">Semua Jenis</option>
+                  <option value="kontrak">Kontrak Sewa</option>
+                  <option value="pembayaran">Pembayaran</option>
+                  <option value="sistem">Sistem</option>
+                  <option value="promo">Promo & Info</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select form-select-sm" id="filterStatusNotif">
+                  <option value="">Semua Status</option>
+                  <option value="unread">Belum Dibaca</option>
+                  <option value="read">Sudah Dibaca</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Periode</label>
+                <select class="form-select form-select-sm" id="filterPeriodeNotif">
+                  <option value="">Semua Waktu</option>
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                  <option value="month">Bulan Ini</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadNotifikasiData()">
+                  <i class="fas fa-search me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notifikasi List -->
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-list me-2"></i>Daftar Notifikasi
+              <span class="badge bg-light text-dark ms-2" id="notifCount">0</span>
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div id="notifikasiContainer">
+              <div class="text-center py-4">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0 text-muted">Memuat notifikasi...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Custom Dashboard JS -->
+  <script src="{{ url_for('static', filename='js/dashUser.js') }}"></script>
+  
+  <!-- User Dashboard Specific JS -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load aset data on page load
+    loadAsetData();
+    loadKecamatanOptions();
+    
+    // Handle menu navigation
+    setupMenuNavigation();
+  });
+
+  // Setup menu navigation
+  function setupMenuNavigation() {
+    const menuLinks = document.querySelectorAll('.menu-link');
+    const sections = document.querySelectorAll('.content-section');
+    
+    menuLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('data-target');
+        if (!targetId) return;
+        
+        // Remove active class from all menu links and sections
+        menuLinks.forEach(ml => ml.classList.remove('active'));
+        sections.forEach(section => section.classList.remove('active'));
+        
+        // Add active class to clicked menu and target section
+        this.classList.add('active');
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+          targetSection.classList.add('active');
+          
+          // Load data for specific sections
+          if (targetId === 'histori-sewa') {
+            loadHistoriData();
+          } else if (targetId === 'notifikasi-user') {
+            loadNotifikasiData();
+          } else if (targetId === 'favorit-aset') {
+            loadFavoritData();
+            loadKecamatanOptions(); // For filter
+          }
+        }
+      });
+    });
+  }
+
+  async function loadAsetData() {
+    try {
+      const filterJenis = document.getElementById('filterJenis').value;
+      const filterKecamatan = document.getElementById('filterKecamatan').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      
+      const response = await fetch(`/api/aset-tersedia?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayAsetData(data.data);
+      } else {
+        showError('Gagal memuat data aset');
+      }
+    } catch (error) {
+      console.error('Error loading aset data:', error);
+      showError('Terjadi kesalahan saat memuat data');
+    }
+  }
+
+  async function loadKecamatanOptions() {
+    try {
+      const response = await fetch('/api/kecamatan-list');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update main dashboard filter
+        const select = document.getElementById('filterKecamatan');
+        if (select) {
+          select.innerHTML = '<option value="">Semua Kecamatan</option>';
+          data.data.forEach(kecamatan => {
+            select.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
+          });
+        }
+        
+        // Update favorit filter
+        const favoritSelect = document.getElementById('filterKecamatanFavorit');
+        if (favoritSelect) {
+          favoritSelect.innerHTML = '<option value="">Semua Kecamatan</option>';
+          data.data.forEach(kecamatan => {
+            favoritSelect.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading kecamatan options:', error);
+    }
+  }
+
+  function displayAsetData(asetList) {
+    const container = document.getElementById('asetContainer');
+    
+    if (asetList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Tidak ada aset yang tersedia saat ini
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    asetList.forEach(aset => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card asset-card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    ${aset.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart" 
+                     onclick="toggleFavorite(${aset.id}, this)" 
+                     title="Tambah ke Favorit"
+                     data-aset-id="${aset.id}"></i>
+                </div>
+              </div>
+              
+              <h6 class="card-title text-truncate">${aset.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${aset.kecamatan || 'Kecamatan tidak tersedia'}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${aset.luas_tanah || 0} m²</strong>
+                </div>
+                ${aset.jenis === 'tanah_bangunan' ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${aset.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(aset.harga_sewa || 0)}/bulan
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="showAsetDetail(${aset.id})">
+                  <i class="fas fa-eye me-1"></i>Lihat Detail
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function showAsetDetail(id) {
+    // Create modal for showing asset detail
+    fetch(`/api/aset-detail/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showDetailModal(data.data);
+        } else {
+          alert('Gagal memuat detail aset: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memuat detail aset');
+      });
+  }
+
+  function showDetailModal(aset) {
+    const modalHTML = `
+      <div class="modal fade" id="asetDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">
+                <i class="fas fa-${aset.jenis === 'tanah' ? 'map-marked-alt' : 'building'} me-2"></i>
+                Detail ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Anda memilih jenis aset: <strong id="selectedAssetType"></strong></p>
-                <p>Sistem akan menampilkan data dan fitur yang sesuai dengan jenis aset ini.</p>
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="text-danger">Informasi Lokasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Alamat:</strong></td><td>${aset.alamat}</td></tr>
+                    <tr><td><strong>Kecamatan:</strong></td><td>${aset.kecamatan}</td></tr>
+                    <tr><td><strong>Kelurahan:</strong></td><td>${aset.kelurahan}</td></tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h6 class="text-danger">Spesifikasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Luas Tanah:</strong></td><td>${aset.luas_tanah} m²</td></tr>
+                    ${aset.luas_bangunan ? `<tr><td><strong>Luas Bangunan:</strong></td><td>${aset.luas_bangunan} m²</td></tr>` : ''}
+                    ${aset.kamar_tidur ? `<tr><td><strong>Kamar Tidur:</strong></td><td>${aset.kamar_tidur}</td></tr>` : ''}
+                    ${aset.kamar_mandi ? `<tr><td><strong>Kamar Mandi:</strong></td><td>${aset.kamar_mandi}</td></tr>` : ''}
+                    ${aset.jumlah_lantai ? `<tr><td><strong>Jumlah Lantai:</strong></td><td>${aset.jumlah_lantai}</td></tr>` : ''}
+                  </table>
+                </div>
+              </div>
+              
+              <div class="row mt-3">
+                <div class="col-12">
+                  <h6 class="text-danger">Informasi Harga</h6>
+                  <div class="card bg-light">
+                    <div class="card-body text-center">
+                      <h4 class="text-danger mb-2">Rp ${formatCurrency(aset.harga_sewa)}/bulan</h4>
+                      <small class="text-muted">
+                        Estimasi berdasarkan nilai properti: Rp ${formatCurrency(aset.harga_prediksi)}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" id="confirmAssetBtn">Konfirmasi</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+              <button type="button" class="btn btn-danger" onclick="contactAdmin('${aset.id}')">
+                <i class="fas fa-phone me-1"></i>Hubungi Admin
+              </button>
             </div>
+          </div>
         </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const assetSelect = document.getElementById('assetTypeSelect');
-    const selectBtn = document.getElementById('selectAssetBtn');
-    const modal = new bootstrap.Modal(document.getElementById('assetModal'));
-    const selectedAssetType = document.getElementById('selectedAssetType');
-    const confirmBtn = document.getElementById('confirmAssetBtn');
+      </div>
+    `;
     
-    // Activate Bootstrap scrollspy on the main nav element
-    const mainNav = document.body.querySelector('#mainNav');
-    if (mainNav) {
-        new bootstrap.ScrollSpy(document.body, {
-            target: '#mainNav',
-            rootMargin: '0px 0px -40%',
-        });
+    // Remove existing modal if any
+    const existingModal = document.getElementById('asetDetailModal');
+    if (existingModal) {
+      existingModal.remove();
     }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('asetDetailModal'));
+    modal.show();
+  }
 
-    // Collapse responsive navbar when toggler is visible
-    const navbarToggler = document.body.querySelector('.navbar-toggler');
-    const responsiveNavItems = [].slice.call(
-        document.querySelectorAll('#navbarResponsive .nav-link')
-    );
-    responsiveNavItems.map(function (responsiveNavItem) {
-        responsiveNavItem.addEventListener('click', () => {
-            if (window.getComputedStyle(navbarToggler).display !== 'none') {
-                navbarToggler.click();
-            }
-        });
+  function contactAdmin(asetId) {
+    alert(`Menghubungi admin untuk aset ${asetId}.\n\nAnda akan diarahkan ke halaman kontak atau form inquiry.`);
+    // Di sini bisa diarahkan ke halaman kontak atau membuka form inquiry
+  }
+
+  function formatCurrency(number) {
+    return new Intl.NumberFormat('id-ID').format(number);
+  }
+
+  function showError(message) {
+    const container = document.getElementById('asetContainer');
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  // ===== HISTORI SEWA FUNCTIONS =====
+
+  async function loadHistoriData() {
+    try {
+      const filterStatus = document.getElementById('filterStatusHistori').value;
+      const filterJenis = document.getElementById('filterJenisHistori').value;
+      const filterPeriode = document.getElementById('filterPeriode').value;
+      
+      const params = new URLSearchParams();
+      if (filterStatus) params.append('status', filterStatus);
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterPeriode) params.append('periode', filterPeriode);
+      
+      const response = await fetch(`/api/histori-sewa?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayHistoriData(data.data);
+      } else {
+        showHistoriError('Gagal memuat data histori sewa');
+      }
+    } catch (error) {
+      console.error('Error loading histori data:', error);
+      showHistoriError('Terjadi kesalahan saat memuat data');
+    }
+  }
+
+  function displayHistoriData(historiList) {
+    const tbody = document.getElementById('historiSewaTableBody');
+    
+    if (historiList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <i class="fas fa-info-circle text-muted mb-2" style="font-size: 2rem;"></i>
+            <p class="text-muted mb-0">Belum ada histori sewa</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    let html = '';
+    historiList.forEach((item, index) => {
+      const statusBadge = getStatusHistoriBadge(item.status);
+      const jenisBadge = item.jenis_aset === 'tanah' ? 
+        '<span class="badge bg-success">Tanah</span>' : 
+        '<span class="badge bg-primary">Tanah + Bangunan</span>';
+      
+      html += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>
+            <div class="fw-semibold">${item.alamat.substring(0, 30)}${item.alamat.length > 30 ? '...' : ''}</div>
+            <small class="text-muted">${item.kecamatan}</small>
+          </td>
+          <td>${jenisBadge}</td>
+          <td>
+            <div><strong>Mulai:</strong> ${formatDate(item.tanggal_mulai)}</div>
+            <div><strong>Berakhir:</strong> ${formatDate(item.tanggal_berakhir)}</div>
+          </td>
+          <td class="fw-semibold text-success">Rp ${formatCurrency(item.harga_sewa)}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-info" onclick="viewHistoriDetail(${item.id})" title="Lihat Detail">
+                <i class="fas fa-eye"></i>
+              </button>
+              ${item.status === 'aktif' ? 
+                `<button class="btn btn-outline-warning" onclick="extendContract(${item.id})" title="Perpanjang">
+                  <i class="fas fa-calendar-plus"></i>
+                </button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
     });
     
-    // Enable/disable button based on selection
-    assetSelect.addEventListener('change', function() {
-        if (this.value) {
-            selectBtn.disabled = false;
-            selectBtn.classList.add('btn-danger');
-            selectBtn.classList.remove('btn-secondary');
+    tbody.innerHTML = html;
+  }
+
+  function getStatusHistoriBadge(status) {
+    const badges = {
+      'aktif': '<span class="badge bg-success">Aktif</span>',
+      'berakhir': '<span class="badge bg-warning text-dark">Berakhir</span>',
+      'dibatalkan': '<span class="badge bg-danger">Dibatalkan</span>'
+    };
+    return badges[status] || '<span class="badge bg-light text-dark">Unknown</span>';
+  }
+
+  function showHistoriError(message) {
+    const tbody = document.getElementById('historiSewaTableBody');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-4">
+          <div class="alert alert-danger mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  function viewHistoriDetail(id) {
+    // Simulate detail view for now
+    alert(`Melihat detail histori sewa dengan ID: ${id}\n\nFitur ini akan menampilkan detail kontrak, dokumen sewa, dan riwayat pembayaran.`);
+    // TODO: Implement actual detail modal
+  }
+
+  function extendContract(id) {
+    if (confirm('Apakah Anda ingin memperpanjang kontrak sewa ini?')) {
+      alert(`Memproses perpanjangan kontrak untuk ID: ${id}\n\nAnda akan diarahkan ke form perpanjangan kontrak.`);
+      // TODO: Implement contract extension
+    }
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  }
+
+  // ===== NOTIFIKASI FUNCTIONS =====
+
+  async function loadNotifikasiData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisNotif').value;
+      const filterStatus = document.getElementById('filterStatusNotif').value;
+      const filterPeriode = document.getElementById('filterPeriodeNotif').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterStatus) params.append('status', filterStatus);
+      if (filterPeriode) params.append('periode', filterPeriode);
+      
+      const response = await fetch(`/api/notifikasi-user?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayNotifikasiData(data.data);
+        updateNotifBadge(data.unread_count || 0);
+      } else {
+        showNotifikasiError('Gagal memuat notifikasi');
+      }
+    } catch (error) {
+      console.error('Error loading notifikasi:', error);
+      showNotifikasiError('Terjadi kesalahan saat memuat notifikasi');
+    }
+  }
+
+  function displayNotifikasiData(notifList) {
+    const container = document.getElementById('notifikasiContainer');
+    const countElement = document.getElementById('notifCount');
+    
+    countElement.textContent = notifList.length;
+    
+    if (notifList.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Tidak ada notifikasi</h5>
+          <p class="text-muted">Anda akan menerima notifikasi terbaru di sini</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    notifList.forEach(notif => {
+      const iconClass = getNotifIcon(notif.jenis);
+      const typeClass = getNotifTypeClass(notif.jenis);
+      const timeAgo = getTimeAgo(notif.created_at);
+      
+      html += `
+        <div class="notification-item p-3 border-bottom ${notif.is_read ? '' : 'notification-unread'} ${typeClass}" 
+             onclick="markAsRead(${notif.id})" data-id="${notif.id}">
+          <div class="d-flex">
+            <div class="me-3">
+              <div class="rounded-circle bg-light p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                <i class="${iconClass} text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <h6 class="mb-0 fw-semibold">${notif.judul}</h6>
+                <div class="d-flex align-items-center">
+                  ${!notif.is_read ? '<span class="badge bg-danger rounded-pill me-2">Baru</span>' : ''}
+                  <small class="text-muted">${timeAgo}</small>
+                </div>
+              </div>
+              <p class="mb-1 text-muted">${notif.pesan}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-light text-dark">${getJenisLabel(notif.jenis)}</span>
+                ${notif.action_url ? `
+                  <button class="btn btn-sm btn-outline-danger" onclick="handleNotifAction('${notif.action_url}', event)">
+                    <i class="fas fa-external-link-alt me-1"></i>Lihat Detail
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function getNotifIcon(jenis) {
+    const icons = {
+      'kontrak': 'fas fa-file-contract',
+      'pembayaran': 'fas fa-credit-card',
+      'sistem': 'fas fa-cog',
+      'promo': 'fas fa-gift'
+    };
+    return icons[jenis] || 'fas fa-bell';
+  }
+
+  function getNotifTypeClass(jenis) {
+    const classes = {
+      'kontrak': 'notification-type-info',
+      'pembayaran': 'notification-type-warning',
+      'sistem': 'notification-type-danger',
+      'promo': 'notification-type-success'
+    };
+    return classes[jenis] || '';
+  }
+
+  function getJenisLabel(jenis) {
+    const labels = {
+      'kontrak': 'Kontrak Sewa',
+      'pembayaran': 'Pembayaran',
+      'sistem': 'Sistem',
+      'promo': 'Promo & Info'
+    };
+    return labels[jenis] || jenis;
+  }
+
+  function getTimeAgo(dateString) {
+    if (!dateString) return '';
+    
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  function updateNotifBadge(count) {
+    const sidebarBadge = document.getElementById('notifBadge');
+    const navbarBadge = document.getElementById('navbarNotifBadge');
+    
+    if (count > 0) {
+      const displayCount = count > 99 ? '99+' : count;
+      if (sidebarBadge) {
+        sidebarBadge.textContent = displayCount;
+        sidebarBadge.style.display = 'flex';
+      }
+      if (navbarBadge) {
+        navbarBadge.textContent = displayCount;
+        navbarBadge.style.display = 'flex';
+      }
+    } else {
+      if (sidebarBadge) sidebarBadge.style.display = 'none';
+      if (navbarBadge) navbarBadge.style.display = 'none';
+    }
+  }
+
+  async function markAsRead(notifId) {
+    try {
+      const response = await fetch(`/api/notifikasi-mark-read/${notifId}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update UI
+        const notifElement = document.querySelector(`[data-id="${notifId}"]`);
+        if (notifElement) {
+          notifElement.classList.remove('notification-unread');
+          const badge = notifElement.querySelector('.badge.bg-danger');
+          if (badge) badge.remove();
+        }
+        
+        // Update badge count
+        loadNotifikasiData();
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }
+
+  async function markAllAsRead() {
+    try {
+      const response = await fetch('/api/notifikasi-mark-all-read', {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah ditandai sebagai dibaca');
+      } else {
+        showNotifError('Gagal menandai notifikasi');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllNotifications() {
+    if (!confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) return;
+    
+    try {
+      const response = await fetch('/api/notifikasi-clear-all', {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah dihapus');
+      } else {
+        showNotifError('Gagal menghapus notifikasi');
+      }
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  function handleNotifAction(actionUrl, event) {
+    event.stopPropagation();
+    if (actionUrl.startsWith('http')) {
+      window.open(actionUrl, '_blank');
+    } else {
+      window.location.href = actionUrl;
+    }
+  }
+
+  function showNotifikasiError(message) {
+    const container = document.getElementById('notifikasiContainer');
+    container.innerHTML = `
+      <div class="text-center py-4">
+        <div class="alert alert-danger mb-0">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  function showNotifSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-check me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  function showNotifError(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // Load notifikasi count on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load initial notification count
+    setTimeout(() => {
+      loadNotifikasiData();
+      loadFavoriteStatus(); // Load favorite status for current aset
+      loadFavoritCount(); // Load favorite count for badge
+    }, 1000);
+  });
+
+  // ===== FAVORIT FUNCTIONS =====
+
+  async function loadFavoritData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisFavorit').value;
+      const filterKecamatan = document.getElementById('filterKecamatanFavorit').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      
+      const response = await fetch(`/api/favorit-aset?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayFavoritData(data.data);
+        updateFavoritBadge(data.total || 0);
+      } else {
+        showFavoritError('Gagal memuat favorit');
+      }
+    } catch (error) {
+      console.error('Error loading favorit:', error);
+      showFavoritError('Terjadi kesalahan saat memuat favorit');
+    }
+  }
+
+  function displayFavoritData(favoritList) {
+    const container = document.getElementById('favoritContainer');
+    const countElement = document.getElementById('favoritCount');
+    
+    countElement.textContent = favoritList.length;
+    
+    if (favoritList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-heart-broken text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada aset favorit</h5>
+          <p class="text-muted">Klik icon ❤️ pada aset yang Anda sukai untuk menambahkannya ke favorit</p>
+          <a href="#" class="btn btn-outline-danger menu-link" data-target="dashboard-home">
+            <i class="fas fa-search me-2"></i>Jelajahi Aset
+          </a>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    favoritList.forEach(favorit => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card favorite-item h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${favorit.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${favorit.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    ${favorit.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart favorited" 
+                     onclick="removeFavorite(${favorit.aset_id}, this)" 
+                     title="Hapus dari Favorit"
+                     data-aset-id="${favorit.aset_id}"></i>
+                </div>
+              </div>
+              
+              <h6 class="card-title text-truncate">${favorit.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${favorit.kecamatan || 'Kecamatan tidak tersedia'}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${favorit.luas_tanah || 0} m²</strong>
+                </div>
+                ${favorit.jenis === 'tanah_bangunan' ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${favorit.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              ${favorit.catatan ? `
+              <div class="mb-3">
+                <small class="text-muted d-block">Catatan:</small>
+                <p class="small text-secondary mb-0">${favorit.catatan}</p>
+              </div>` : ''}
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(favorit.harga_sewa || 0)}/bulan
+                </div>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-danger" onclick="showAsetDetail(${favorit.aset_id})">
+                    <i class="fas fa-eye me-1"></i>Detail
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="editFavoriteNote(${favorit.id}, '${favorit.catatan || ''}')">
+                    <i class="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="fas fa-calendar me-1"></i>
+                  Ditambahkan ${getTimeAgo(favorit.created_at)}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async function toggleFavorite(asetId, element) {
+    try {
+      const isFavorited = element.classList.contains('favorited');
+      const action = isFavorited ? 'remove' : 'add';
+      
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: action
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        if (action === 'add') {
+          element.classList.add('favorited');
+          element.title = 'Hapus dari Favorit';
+          showFavoritSuccess('Aset ditambahkan ke favorit');
         } else {
-            selectBtn.disabled = true;
-            selectBtn.classList.add('btn-secondary');
-            selectBtn.classList.remove('btn-danger');
+          element.classList.remove('favorited');
+          element.title = 'Tambah ke Favorit';
+          showFavoritSuccess('Aset dihapus dari favorit');
         }
-    });
+        loadFavoritCount(); // Update badge
+      } else {
+        showFavoritError(data.error || 'Gagal mengubah status favorit');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function removeFavorite(asetId, element) {
+    if (!confirm('Hapus aset ini dari favorit?')) return;
     
-    // Show modal when button clicked
-    selectBtn.addEventListener('click', function() {
-        const selected = assetSelect.options[assetSelect.selectedIndex].text;
-        selectedAssetType.textContent = selected;
-        modal.show();
-    });
+    try {
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: 'remove'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Aset dihapus dari favorit');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function editFavoriteNote(favoritId, currentNote) {
+    const newNote = prompt('Edit catatan untuk aset favorit ini:', currentNote);
+    if (newNote === null) return; // User canceled
     
-    // Handle confirmation
-    confirmBtn.addEventListener('click', function() {
-        const assetType = assetSelect.value;
-        // Redirect to specific pages based on asset type
-        switch(assetType) {
-            case 'tanah':
-                window.location.href = '{{ url_for("main.data") }}?type=tanah';
-                break;
-            case 'tanah_bangunan':
-                window.location.href = '{{ url_for("main.data") }}?type=tanah_bangunan';
-                break;
-            default:
-                window.location.href = '{{ url_for("main.data") }}';
-        }
-        modal.hide();
-    });
-});
-</script>
-{% endblock %}
+    try {
+      const response = await fetch(`/api/favorit-note/${favoritId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          catatan: newNote
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Catatan berhasil diperbarui');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal memperbarui catatan');
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllFavorites() {
+    if (!confirm('Hapus semua aset favorit? Tindakan ini tidak dapat dibatalkan.')) return;
+    
+    try {
+      const response = await fetch('/api/favorit-clear-all', {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Semua favorit telah dihapus');
+        loadFavoritData();
+        loadFavoriteStatus(); // Update heart icons in main dashboard
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error clearing favorites:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function loadFavoriteStatus() {
+    // Load favorite status for aset displayed in main dashboard
+    try {
+      const response = await fetch('/api/favorit-status');
+      const data = await response.json();
+      
+      if (data.success) {
+        const favoritedIds = data.favorited_ids || [];
+        
+        // Update heart icons
+        document.querySelectorAll('.favorite-heart').forEach(heart => {
+          const asetId = parseInt(heart.getAttribute('data-aset-id'));
+          if (favoritedIds.includes(asetId)) {
+            heart.classList.add('favorited');
+            heart.title = 'Hapus dari Favorit';
+          } else {
+            heart.classList.remove('favorited');
+            heart.title = 'Tambah ke Favorit';
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading favorite status:', error);
+    }
+  }
+
+  async function loadFavoritCount() {
+    try {
+      const response = await fetch('/api/favorit-count');
+      const data = await response.json();
+      
+      if (data.success) {
+        updateFavoritBadge(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading favorit count:', error);
+    }
+  }
+
+  function updateFavoritBadge(count) {
+    const badge = document.getElementById('favoriteBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function showFavoritError(message) {
+    const container = document.getElementById('favoritContainer');
+    if (container) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function showFavoritSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-heart me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+  </script>
+</body>
+</html>
