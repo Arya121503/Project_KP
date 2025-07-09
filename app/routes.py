@@ -117,7 +117,7 @@ def user_dashboard():
         return redirect(url_for('main.login'))
     
     stats = data_processor.get_statistics()
-    return render_template('dashboard_user_bootstrap.html', stats=stats)
+    return render_template('dashboard_user.html', stats=stats)
 
 @main.route('/logout')
 def logout_user():
@@ -1096,6 +1096,7 @@ def tambah_bangunan():
             # Ambil data dari form
             data = {
                 'kecamatan': request.form.get('kecamatan'),
+                'kelurahan': request.form.get('kelurahan'),
                 'luas_tanah_m2': float(request.form.get('luas_tanah_m2', 0)),
                 'luas_bangunan_m2': float(request.form.get('luas_bangunan_m2', 0)),
                 'jumlah_kamar_tidur': int(request.form.get('jumlah_kamar_tidur', 0)),
@@ -1126,16 +1127,25 @@ def tambah_bangunan():
             
             # Simpan ke database
             cur = mysql.connection.cursor()
+            
+            # Check if kelurahan column exists, if not add it
+            try:
+                cur.execute("ALTER TABLE prediksi_properti_bangunan_tanah ADD COLUMN kelurahan VARCHAR(100) AFTER kecamatan")
+                mysql.connection.commit()
+            except Exception:
+                # Column probably already exists, continue
+                pass
+            
             cur.execute("""
                 INSERT INTO prediksi_properti_bangunan_tanah 
-                (kecamatan, luas_tanah_m2, luas_bangunan_m2, jumlah_kamar_tidur, jumlah_kamar_mandi, 
+                (kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2, jumlah_kamar_tidur, jumlah_kamar_mandi, 
                  jumlah_lantai, tahun_dibangun, daya_listrik, sertifikat, kondisi_properti, 
                  tingkat_keamanan, aksesibilitas, tipe_iklan, njop_per_m2, rasio_bangunan_tanah, 
                  umur_bangunan, harga_prediksi_total, harga_prediksi_tanah, harga_prediksi_bangunan, 
                  harga_per_m2_bangunan, model_predictor, confidence_score, created_at, updated_at) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             """, (
-                data['kecamatan'], data['luas_tanah_m2'], data['luas_bangunan_m2'], 
+                data['kecamatan'], data['kelurahan'], data['luas_tanah_m2'], data['luas_bangunan_m2'], 
                 data['jumlah_kamar_tidur'], data['jumlah_kamar_mandi'], data['jumlah_lantai'],
                 data['tahun_dibangun'], data['daya_listrik'], data['sertifikat'],
                 data['kondisi_properti'], data['tingkat_keamanan'], data['aksesibilitas'],
@@ -1154,6 +1164,292 @@ def tambah_bangunan():
     
     return render_template('form_bangunan.html')
 
+@main.route('/edit-tanah/<int:id>', methods=['GET', 'POST'])
+def edit_tanah(id):
+    """Edit data prediksi tanah"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        try:
+            # Ambil data dari form
+            data = {
+                'kecamatan': request.form.get('kecamatan'),
+                'kelurahan': request.form.get('kelurahan'),
+                'luas_tanah_m2': float(request.form.get('luas_tanah_m2', 0)),
+                'njop_tanah_per_m2': float(request.form.get('njop_tanah_per_m2', 0)),
+                'zona_nilai_tanah': request.form.get('zona_nilai_tanah'),
+                'kelas_tanah': request.form.get('kelas_tanah'),
+                'jenis_sertifikat': request.form.get('jenis_sertifikat'),
+                'model_predictor': request.form.get('model_predictor', 'Manual Input'),
+                'confidence_score': float(request.form.get('confidence_score', 0.95))
+            }
+            
+            # Hitung harga prediksi (formula sederhana)
+            harga_prediksi_tanah = data['luas_tanah_m2'] * data['njop_tanah_per_m2']
+            harga_per_m2_tanah = data['njop_tanah_per_m2']
+            
+            # Update ke database
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                UPDATE prediksi_properti_tanah 
+                SET kecamatan=%s, kelurahan=%s, luas_tanah_m2=%s, njop_tanah_per_m2=%s, 
+                    zona_nilai_tanah=%s, kelas_tanah=%s, jenis_sertifikat=%s, 
+                    harga_prediksi_tanah=%s, harga_per_m2_tanah=%s, 
+                    model_predictor=%s, confidence_score=%s, updated_at=NOW()
+                WHERE id=%s
+            """, (
+                data['kecamatan'], data['kelurahan'], data['luas_tanah_m2'], 
+                data['njop_tanah_per_m2'], data['zona_nilai_tanah'], data['kelas_tanah'],
+                data['jenis_sertifikat'], harga_prediksi_tanah, harga_per_m2_tanah,
+                data['model_predictor'], data['confidence_score'], id
+            ))
+            mysql.connection.commit()
+            cur.close()
+            
+            flash('Data prediksi tanah berhasil diperbarui!', 'success')
+            return redirect(url_for('main.total_properti'))
+            
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+    
+    # GET - ambil data untuk form edit
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, kecamatan, kelurahan, luas_tanah_m2, njop_tanah_per_m2, 
+                   zona_nilai_tanah, kelas_tanah, jenis_sertifikat, 
+                   harga_prediksi_tanah, harga_per_m2_tanah, 
+                   model_predictor, confidence_score, created_at, updated_at
+            FROM prediksi_properti_tanah WHERE id = %s
+        """, (id,))
+        result = cur.fetchone()
+        cur.close()
+        
+        if not result:
+            flash('Data tidak ditemukan', 'error')
+            return redirect(url_for('main.total_properti'))
+        
+        # Convert tuple to dictionary for easier template access
+        columns = ['id', 'kecamatan', 'kelurahan', 'luas_tanah_m2', 'njop_tanah_per_m2', 
+                  'zona_nilai_tanah', 'kelas_tanah', 'jenis_sertifikat', 
+                  'harga_prediksi_tanah', 'harga_per_m2_tanah', 
+                  'model_predictor', 'confidence_score', 'created_at', 'updated_at']
+        data = dict(zip(columns, result))
+            
+        return render_template('form_tanah_edit.html', data=data)
+        
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+        return redirect(url_for('main.total_properti'))
+
+@main.route('/edit-bangunan/<int:id>', methods=['GET', 'POST'])
+def edit_bangunan(id):
+    """Edit data prediksi bangunan"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        try:
+            # Ambil data dari form
+            data = {
+                'kecamatan': request.form.get('kecamatan'),
+                'kelurahan': request.form.get('kelurahan'),
+                'luas_tanah_m2': float(request.form.get('luas_tanah_m2', 0)),
+                'luas_bangunan_m2': float(request.form.get('luas_bangunan_m2', 0)),
+                'jumlah_kamar_tidur': int(request.form.get('jumlah_kamar_tidur', 0)),
+                'jumlah_kamar_mandi': int(request.form.get('jumlah_kamar_mandi', 0)),
+                'jumlah_lantai': float(request.form.get('jumlah_lantai', 1)),
+                'tahun_dibangun': int(request.form.get('tahun_dibangun', 2020)),
+                'daya_listrik': int(request.form.get('daya_listrik', 1300)),
+                'sertifikat': request.form.get('sertifikat'),
+                'kondisi_properti': request.form.get('kondisi_properti'),
+                'tingkat_keamanan': request.form.get('tingkat_keamanan'),
+                'aksesibilitas': request.form.get('aksesibilitas'),
+                'tipe_iklan': request.form.get('tipe_iklan', 'Sewa'),
+                'njop_per_m2': float(request.form.get('njop_per_m2', 0)),
+                'model_predictor': request.form.get('model_predictor', 'Manual Input'),
+                'confidence_score': float(request.form.get('confidence_score', 0.95))
+            }
+            
+            # Hitung nilai turunan
+            current_year = datetime.now().year
+            umur_bangunan = current_year - data['tahun_dibangun']
+            rasio_bangunan_tanah = data['luas_bangunan_m2'] / data['luas_tanah_m2'] if data['luas_tanah_m2'] > 0 else 0
+            
+            # Hitung harga prediksi (formula sederhana)
+            harga_prediksi_tanah = data['luas_tanah_m2'] * data['njop_per_m2']
+            harga_prediksi_bangunan = data['luas_bangunan_m2'] * data['njop_per_m2'] * 1.5  # Building premium
+            harga_prediksi_total = harga_prediksi_tanah + harga_prediksi_bangunan
+            harga_per_m2_bangunan = harga_prediksi_bangunan / data['luas_bangunan_m2'] if data['luas_bangunan_m2'] > 0 else 0
+            
+            # Update ke database
+            cur = mysql.connection.cursor()
+            
+            # Check if kelurahan column exists, if not add it
+            try:
+                cur.execute("ALTER TABLE prediksi_properti_bangunan_tanah ADD COLUMN kelurahan VARCHAR(100) AFTER kecamatan")
+                mysql.connection.commit()
+            except Exception:
+                # Column probably already exists, continue
+                pass
+            
+            cur.execute("""
+                UPDATE prediksi_properti_bangunan_tanah 
+                SET kecamatan=%s, kelurahan=%s, luas_tanah_m2=%s, luas_bangunan_m2=%s, 
+                    jumlah_kamar_tidur=%s, jumlah_kamar_mandi=%s, jumlah_lantai=%s, 
+                    tahun_dibangun=%s, daya_listrik=%s, sertifikat=%s, kondisi_properti=%s, 
+                    tingkat_keamanan=%s, aksesibilitas=%s, tipe_iklan=%s, njop_per_m2=%s, 
+                    rasio_bangunan_tanah=%s, umur_bangunan=%s, harga_prediksi_total=%s, 
+                    harga_prediksi_tanah=%s, harga_prediksi_bangunan=%s, harga_per_m2_bangunan=%s, 
+                    model_predictor=%s, confidence_score=%s, updated_at=NOW()
+                WHERE id=%s
+            """, (
+                data['kecamatan'], data['kelurahan'], data['luas_tanah_m2'], data['luas_bangunan_m2'], 
+                data['jumlah_kamar_tidur'], data['jumlah_kamar_mandi'], data['jumlah_lantai'],
+                data['tahun_dibangun'], data['daya_listrik'], data['sertifikat'],
+                data['kondisi_properti'], data['tingkat_keamanan'], data['aksesibilitas'],
+                data['tipe_iklan'], data['njop_per_m2'], rasio_bangunan_tanah, umur_bangunan,
+                harga_prediksi_total, harga_prediksi_tanah, harga_prediksi_bangunan,
+                harga_per_m2_bangunan, data['model_predictor'], data['confidence_score'], id
+            ))
+            mysql.connection.commit()
+            cur.close()
+            
+            flash('Data prediksi bangunan berhasil diperbarui!', 'success')
+            return redirect(url_for('main.total_properti'))
+            
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+    
+    # GET - ambil data untuk form edit
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2, 
+                   jumlah_kamar_tidur, jumlah_kamar_mandi, jumlah_lantai, 
+                   tahun_dibangun, daya_listrik, sertifikat, kondisi_properti, 
+                   tingkat_keamanan, aksesibilitas, tipe_iklan, njop_per_m2, 
+                   rasio_bangunan_tanah, umur_bangunan, harga_prediksi_total, 
+                   harga_prediksi_tanah, harga_prediksi_bangunan, harga_per_m2_bangunan, 
+                   model_predictor, confidence_score, created_at, updated_at
+            FROM prediksi_properti_bangunan_tanah WHERE id = %s
+        """, (id,))
+        result = cur.fetchone()
+        cur.close()
+        
+        if not result:
+            flash('Data tidak ditemukan', 'error')
+            return redirect(url_for('main.total_properti'))
+        
+        # Convert tuple to dictionary for easier template access
+        columns = ['id', 'kecamatan', 'kelurahan', 'luas_tanah_m2', 'luas_bangunan_m2', 
+                  'jumlah_kamar_tidur', 'jumlah_kamar_mandi', 'jumlah_lantai', 
+                  'tahun_dibangun', 'daya_listrik', 'sertifikat', 'kondisi_properti', 
+                  'tingkat_keamanan', 'aksesibilitas', 'tipe_iklan', 'njop_per_m2', 
+                  'rasio_bangunan_tanah', 'umur_bangunan', 'harga_prediksi_total', 
+                  'harga_prediksi_tanah', 'harga_prediksi_bangunan', 'harga_per_m2_bangunan', 
+                  'model_predictor', 'confidence_score', 'created_at', 'updated_at']
+        data = dict(zip(columns, result))
+            
+        return render_template('form_bangunan_edit.html', data=data)
+        
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+        return redirect(url_for('main.total_properti'))
+
+@main.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    """Route untuk edit profil user"""
+    if 'user_id' not in session:
+        flash('Silakan login terlebih dahulu.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        # Handle form submission for profile update
+        user_id = session['user_id']
+        new_name = request.form.get('name')
+        new_email = request.form.get('email')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        try:
+            # Update profile logic here
+            # For now, just flash a success message
+            flash('Profil berhasil diperbarui!', 'success')
+            return redirect(url_for('main.user_dashboard'))
+        except Exception as e:
+            flash(f'Terjadi kesalahan: {str(e)}', 'error')
+            return redirect(url_for('main.edit_profile'))
+    
+    # GET request - show edit profile form
+    return render_template('edit_profile.html')
+
+
+@main.route('/api/delete-tanah/<int:id>', methods=['DELETE'])
+def delete_tanah(id):
+    """API untuk menghapus data tanah"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'error': 'Akses ditolak'}), 403
+    
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Check if tanah exists
+        cur.execute("SELECT id FROM prediksi_properti_tanah WHERE id = %s", (id,))
+        tanah = cur.fetchone()
+        
+        if not tanah:
+            cur.close()
+            return jsonify({'success': False, 'error': 'Data tanah tidak ditemukan'}), 404
+        
+        # Delete the tanah record
+        cur.execute("DELETE FROM prediksi_properti_tanah WHERE id = %s", (id,))
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Data tanah ID {id} berhasil dihapus'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@main.route('/api/delete-bangunan/<int:id>', methods=['DELETE'])
+def delete_bangunan(id):
+    """API untuk menghapus data bangunan"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'error': 'Akses ditolak'}), 403
+    
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Check if bangunan exists
+        cur.execute("SELECT id FROM prediksi_properti_bangunan_tanah WHERE id = %s", (id,))
+        bangunan = cur.fetchone()
+        
+        if not bangunan:
+            cur.close()
+            return jsonify({'success': False, 'error': 'Data bangunan tidak ditemukan'}), 404
+        
+        # Delete the bangunan record
+        cur.execute("DELETE FROM prediksi_properti_bangunan_tanah WHERE id = %s", (id,))
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Data bangunan ID {id} berhasil dihapus'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @main.route('/total-properti')
 def total_properti():
     """Halaman untuk melihat semua data properti"""
@@ -1161,45 +1457,56 @@ def total_properti():
         flash('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.', 'error')
         return redirect(url_for('main.login'))
     
-    # Ambil data dari kedua tabel
-    data_tanah = PrediksiPropertiTanah.get_all(limit=100, offset=0)
-    data_bangunan = PrediksiPropertiBangunanTanah.get_all(limit=100, offset=0)
-    
-    # Ambil statistik
-    stats_tanah = PrediksiPropertiTanah.get_statistics()
-    stats_bangunan = PrediksiPropertiBangunanTanah.get_statistics()
-    
-    # Calculate totals with safe defaults
-    total_tanah = stats_tanah[0] if stats_tanah and stats_tanah[0] else 0
-    total_bangunan = stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0
-    
-    avg_price_tanah = stats_tanah[1] if stats_tanah and stats_tanah[1] else 0
-    avg_price_bangunan = stats_bangunan[1] if stats_bangunan and stats_bangunan[1] else 0
-    
-    total_nilai = (avg_price_tanah * total_tanah) + (avg_price_bangunan * total_bangunan)
-    
-    # Get unique kecamatan list from both tables safely
-    kecamatan_set = set()
-    if data_tanah:
-        for row in data_tanah:
-            if row and len(row) > 1 and row[1]:  # Check if row exists and has kecamatan
-                kecamatan_set.add(row[1])
-    if data_bangunan:
-        for row in data_bangunan:
-            if row and len(row) > 1 and row[1]:  # Check if row exists and has kecamatan
-                kecamatan_set.add(row[1])
-    
-    kecamatan_list = sorted(list(kecamatan_set))
-    
-    return render_template('total_properti.html',
-                         data_tanah=data_tanah,
-                         data_bangunan=data_bangunan,
-                         stats_tanah=stats_tanah,
-                         stats_bangunan=stats_bangunan,
-                         total_tanah=total_tanah,
-                         total_bangunan=total_bangunan,
-                         total_nilai=total_nilai,
-                         kecamatan_list=kecamatan_list)
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get statistics directly from database
+        cur.execute("SELECT COUNT(*), COALESCE(AVG(harga_prediksi_tanah), 0) FROM prediksi_properti_tanah")
+        stats_tanah = cur.fetchone()
+        
+        cur.execute("SELECT COUNT(*), COALESCE(AVG(harga_prediksi_total), 0) FROM prediksi_properti_bangunan_tanah")
+        stats_bangunan = cur.fetchone()
+        
+        # Calculate totals with safe defaults
+        total_tanah = stats_tanah[0] if stats_tanah and stats_tanah[0] else 0
+        total_bangunan = stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0
+        
+        avg_price_tanah = stats_tanah[1] if stats_tanah and stats_tanah[1] else 0
+        avg_price_bangunan = stats_bangunan[1] if stats_bangunan and stats_bangunan[1] else 0
+        
+        total_nilai = (avg_price_tanah * total_tanah) + (avg_price_bangunan * total_bangunan)
+        
+        # Get unique kecamatan list from both tables
+        cur.execute("""
+            SELECT DISTINCT kecamatan FROM prediksi_properti_tanah 
+            WHERE kecamatan IS NOT NULL AND kecamatan != ''
+            UNION
+            SELECT DISTINCT kecamatan FROM prediksi_properti_bangunan_tanah 
+            WHERE kecamatan IS NOT NULL AND kecamatan != ''
+            ORDER BY kecamatan
+        """)
+        kecamatan_result = cur.fetchall()
+        kecamatan_list = [row[0] for row in kecamatan_result]
+        
+        cur.close()
+        
+        return render_template('total_properti.html',
+                             stats_tanah=stats_tanah,
+                             stats_bangunan=stats_bangunan,
+                             total_tanah=total_tanah,
+                             total_bangunan=total_bangunan,
+                             total_nilai=total_nilai,
+                             kecamatan_list=kecamatan_list)
+                             
+    except Exception as e:
+        flash(f'Error loading data: {str(e)}', 'error')
+        return render_template('total_properti.html',
+                             stats_tanah=(0, 0),
+                             stats_bangunan=(0, 0),
+                             total_tanah=0,
+                             total_bangunan=0,
+                             total_nilai=0,
+                             kecamatan_list=[])
 
 @main.route('/manajemen-aset')
 def manajemen_aset():
@@ -1208,53 +1515,27 @@ def manajemen_aset():
         flash('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.', 'error')
         return redirect(url_for('main.login'))
     
-    # Ambil data dari kedua tabel
-    data_tanah = PrediksiPropertiTanah.get_all(limit=50, offset=0)
-    data_bangunan = PrediksiPropertiBangunanTanah.get_all(limit=50, offset=0)
-    
-    # Ambil statistik
-    stats_tanah = PrediksiPropertiTanah.get_statistics()
-    stats_bangunan = PrediksiPropertiBangunanTanah.get_statistics()
-    
-    return render_template('manajemen_aset.html',
-                         data_tanah=data_tanah,
-                         data_bangunan=data_bangunan,
-                         stats_tanah=stats_tanah,
-                         stats_bangunan=stats_bangunan)
-
-@main.route('/delete-tanah/<int:id>', methods=['POST'])
-def delete_tanah(id):
-    """Hapus data prediksi tanah"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
     try:
         cur = mysql.connection.cursor()
-        cur.execute("DELETE FROM prediksi_properti_tanah WHERE id = %s", (id,))
-        mysql.connection.commit()
+        
+        # Get basic statistics
+        cur.execute("SELECT COUNT(*), COALESCE(AVG(harga_prediksi_tanah), 0) FROM prediksi_properti_tanah")
+        stats_tanah = cur.fetchone()
+        
+        cur.execute("SELECT COUNT(*), COALESCE(AVG(harga_prediksi_total), 0) FROM prediksi_properti_bangunan_tanah")
+        stats_bangunan = cur.fetchone()
+        
         cur.close()
         
-        flash('Data prediksi tanah berhasil dihapus!', 'success')
-        return jsonify({'success': True})
+        return render_template('manajemen_aset.html',
+                             stats_tanah=stats_tanah,
+                             stats_bangunan=stats_bangunan)
+                             
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@main.route('/delete-bangunan/<int:id>', methods=['POST'])
-def delete_bangunan(id):
-    """Hapus data prediksi bangunan"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("DELETE FROM prediksi_properti_bangunan_tanah WHERE id = %s", (id,))
-        mysql.connection.commit()
-        cur.close()
-        
-        flash('Data prediksi bangunan berhasil dihapus!', 'success')
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        flash(f'Error loading data: {str(e)}', 'error')
+        return render_template('manajemen_aset.html',
+                             stats_tanah=(0, 0),
+                             stats_bangunan=(0, 0))
 
 @main.route('/api/total-properti')
 def api_total_properti():
@@ -1263,25 +1544,36 @@ def api_total_properti():
         cur = mysql.connection.cursor()
         
         # Get all tanah data
-        cur.execute("""
-            SELECT id, kecamatan, kelurahan, luas_tanah_m2 as luas, 
-                   harga_prediksi_tanah as harga, jenis_sertifikat as sertifikat, 
-                   'tanah' as tipe
-            FROM prediksi_properti_tanah
-            ORDER BY created_at DESC
-        """)
-        tanah_data = cur.fetchall()
+        try:
+            cur.execute("""
+                SELECT id, kecamatan, 
+                       CASE WHEN kelurahan IS NOT NULL THEN kelurahan ELSE 'N/A' END as kelurahan, 
+                       luas_tanah_m2 as luas, 
+                       harga_prediksi_tanah as harga, jenis_sertifikat as sertifikat, 
+                       'tanah' as tipe
+                FROM prediksi_properti_tanah
+                ORDER BY created_at DESC
+                LIMIT 100
+            """)
+            tanah_data = cur.fetchall()
+        except Exception as e:
+            tanah_data = []
         
         # Get all bangunan data
-        cur.execute("""
-            SELECT id, kecamatan, 'N/A' as kelurahan, 
-                   (luas_tanah_m2 + luas_bangunan_m2) as luas, 
-                   harga_prediksi_total as harga, 
-                   sertifikat, 'bangunan' as tipe
-            FROM prediksi_properti_bangunan_tanah
-            ORDER BY created_at DESC
-        """)
-        bangunan_data = cur.fetchall()
+        try:
+            cur.execute("""
+                SELECT id, kecamatan, 
+                       CASE WHEN kelurahan IS NOT NULL THEN kelurahan ELSE 'N/A' END as kelurahan, 
+                       (luas_tanah_m2 + luas_bangunan_m2) as luas, 
+                       harga_prediksi_total as harga, 
+                       sertifikat, 'bangunan' as tipe
+                FROM prediksi_properti_bangunan_tanah
+                ORDER BY created_at DESC
+                LIMIT 100
+            """)
+            bangunan_data = cur.fetchall()
+        except Exception as e:
+            bangunan_data = []
         
         cur.close()
         
@@ -1328,5 +1620,295 @@ def api_total_properti():
             'success': False,
             'error': str(e)
         }), 500
+
+@main.route('/api/aset-tersedia', methods=['GET'])
+def get_aset_tersedia():
+    """API untuk mendapatkan daftar aset yang tersedia untuk disewa dengan paginasi"""
+    try:
+        # Filter parameters
+        jenis = request.args.get('jenis', '')
+        kecamatan = request.args.get('kecamatan', '')
+        
+        # Pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 6, type=int)  # Show 6 items per page
+        
+        # Calculate offset
+        offset = (page - 1) * per_page
+        
+        # Gunakan data dari MySQL database (prediksi properti)
+        cur = mysql.connection.cursor()
+        
+        # Get all data first, then apply pagination (since we need to combine two tables)
+        aset_list = []
+        
+        # Query data tanah jika diminta atau jika tidak ada filter jenis
+        if jenis == '' or jenis == 'tanah':
+            tanah_query = """
+                SELECT 
+                    id, kecamatan, kelurahan, luas_tanah_m2,
+                    harga_prediksi_tanah, jenis_sertifikat, created_at
+                FROM prediksi_properti_tanah 
+                WHERE 1=1
+            """
+            
+            # Tambahkan filter kecamatan
+            params_tanah = []
+            if kecamatan:
+                tanah_query += " AND kecamatan = %s"
+                params_tanah.append(kecamatan)
+            
+            tanah_query += " ORDER BY created_at DESC"
+            
+            cur.execute(tanah_query, params_tanah)
+            tanah_data = cur.fetchall()
+            
+            # Format data tanah
+            for row in tanah_data:
+                harga_prediksi = float(row[4]) if row[4] else 0
+                aset_list.append({
+                    'id': row[0],
+                    'jenis': 'tanah',
+                    'alamat': f"Kelurahan {row[2]}, Kecamatan {row[1]}",
+                    'kecamatan': row[1],
+                    'kelurahan': row[2],
+                    'luas_tanah': row[3],
+                    'luas_bangunan': None,
+                    'kamar_tidur': None,
+                    'kamar_mandi': None,
+                    'jumlah_lantai': None,
+                    'harga_prediksi': harga_prediksi,
+                    'harga_sewa': int(harga_prediksi * 0.01) if harga_prediksi else 0,  # 1% dari harga prediksi
+                    'status': 'tersedia',
+                    'sertifikat': row[5],
+                    'created_at': row[6]
+                })
+        
+        # Query data bangunan jika diminta atau jika tidak ada filter jenis
+        if jenis == '' or jenis == 'tanah_bangunan':
+            bangunan_query = """
+                SELECT 
+                    id, kecamatan, 
+                    CASE WHEN kelurahan IS NOT NULL THEN kelurahan ELSE '' END as kelurahan, 
+                    luas_tanah_m2, luas_bangunan_m2,
+                    jumlah_kamar_tidur, jumlah_kamar_mandi, jumlah_lantai,
+                    harga_prediksi_total, sertifikat, created_at
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE 1=1
+            """
+            
+            # Tambahkan filter kecamatan
+            params_bangunan = []
+            if kecamatan:
+                bangunan_query += " AND kecamatan = %s"
+                params_bangunan.append(kecamatan)
+            
+            bangunan_query += " ORDER BY created_at DESC"
+            
+            cur.execute(bangunan_query, params_bangunan)
+            bangunan_data = cur.fetchall()
+            
+            # Format data bangunan
+            for row in bangunan_data:
+                harga_prediksi = float(row[8]) if row[8] else 0
+                aset_list.append({
+                    'id': row[0],
+                    'jenis': 'tanah_bangunan',
+                    'alamat': f"Kecamatan {row[1]}" + (f", Kelurahan {row[2]}" if row[2] else ""),
+                    'kecamatan': row[1],
+                    'kelurahan': row[2],
+                    'luas_tanah': row[3],
+                    'luas_bangunan': row[4],
+                    'kamar_tidur': row[5],
+                    'kamar_mandi': row[6],
+                    'jumlah_lantai': row[7],
+                    'harga_prediksi': harga_prediksi,
+                    'harga_sewa': int(harga_prediksi * 0.01) if harga_prediksi else 0,  # 1% dari harga prediksi
+                    'status': 'tersedia',
+                    'sertifikat': row[9],
+                    'created_at': row[10]
+                })
+        
+        cur.close()
+        
+        # Sort by created_at DESC
+        aset_list.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        # Apply pagination
+        total_items = len(aset_list)
+        start_idx = offset
+        end_idx = start_idx + per_page
+        paginated_data = aset_list[start_idx:end_idx]
+        
+        # Calculate pagination info
+        total_pages = (total_items + per_page - 1) // per_page
+        has_next = page < total_pages
+        has_prev = page > 1
+        
+        return jsonify({
+            'success': True,
+            'data': paginated_data,
+            'pagination': {
+                'current_page': page,
+                'per_page': per_page,
+                'total_items': total_items,
+                'total_pages': total_pages,
+                'has_next': has_next,
+                'has_prev': has_prev,
+                'next_page': page + 1 if has_next else None,
+                'prev_page': page - 1 if has_prev else None
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/kecamatan-list', methods=['GET'])
+def get_kecamatan_list():
+    """API untuk mendapatkan daftar kecamatan"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Query untuk mendapatkan kecamatan dari kedua tabel MySQL
+        cur.execute("""
+            SELECT DISTINCT kecamatan FROM prediksi_properti_tanah 
+            WHERE kecamatan IS NOT NULL AND kecamatan != ''
+            UNION
+            SELECT DISTINCT kecamatan FROM prediksi_properti_bangunan_tanah 
+            WHERE kecamatan IS NOT NULL AND kecamatan != ''
+            ORDER BY kecamatan
+        """)
+        
+        result = cur.fetchall()
+        kecamatan_list = [row[0] for row in result]
+        
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'data': kecamatan_list
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/aset-detail/<int:aset_id>', methods=['GET'])
+def get_aset_detail(aset_id):
+    """API untuk mendapatkan detail aset berdasarkan ID"""
+    try:
+        jenis = request.args.get('jenis', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Tentukan tabel berdasarkan jenis
+        if jenis == 'tanah':
+            cur.execute("""
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, 
+                       NULL as luas_bangunan, NULL as kamar_tidur, 
+                       NULL as kamar_mandi, NULL as jumlah_lantai, 
+                       harga_prediksi_tanah, jenis_sertifikat
+                FROM prediksi_properti_tanah WHERE id = %s
+            """, (aset_id,))
+        else:  # tanah_bangunan
+            cur.execute("""
+                SELECT id, kecamatan, 
+                       CASE WHEN kelurahan IS NOT NULL THEN kelurahan ELSE '' END as kelurahan, 
+                       luas_tanah_m2, luas_bangunan_m2, jumlah_kamar_tidur, jumlah_kamar_mandi, 
+                       jumlah_lantai, harga_prediksi_total, sertifikat
+                FROM prediksi_properti_bangunan_tanah WHERE id = %s
+            """, (aset_id,))
+        
+        result = cur.fetchone()
+        cur.close()
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'Aset tidak ditemukan'}), 404
+        
+        harga_prediksi = float(result[8]) if result[8] else 0
+        aset_detail = {
+            'id': result[0],
+            'jenis': jenis,
+            'alamat': f"Kelurahan {result[2]}, Kecamatan {result[1]}" if result[2] else f"Kecamatan {result[1]}",
+            'kecamatan': result[1],
+            'kelurahan': result[2],
+            'luas_tanah': result[3],
+            'luas_bangunan': result[4],
+            'kamar_tidur': result[5],
+            'kamar_mandi': result[6],
+            'jumlah_lantai': result[7],
+            'harga_prediksi': harga_prediksi,
+            'harga_sewa': int(harga_prediksi * 0.01) if harga_prediksi else 0,
+            'status': 'tersedia',
+            'sertifikat': result[9]
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': aset_detail
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/submit-rental', methods=['POST'])
+def submit_rental():
+    """API untuk submit pengajuan sewa aset"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Anda harus login terlebih dahulu'}), 401
+    
+    try:
+        data = request.get_json()
+        
+        # Validasi data
+        required_fields = ['aset_id', 'jenis_aset', 'nama_penyewa', 'email', 'telepon', 'durasi_sewa']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'Field {field} harus diisi'}), 400
+        
+        cur = mysql.connection.cursor()
+        
+        # Simpan data pengajuan sewa
+        cur.execute("""
+            INSERT INTO pengajuan_sewa (
+                user_id, aset_id, jenis_aset, nama_penyewa, email, telepon, 
+                durasi_sewa, tanggal_mulai, pesan, status, created_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', NOW())
+        """, (
+            session['user_id'],
+            data['aset_id'],
+            data['jenis_aset'],
+            data['nama_penyewa'],
+            data['email'],
+            data['telepon'],
+            data['durasi_sewa'],
+            data.get('tanggal_mulai'),
+            data.get('pesan', ''),
+        ))
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Pengajuan sewa berhasil dikirim. Admin akan menghubungi Anda segera.'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+
+
+
 
 

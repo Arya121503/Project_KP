@@ -470,18 +470,61 @@ function refreshData() {
     loadData();
 }
 
-// CRUD Functions (placeholders)
+// CRUD Functions
 function viewDetail(id, type) {
-    alert(`View detail ${type} ID: ${id}`);
+    // For now, just show basic info
+    const item = filteredData.find(item => item.id === id && item.tipe === type);
+    if (item) {
+        alert(`Detail ${type.toUpperCase()} ID: ${id}\nKecamatan: ${item.kecamatan}\nLuas: ${formatNumber(item.luas)} m²\nHarga: ${formatCurrency(item.harga)}`);
+    } else {
+        alert(`Data ${type} tidak ditemukan`);
+    }
 }
 
 function editData(id, type) {
-    alert(`Edit ${type} ID: ${id}`);
+    // Redirect to edit form
+    const editUrl = type === 'tanah' ? `/edit-tanah/${id}` : `/edit-bangunan/${id}`;
+    window.location.href = editUrl;
 }
 
-function deleteData(id, type) {
-    if (confirm(`Apakah Anda yakin ingin menghapus ${type} ID: ${id}?`)) {
-        alert(`Delete ${type} ID: ${id}`);
+async function deleteData(id, type) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus ${type} ID: ${id}?`)) {
+        return;
+    }
+    
+    try {
+        showStatus(`Menghapus data ${type}...`, 'info');
+        
+        const response = await fetch(`/api/delete-${type}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showStatus(result.message, 'success');
+            
+            // Remove item from local data
+            allData = allData.filter(item => !(item.id === id && item.tipe === type));
+            filteredData = filteredData.filter(item => !(item.id === id && item.tipe === type));
+            
+            // Update display
+            updateStatistics();
+            displayData();
+            
+            // Hide status after 3 seconds
+            setTimeout(hideStatus, 3000);
+            
+        } else {
+            throw new Error(result.error || 'Gagal menghapus data');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting data:', error);
+        showStatus(`Error: ${error.message}`, 'danger');
     }
 }
 </script>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data Tanah | Telkom Aset</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --telkom-red: #DC143C;
+            --telkom-dark: #8B0000;
+            --telkom-light: #FFE4E1;
+            --telkom-white: #FFFFFF;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .form-header {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: var(--telkom-red);
+            box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 20, 60, 0.3);
+        }
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.admin_dashboard') }}">
+                <i class="fas fa-home me-2"></i>Telkom Aset
+            </a>
+            <div class="ms-auto">
+                <a href="{{ url_for('main.total_properti') }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Kembali
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h3><i class="fas fa-edit me-2"></i>Edit Data Tanah</h3>
+                        <p class="mb-0">Perbarui informasi data tanah</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" id="editTanahForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="kecamatan" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Kecamatan
+                                    </label>
+                                    <select class="form-control" id="kecamatan" name="kecamatan" required>
+                                        <option value="">Pilih Kecamatan</option>
+                                        <option value="Asemrowo" {{ 'selected' if data.kecamatan == 'Asemrowo' else '' }}>Asemrowo</option>
+                                        <option value="Benowo" {{ 'selected' if data.kecamatan == 'Benowo' else '' }}>Benowo</option>
+                                        <option value="Bubutan" {{ 'selected' if data.kecamatan == 'Bubutan' else '' }}>Bubutan</option>
+                                        <option value="Bulak" {{ 'selected' if data.kecamatan == 'Bulak' else '' }}>Bulak</option>
+                                        <option value="Dukuh Pakis" {{ 'selected' if data.kecamatan == 'Dukuh Pakis' else '' }}>Dukuh Pakis</option>
+                                        <option value="Gayungan" {{ 'selected' if data.kecamatan == 'Gayungan' else '' }}>Gayungan</option>
+                                        <option value="Genteng" {{ 'selected' if data.kecamatan == 'Genteng' else '' }}>Genteng</option>
+                                        <option value="Gubeng" {{ 'selected' if data.kecamatan == 'Gubeng' else '' }}>Gubeng</option>
+                                        <option value="Gunung Anyar" {{ 'selected' if data.kecamatan == 'Gunung Anyar' else '' }}>Gunung Anyar</option>
+                                        <option value="Jambangan" {{ 'selected' if data.kecamatan == 'Jambangan' else '' }}>Jambangan</option>
+                                        <option value="Karang Pilang" {{ 'selected' if data.kecamatan == 'Karang Pilang' else '' }}>Karang Pilang</option>
+                                        <option value="Kenjeran" {{ 'selected' if data.kecamatan == 'Kenjeran' else '' }}>Kenjeran</option>
+                                        <option value="Krembangan" {{ 'selected' if data.kecamatan == 'Krembangan' else '' }}>Krembangan</option>
+                                        <option value="Lakarsantri" {{ 'selected' if data.kecamatan == 'Lakarsantri' else '' }}>Lakarsantri</option>
+                                        <option value="Mulyorejo" {{ 'selected' if data.kecamatan == 'Mulyorejo' else '' }}>Mulyorejo</option>
+                                        <option value="Pabean Cantian" {{ 'selected' if data.kecamatan == 'Pabean Cantian' else '' }}>Pabean Cantian</option>
+                                        <option value="Pakal" {{ 'selected' if data.kecamatan == 'Pakal' else '' }}>Pakal</option>
+                                        <option value="Rungkut" {{ 'selected' if data.kecamatan == 'Rungkut' else '' }}>Rungkut</option>
+                                        <option value="Sambikerep" {{ 'selected' if data.kecamatan == 'Sambikerep' else '' }}>Sambikerep</option>
+                                        <option value="Sawahan" {{ 'selected' if data.kecamatan == 'Sawahan' else '' }}>Sawahan</option>
+                                        <option value="Semampir" {{ 'selected' if data.kecamatan == 'Semampir' else '' }}>Semampir</option>
+                                        <option value="Simokerto" {{ 'selected' if data.kecamatan == 'Simokerto' else '' }}>Simokerto</option>
+                                        <option value="Sukolilo" {{ 'selected' if data.kecamatan == 'Sukolilo' else '' }}>Sukolilo</option>
+                                        <option value="Sukomanunggal" {{ 'selected' if data.kecamatan == 'Sukomanunggal' else '' }}>Sukomanunggal</option>
+                                        <option value="Tambaksari" {{ 'selected' if data.kecamatan == 'Tambaksari' else '' }}>Tambaksari</option>
+                                        <option value="Tandes" {{ 'selected' if data.kecamatan == 'Tandes' else '' }}>Tandes</option>
+                                        <option value="Tegalsari" {{ 'selected' if data.kecamatan == 'Tegalsari' else '' }}>Tegalsari</option>
+                                        <option value="Tenggilis Mejoyo" {{ 'selected' if data.kecamatan == 'Tenggilis Mejoyo' else '' }}>Tenggilis Mejoyo</option>
+                                        <option value="Wiyung" {{ 'selected' if data.kecamatan == 'Wiyung' else '' }}>Wiyung</option>
+                                        <option value="Wonocolo" {{ 'selected' if data.kecamatan == 'Wonocolo' else '' }}>Wonocolo</option>
+                                        <option value="Wonokromo" {{ 'selected' if data.kecamatan == 'Wonokromo' else '' }}>Wonokromo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="kelurahan" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Kelurahan
+                                    </label>
+                                    <input type="text" class="form-control" id="kelurahan" name="kelurahan" 
+                                           value="{{ data.kelurahan or '' }}" required
+                                           placeholder="Masukkan nama kelurahan">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="luas_tanah_m2" class="form-label">
+                                        <i class="fas fa-ruler me-2"></i>Luas Tanah (m²)
+                                    </label>
+                                    <input type="number" class="form-control" id="luas_tanah_m2" name="luas_tanah_m2" 
+                                           value="{{ data.luas_tanah_m2 or '' }}" required min="1" step="0.01"
+                                           placeholder="Contoh: 1000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="jenis_sertifikat" class="form-label">
+                                        <i class="fas fa-certificate me-2"></i>Jenis Sertifikat
+                                    </label>
+                                    <select class="form-control" id="jenis_sertifikat" name="jenis_sertifikat" required>
+                                        <option value="">Pilih Jenis Sertifikat</option>
+                                        <option value="SHM" {{ 'selected' if data.jenis_sertifikat == 'SHM' else '' }}>SHM (Sertifikat Hak Milik)</option>
+                                        <option value="SHGB" {{ 'selected' if data.jenis_sertifikat == 'SHGB' else '' }}>SHGB (Sertifikat Hak Guna Bangunan)</option>
+                                        <option value="AJB" {{ 'selected' if data.jenis_sertifikat == 'AJB' else '' }}>AJB (Akta Jual Beli)</option>
+                                        <option value="Girik" {{ 'selected' if data.jenis_sertifikat == 'Girik' else '' }}>Girik</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="njop_tanah_per_m2" class="form-label">
+                                        <i class="fas fa-money-bill me-2"></i>NJOP Tanah per m² (Rp)
+                                    </label>
+                                    <input type="number" class="form-control" id="njop_tanah_per_m2" name="njop_tanah_per_m2" 
+                                           value="{{ data.njop_tanah_per_m2 or '' }}" required min="1" step="1000"
+                                           placeholder="Contoh: 5000000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="zona_nilai_tanah" class="form-label">
+                                        <i class="fas fa-layer-group me-2"></i>Zona Nilai Tanah
+                                    </label>
+                                    <select class="form-control" id="zona_nilai_tanah" name="zona_nilai_tanah" required>
+                                        <option value="">Pilih Zona</option>
+                                        <option value="Zona 1" {{ 'selected' if data.zona_nilai_tanah == 'Zona 1' else '' }}>Zona 1</option>
+                                        <option value="Zona 2" {{ 'selected' if data.zona_nilai_tanah == 'Zona 2' else '' }}>Zona 2</option>
+                                        <option value="Zona 3" {{ 'selected' if data.zona_nilai_tanah == 'Zona 3' else '' }}>Zona 3</option>
+                                        <option value="Zona 4" {{ 'selected' if data.zona_nilai_tanah == 'Zona 4' else '' }}>Zona 4</option>
+                                        <option value="Zona 5" {{ 'selected' if data.zona_nilai_tanah == 'Zona 5' else '' }}>Zona 5</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="kelas_tanah" class="form-label">
+                                <i class="fas fa-tags me-2"></i>Kelas Tanah
+                            </label>
+                            <select class="form-control" id="kelas_tanah" name="kelas_tanah" required>
+                                <option value="">Pilih Kelas</option>
+                                <option value="Kelas A" {{ 'selected' if data.kelas_tanah == 'Kelas A' else '' }}>Kelas A</option>
+                                <option value="Kelas B" {{ 'selected' if data.kelas_tanah == 'Kelas B' else '' }}>Kelas B</option>
+                                <option value="Kelas C" {{ 'selected' if data.kelas_tanah == 'Kelas C' else '' }}>Kelas C</option>
+                                <option value="Kelas D" {{ 'selected' if data.kelas_tanah == 'Kelas D' else '' }}>Kelas D</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.total_properti') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

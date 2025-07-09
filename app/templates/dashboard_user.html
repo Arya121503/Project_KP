@@ -201,6 +201,79 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
     }
+    
+    /* Pagination Styles */
+    .pagination {
+      --bs-pagination-padding-x: 0.75rem;
+      --bs-pagination-padding-y: 0.375rem;
+      --bs-pagination-font-size: 0.875rem;
+      --bs-pagination-color: var(--telkom-red);
+      --bs-pagination-bg: #fff;
+      --bs-pagination-border-width: 1px;
+      --bs-pagination-border-color: #dee2e6;
+      --bs-pagination-border-radius: 0.375rem;
+      --bs-pagination-hover-color: #fff;
+      --bs-pagination-hover-bg: var(--telkom-red);
+      --bs-pagination-hover-border-color: var(--telkom-red);
+      --bs-pagination-focus-color: #fff;
+      --bs-pagination-focus-bg: var(--telkom-red);
+      --bs-pagination-focus-border-color: var(--telkom-red);
+      --bs-pagination-active-color: #fff;
+      --bs-pagination-active-bg: var(--telkom-red);
+      --bs-pagination-active-border-color: var(--telkom-red);
+      --bs-pagination-disabled-color: #6c757d;
+      --bs-pagination-disabled-bg: #fff;
+      --bs-pagination-disabled-border-color: #dee2e6;
+    }
+    
+    .pagination .page-link {
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    
+    .pagination .page-item.active .page-link {
+      background-color: var(--telkom-red);
+      border-color: var(--telkom-red);
+      color: white;
+      font-weight: 600;
+    }
+    
+    .pagination .page-link:hover {
+      background-color: var(--telkom-red);
+      border-color: var(--telkom-red);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 4px rgba(220, 20, 60, 0.2);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+      background-color: #f8f9fa;
+      border-color: #dee2e6;
+      color: #6c757d;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .pagination-info {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+    
+    @media (max-width: 768px) {
+      .pagination {
+        --bs-pagination-padding-x: 0.5rem;
+        --bs-pagination-padding-y: 0.25rem;
+        --bs-pagination-font-size: 0.75rem;
+      }
+      
+      .pagination .page-link {
+        min-width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -328,7 +401,7 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData()">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData(1)">
                   <i class="fas fa-search me-1"></i>Cari
                 </button>
               </div>
@@ -340,6 +413,24 @@
                   <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-2 text-muted">Memuat data aset...</p>
+              </div>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div id="paginationControls" class="row mt-4" style="display: none;">
+              <div class="col-12">
+                <nav aria-label="Asset pagination">
+                  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div class="pagination-info">
+                      <small class="text-muted">
+                        Menampilkan <span id="paginationInfo"></span>
+                      </small>
+                    </div>
+                    <ul class="pagination pagination-sm mb-0" id="paginationList">
+                      <!-- Pagination buttons will be generated dynamically -->
+                    </ul>
+                  </div>
+                </nav>
               </div>
             </div>
           </div>
@@ -594,6 +685,11 @@
   
   <!-- User Dashboard Specific JS -->
   <script>
+  // Global pagination variables
+  let currentPage = 1;
+  let totalPages = 1;
+  let paginationData = {};
+  
   document.addEventListener('DOMContentLoaded', function() {
     // Load aset data on page load
     loadAsetData();
@@ -639,22 +735,37 @@
     });
   }
 
-  async function loadAsetData() {
+  async function loadAsetData(page = 1) {
     try {
+      currentPage = page;
       const filterJenis = document.getElementById('filterJenis').value;
       const filterKecamatan = document.getElementById('filterKecamatan').value;
       
       const params = new URLSearchParams();
       if (filterJenis) params.append('jenis', filterJenis);
       if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      params.append('page', page);
+      params.append('per_page', 6); // Show 6 items per page
+      
+      // Show loading state
+      const container = document.getElementById('asetContainer');
+      container.innerHTML = `
+        <div class="col-12 text-center">
+          <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Memuat data aset halaman ${page}...</p>
+        </div>
+      `;
       
       const response = await fetch(`/api/aset-tersedia?${params}`);
       const data = await response.json();
       
       if (data.success) {
         displayAsetData(data.data);
+        updatePaginationControls(data.pagination);
       } else {
-        showError('Gagal memuat data aset');
+        showError('Gagal memuat data aset: ' + data.error);
       }
     } catch (error) {
       console.error('Error loading aset data:', error);
@@ -716,23 +827,19 @@
                 <span class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
                   ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
                 </span>
-                <div class="d-flex gap-2">
-                  <span class="badge bg-warning text-dark rounded-pill">
-                    ${aset.status || 'Tersedia'}
-                  </span>
-                  <i class="fas fa-heart favorite-heart" 
-                     onclick="toggleFavorite(${aset.id}, this)" 
-                     title="Tambah ke Favorit"
-                     data-aset-id="${aset.id}"></i>
-                </div>
+                <span class="badge bg-success text-white rounded-pill">
+                  ${aset.status || 'Tersedia'}
+                </span>
               </div>
               
-              <h6 class="card-title text-truncate">${aset.alamat || 'Alamat tidak tersedia'}</h6>
+              <h6 class="card-title text-truncate" title="${aset.alamat || 'Alamat tidak tersedia'}">
+                ${aset.alamat || 'Alamat tidak tersedia'}
+              </h6>
               
               <div class="mb-2">
                 <small class="text-muted">
                   <i class="fas fa-map-marker-alt me-1"></i>
-                  ${aset.kecamatan || 'Kecamatan tidak tersedia'}
+                  ${aset.kecamatan || 'Kecamatan tidak tersedia'}${aset.kelurahan ? ', ' + aset.kelurahan : ''}
                 </small>
               </div>
               
@@ -741,20 +848,40 @@
                   <small class="text-muted d-block">Luas Tanah</small>
                   <strong>${aset.luas_tanah || 0} m²</strong>
                 </div>
-                ${aset.jenis === 'tanah_bangunan' ? `
+                ${aset.jenis === 'tanah_bangunan' && aset.luas_bangunan ? `
                 <div class="col-6">
                   <small class="text-muted d-block">Luas Bangunan</small>
                   <strong>${aset.luas_bangunan || 0} m²</strong>
                 </div>` : '<div class="col-6"></div>'}
               </div>
               
+              ${aset.jenis === 'tanah_bangunan' && (aset.kamar_tidur || aset.kamar_mandi) ? `
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Kamar Tidur</small>
+                  <strong>${aset.kamar_tidur || 0}</strong>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Kamar Mandi</small>
+                  <strong>${aset.kamar_mandi || 0}</strong>
+                </div>
+              </div>` : ''}
+              
               <div class="text-center">
                 <div class="h6 text-danger mb-2">
                   Rp ${formatCurrency(aset.harga_sewa || 0)}/bulan
                 </div>
-                <button class="btn btn-outline-danger btn-sm" onclick="showAsetDetail(${aset.id})">
-                  <i class="fas fa-eye me-1"></i>Lihat Detail
-                </button>
+                <small class="text-muted d-block mb-3">
+                  Estimasi dari nilai: Rp ${formatCurrency(aset.harga_prediksi || 0)}
+                </small>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-info" onclick="showAsetDetail(${aset.id}, '${aset.jenis}')">
+                    <i class="fas fa-eye me-1"></i>Detail
+                  </button>
+                  <button class="btn btn-danger" onclick="showRentalForm(${aset.id}, '${aset.jenis}')">
+                    <i class="fas fa-handshake me-1"></i>Sewa
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -765,9 +892,150 @@
     container.innerHTML = html;
   }
 
-  function showAsetDetail(id) {
-    // Create modal for showing asset detail
-    fetch(`/api/aset-detail/${id}`)
+  function updatePaginationControls(pagination) {
+    paginationData = pagination;
+    totalPages = pagination.total_pages;
+    
+    const paginationControls = document.getElementById('paginationControls');
+    const paginationList = document.getElementById('paginationList');
+    const paginationInfo = document.getElementById('paginationInfo');
+    
+    // Show/hide pagination controls
+    if (pagination.total_pages <= 1) {
+      paginationControls.style.display = 'none';
+      return;
+    } else {
+      paginationControls.style.display = 'block';
+    }
+    
+    // Update pagination info
+    const startItem = ((pagination.current_page - 1) * pagination.per_page) + 1;
+    const endItem = Math.min(pagination.current_page * pagination.per_page, pagination.total_items);
+    paginationInfo.textContent = `${startItem}-${endItem} dari ${pagination.total_items} aset`;
+    
+    // Generate pagination buttons
+    generatePaginationButtons(pagination);
+  }
+
+  function generatePaginationButtons(pagination) {
+    const paginationList = document.getElementById('paginationList');
+    const currentPage = pagination.current_page;
+    const totalPages = pagination.total_pages;
+    
+    let html = '';
+    
+    // Previous button
+    html += `
+      <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
+        <button class="page-link" onclick="changePage(${currentPage - 1})" ${!pagination.has_prev ? 'disabled' : ''} 
+                title="Halaman sebelumnya (← atau ArrowLeft)">
+          <i class="fas fa-chevron-left me-1"></i>Previous
+        </button>
+      </li>
+    `;
+    
+    // Calculate page range to show
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    
+    // Adjust range if we're near the beginning or end
+    if (currentPage <= 3) {
+      endPage = Math.min(5, totalPages);
+    }
+    if (currentPage > totalPages - 3) {
+      startPage = Math.max(1, totalPages - 4);
+    }
+    
+    // First page (if not in range)
+    if (startPage > 1) {
+      html += `
+        <li class="page-item">
+          <button class="page-link" onclick="changePage(1)" title="Halaman pertama (Home)">1</button>
+        </li>
+      `;
+      if (startPage > 2) {
+        html += `
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        `;
+      }
+    }
+    
+    // Page numbers in range
+    for (let i = startPage; i <= endPage; i++) {
+      html += `
+        <li class="page-item ${i === currentPage ? 'active' : ''}">
+          <button class="page-link" onclick="changePage(${i})" ${i === currentPage ? 'disabled' : ''}>
+            ${i}
+          </button>
+        </li>
+      `;
+    }
+    
+    // Last page (if not in range)
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        html += `
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        `;
+      }
+      html += `
+        <li class="page-item">
+          <button class="page-link" onclick="changePage(${totalPages})" title="Halaman terakhir (End)">${totalPages}</button>
+        </li>
+      `;
+    }
+    
+    // Next button
+    html += `
+      <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
+        <button class="page-link" onclick="changePage(${currentPage + 1})" ${!pagination.has_next ? 'disabled' : ''} 
+                title="Halaman selanjutnya (→ atau ArrowRight)">
+          Next<i class="fas fa-chevron-right ms-1"></i>
+        </button>
+      </li>
+    `;
+    
+    paginationList.innerHTML = html;
+  }
+
+  function changePage(newPage) {
+    // Validate page number
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) {
+      return;
+    }
+    
+    // Show loading state
+    const container = document.getElementById('asetContainer');
+    container.innerHTML = `
+      <div class="col-12 text-center">
+        <div class="spinner-border text-danger" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Memuat halaman ${newPage}...</p>
+      </div>
+    `;
+    
+    // Disable pagination buttons during loading
+    const paginationButtons = document.querySelectorAll('#paginationList button');
+    paginationButtons.forEach(btn => btn.disabled = true);
+    
+    // Load new page
+    loadAsetData(newPage).then(() => {
+      // Scroll to top of asset container smoothly
+      document.getElementById('asetContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    });
+  }
+
+  function showAsetDetail(id, jenis) {
+    // Get asset detail
+    fetch(`/api/aset-detail/${id}?jenis=${jenis}`)
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -799,15 +1067,15 @@
                 <div class="col-md-6">
                   <h6 class="text-danger">Informasi Lokasi</h6>
                   <table class="table table-sm">
-                    <tr><td><strong>Alamat:</strong></td><td>${aset.alamat}</td></tr>
-                    <tr><td><strong>Kecamatan:</strong></td><td>${aset.kecamatan}</td></tr>
-                    <tr><td><strong>Kelurahan:</strong></td><td>${aset.kelurahan}</td></tr>
+                    <tr><td><strong>Alamat:</strong></td><td>${aset.alamat || '-'}</td></tr>
+                    <tr><td><strong>Kecamatan:</strong></td><td>${aset.kecamatan || '-'}</td></tr>
+                    <tr><td><strong>Kelurahan:</strong></td><td>${aset.kelurahan || '-'}</td></tr>
                   </table>
                 </div>
                 <div class="col-md-6">
                   <h6 class="text-danger">Spesifikasi</h6>
                   <table class="table table-sm">
-                    <tr><td><strong>Luas Tanah:</strong></td><td>${aset.luas_tanah} m²</td></tr>
+                    <tr><td><strong>Luas Tanah:</strong></td><td>${aset.luas_tanah || 0} m²</td></tr>
                     ${aset.luas_bangunan ? `<tr><td><strong>Luas Bangunan:</strong></td><td>${aset.luas_bangunan} m²</td></tr>` : ''}
                     ${aset.kamar_tidur ? `<tr><td><strong>Kamar Tidur:</strong></td><td>${aset.kamar_tidur}</td></tr>` : ''}
                     ${aset.kamar_mandi ? `<tr><td><strong>Kamar Mandi:</strong></td><td>${aset.kamar_mandi}</td></tr>` : ''}
@@ -832,8 +1100,8 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-              <button type="button" class="btn btn-danger" onclick="contactAdmin('${aset.id}')">
-                <i class="fas fa-phone me-1"></i>Hubungi Admin
+              <button type="button" class="btn btn-danger" onclick="showRentalForm(${aset.id}, '${aset.jenis}'); document.getElementById('asetDetailModal').querySelector('.btn-close').click();">
+                <i class="fas fa-handshake me-1"></i>Ajukan Sewa
               </button>
             </div>
           </div>
@@ -855,9 +1123,206 @@
     modal.show();
   }
 
-  function contactAdmin(asetId) {
-    alert(`Menghubungi admin untuk aset ${asetId}.\n\nAnda akan diarahkan ke halaman kontak atau form inquiry.`);
-    // Di sini bisa diarahkan ke halaman kontak atau membuka form inquiry
+  function showRentalForm(asetId, jenisAset) {
+    // Get asset detail first
+    fetch(`/api/aset-detail/${asetId}?jenis=${jenisAset}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showRentalModal(data.data);
+        } else {
+          alert('Gagal memuat detail aset: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memuat detail aset');
+      });
+  }
+
+  function showRentalModal(aset) {
+    const modalHTML = `
+      <div class="modal fade" id="rentalModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">
+                <i class="fas fa-handshake me-2"></i>
+                Pengajuan Sewa Aset
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Asset Info -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">
+                    <i class="fas fa-${aset.jenis === 'tanah' ? 'map-marked-alt' : 'building'} me-2"></i>
+                    Detail Aset yang Akan Disewa
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <p class="mb-1"><strong>Alamat:</strong> ${aset.alamat}</p>
+                      <p class="mb-1"><strong>Kecamatan:</strong> ${aset.kecamatan}</p>
+                      <p class="mb-1"><strong>Luas Tanah:</strong> ${aset.luas_tanah} m²</p>
+                      ${aset.luas_bangunan ? `<p class="mb-1"><strong>Luas Bangunan:</strong> ${aset.luas_bangunan} m²</p>` : ''}
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <div class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill mb-2">
+                        ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                      </div>
+                      <h5 class="text-danger">Rp ${formatCurrency(aset.harga_sewa)}/bulan</h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rental Form -->
+              <form id="rentalForm" onsubmit="submitRental(event)">
+                <input type="hidden" name="aset_id" value="${aset.id}">
+                <input type="hidden" name="jenis_aset" value="${aset.jenis}">
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="nama_penyewa" class="form-label">Nama Lengkap *</label>
+                      <input type="text" class="form-control" id="nama_penyewa" name="nama_penyewa" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="email" class="form-label">Email *</label>
+                      <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="telepon" class="form-label">Nomor Telepon *</label>
+                      <input type="tel" class="form-control" id="telepon" name="telepon" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="durasi_sewa" class="form-label">Durasi Sewa (bulan) *</label>
+                      <select class="form-select" id="durasi_sewa" name="durasi_sewa" required onchange="calculateTotal()">
+                        <option value="">Pilih Durasi</option>
+                        <option value="6">6 Bulan</option>
+                        <option value="12">12 Bulan (1 Tahun)</option>
+                        <option value="24">24 Bulan (2 Tahun)</option>
+                        <option value="36">36 Bulan (3 Tahun)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="tanggal_mulai" class="form-label">Tanggal Mulai Sewa</label>
+                      <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" 
+                             min="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Estimasi Total Biaya</label>
+                      <div class="form-control-plaintext">
+                        <h5 class="text-danger" id="totalBiaya">Rp 0</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="pesan" class="form-label">Pesan Tambahan</label>
+                  <textarea class="form-control" id="pesan" name="pesan" rows="3" 
+                            placeholder="Tuliskan pesan atau kebutuhan khusus untuk admin..."></textarea>
+                </div>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <strong>Catatan:</strong> Pengajuan sewa akan diproses oleh admin. 
+                  Anda akan dihubungi melalui email/telepon untuk proses selanjutnya.
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" form="rentalForm" class="btn btn-danger">
+                <i class="fas fa-paper-plane me-1"></i>Kirim Pengajuan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('rentalModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('rentalModal'));
+    modal.show();
+    
+    // Set default values
+    document.getElementById('nama_penyewa').value = '{{ session.get("user_name", "") }}';
+    document.getElementById('email').value = '{{ session.get("user_email", "") }}';
+    
+    // Store asset data for calculation
+    window.currentAsset = aset;
+  }
+
+  function calculateTotal() {
+    const durasi = document.getElementById('durasi_sewa').value;
+    const totalElement = document.getElementById('totalBiaya');
+    
+    if (durasi && window.currentAsset) {
+      const total = window.currentAsset.harga_sewa * parseInt(durasi);
+      totalElement.textContent = `Rp ${formatCurrency(total)}`;
+    } else {
+      totalElement.textContent = 'Rp 0';
+    }
+  }
+
+  async function submitRental(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+      const response = await fetch('/api/submit-rental', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Pengajuan sewa berhasil dikirim!\n\n' + result.message);
+        document.getElementById('rentalModal').querySelector('.btn-close').click();
+      } else {
+        alert('Gagal mengirim pengajuan: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error submitting rental:', error);
+      alert('Terjadi kesalahan saat mengirim pengajuan');
+    }
   }
 
   function formatCurrency(number) {
@@ -1211,6 +1676,1069 @@
       const response = await fetch('/api/notifikasi-clear-all', {
         method: 'DELETE'
       });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah dihapus');
+      } else {
+        showNotifError('Gagal menghapus notifikasi');
+      }
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  function handleNotifAction(actionUrl, event) {
+    event.stopPropagation();
+    if (actionUrl.startsWith('http')) {
+      window.open(actionUrl, '_blank');
+    } else {
+      window.location.href = actionUrl;
+    }
+  }
+
+  function showNotifikasiError(message) {
+    const container = document.getElementById('notifikasiContainer');
+    container.innerHTML = `
+      <div class="text-center py-4">
+        <div class="alert alert-danger mb-0">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  function showNotifSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-check me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  function showNotifError(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // Load notifikasi count on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load initial notification count
+    setTimeout(() => {
+      loadNotifikasiData();
+      loadFavoriteStatus(); // Load favorite status for current aset
+      loadFavoritCount(); // Load favorite count for badge
+    }, 1000);
+  });
+
+  // ===== FAVORIT FUNCTIONS =====
+
+  async function loadFavoritData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisFavorit').value;
+      const filterKecamatan = document.getElementById('filterKecamatanFavorit').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      
+      const response = await fetch(`/api/favorit-aset?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayFavoritData(data.data);
+        updateFavoritBadge(data.total || 0);
+      } else {
+        showFavoritError('Gagal memuat favorit');
+      }
+    } catch (error) {
+      console.error('Error loading favorit:', error);
+      showFavoritError('Terjadi kesalahan saat memuat favorit');
+    }
+  }
+
+  function displayFavoritData(favoritList) {
+    const container = document.getElementById('favoritContainer');
+    const countElement = document.getElementById('favoritCount');
+    
+    countElement.textContent = favoritList.length;
+    
+    if (favoritList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-heart-broken text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada aset favorit</h5>
+          <p class="text-muted">Klik icon ❤️ pada aset yang Anda sukai untuk menambahkannya ke favorit</p>
+          <a href="#" class="btn btn-outline-danger menu-link" data-target="dashboard-home">
+            <i class="fas fa-search me-2"></i>Jelajahi Aset
+          </a>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    favoritList.forEach(favorit => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card favorite-item h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${favorit.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${favorit.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    ${favorit.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart favorited" 
+                     onclick="removeFavorite(${favorit.aset_id}, this)" 
+                     title="Hapus dari Favorit"
+                     data-aset-id="${favorit.aset_id}"></i>
+                </div>
+              </div>
+              
+              <h6 class="card-title text-truncate">${favorit.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${favorit.kecamatan || 'Kecamatan tidak tersedia'}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${favorit.luas_tanah || 0} m²</strong>
+                </div>
+                ${favorit.jenis === 'tanah_bangunan' ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${favorit.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              ${favorit.catatan ? `
+              <div class="mb-3">
+                <small class="text-muted d-block">Catatan:</small>
+                <p class="small text-secondary mb-0">${favorit.catatan}</p>
+              </div>` : ''}
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(favorit.harga_sewa || 0)}/bulan
+                </div>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-danger" onclick="showAsetDetail(${favorit.aset_id})">
+                    <i class="fas fa-eye me-1"></i>Detail
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="editFavoriteNote(${favorit.id}, '${favorit.catatan || ''}')">
+                    <i class="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="fas fa-calendar me-1"></i>
+                  Ditambahkan ${getTimeAgo(favorit.created_at)}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async function toggleFavorite(asetId, element) {
+    try {
+      const isFavorited = element.classList.contains('favorited');
+      const action = isFavorited ? 'remove' : 'add';
+      
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: action
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        if (action === 'add') {
+          element.classList.add('favorited');
+          element.title = 'Hapus dari Favorit';
+          showFavoritSuccess('Aset ditambahkan ke favorit');
+        } else {
+          element.classList.remove('favorited');
+          element.title = 'Tambah ke Favorit';
+          showFavoritSuccess('Aset dihapus dari favorit');
+        }
+        loadFavoritCount(); // Update badge
+      } else {
+        showFavoritError(data.error || 'Gagal mengubah status favorit');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function removeFavorite(asetId, element) {
+    if (!confirm('Hapus aset ini dari favorit?')) return;
+    
+    try {
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: 'remove'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Aset dihapus dari favorit');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function editFavoriteNote(favoritId, currentNote) {
+    const newNote = prompt('Edit catatan untuk aset favorit ini:', currentNote);
+    if (newNote === null) return; // User canceled
+    
+    try {
+      const response = await fetch(`/api/favorit-note/${favoritId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          catatan: newNote
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Catatan berhasil diperbarui');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal memperbarui catatan');
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllFavorites() {
+    if (!confirm('Hapus semua aset favorit? Tindakan ini tidak dapat dibatalkan.')) return;
+    
+    try {
+      const response = await fetch('/api/favorit-clear-all', {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Semua favorit telah dihapus');
+        loadFavoritData();
+        loadFavoriteStatus(); // Update heart icons in main dashboard
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error clearing favorites:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function loadFavoriteStatus() {
+    // Load favorite status for aset displayed in main dashboard
+    try {
+      const response = await fetch('/api/favorit-status');
+      const data = await response.json();
+      
+      if (data.success) {
+        const favoritedIds = data.favorited_ids || [];
+        
+        // Update heart icons
+        document.querySelectorAll('.favorite-heart').forEach(heart => {
+          const asetId = parseInt(heart.getAttribute('data-aset-id'));
+          if (favoritedIds.includes(asetId)) {
+            heart.classList.add('favorited');
+            heart.title = 'Hapus dari Favorit';
+          } else {
+            heart.classList.remove('favorited');
+            heart.title = 'Tambah ke Favorit';
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading favorite status:', error);
+    }
+  }
+
+  async function loadFavoritCount() {
+    try {
+      const response = await fetch('/api/favorit-count');
+      const data = await response.json();
+      
+      if (data.success) {
+        updateFavoritBadge(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading favorit count:', error);
+    }
+  }
+
+  function updateFavoritBadge(count) {
+    const badge = document.getElementById('favoriteBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function showFavoritError(message) {
+    const container = document.getElementById('favoritContainer');
+    if (container) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function showFavoritSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-heart me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // Add keyboard navigation for pagination
+  document.addEventListener('keydown', function(e) {
+    // Only handle pagination if we're on the main dashboard and pagination is visible
+    const paginationControls = document.getElementById('paginationControls');
+    const activeSection = document.querySelector('.content-section:not([style*="display: none"])');
+    
+    if (!paginationControls || paginationControls.style.display === 'none' || 
+        !activeSection || activeSection.id !== 'dashboard-user') {
+      return;
+    }
+    
+    // Handle arrow keys for pagination navigation
+    if (e.key === 'ArrowLeft' && paginationData.has_prev) {
+      e.preventDefault();
+      changePage(paginationData.prev_page);
+    } else if (e.key === 'ArrowRight' && paginationData.has_next) {
+      e.preventDefault();
+      changePage(paginationData.next_page);
+    }
+    // Handle Home/End keys
+    else if (e.key === 'Home' && currentPage > 1) {
+      e.preventDefault();
+      changePage(1);
+    } else if (e.key === 'End' && currentPage < totalPages) {
+      e.preventDefault();
+      changePage(totalPages);
+    }
+  });
+
+  function showAsetDetail(id, jenis) {
+    // Get asset detail
+    fetch(`/api/aset-detail/${id}?jenis=${jenis}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showDetailModal(data.data);
+        } else {
+          alert('Gagal memuat detail aset: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memuat detail aset');
+      });
+  }
+
+  function showDetailModal(aset) {
+    const modalHTML = `
+      <div class="modal fade" id="asetDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">
+                <i class="fas fa-${aset.jenis === 'tanah' ? 'map-marked-alt' : 'building'} me-2"></i>
+                Detail ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="text-danger">Informasi Lokasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Alamat:</strong></td><td>${aset.alamat || '-'}</td></tr>
+                    <tr><td><strong>Kecamatan:</strong></td><td>${aset.kecamatan || '-'}</td></tr>
+                    <tr><td><strong>Kelurahan:</strong></td><td>${aset.kelurahan || '-'}</td></tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h6 class="text-danger">Spesifikasi</h6>
+                  <table class="table table-sm">
+                    <tr><td><strong>Luas Tanah:</strong></td><td>${aset.luas_tanah || 0} m²</td></tr>
+                    ${aset.luas_bangunan ? `<tr><td><strong>Luas Bangunan:</strong></td><td>${aset.luas_bangunan} m²</td></tr>` : ''}
+                    ${aset.kamar_tidur ? `<tr><td><strong>Kamar Tidur:</strong></td><td>${aset.kamar_tidur}</td></tr>` : ''}
+                    ${aset.kamar_mandi ? `<tr><td><strong>Kamar Mandi:</strong></td><td>${aset.kamar_mandi}</td></tr>` : ''}
+                    ${aset.jumlah_lantai ? `<tr><td><strong>Jumlah Lantai:</strong></td><td>${aset.jumlah_lantai}</td></tr>` : ''}
+                  </table>
+                </div>
+              </div>
+              
+              <div class="row mt-3">
+                <div class="col-12">
+                  <h6 class="text-danger">Informasi Harga</h6>
+                  <div class="card bg-light">
+                    <div class="card-body text-center">
+                      <h4 class="text-danger mb-2">Rp ${formatCurrency(aset.harga_sewa)}/bulan</h4>
+                      <small class="text-muted">
+                        Estimasi berdasarkan nilai properti: Rp ${formatCurrency(aset.harga_prediksi)}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+              <button type="button" class="btn btn-danger" onclick="showRentalForm(${aset.id}, '${aset.jenis}'); document.getElementById('asetDetailModal').querySelector('.btn-close').click();">
+                <i class="fas fa-handshake me-1"></i>Ajukan Sewa
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('asetDetailModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('asetDetailModal'));
+    modal.show();
+  }
+
+  function showRentalForm(asetId, jenisAset) {
+    // Get asset detail first
+    fetch(`/api/aset-detail/${asetId}?jenis=${jenisAset}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showRentalModal(data.data);
+        } else {
+          alert('Gagal memuat detail aset: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memuat detail aset');
+      });
+  }
+
+  function showRentalModal(aset) {
+    const modalHTML = `
+      <div class="modal fade" id="rentalModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">
+                <i class="fas fa-handshake me-2"></i>
+                Pengajuan Sewa Aset
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Asset Info -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">
+                    <i class="fas fa-${aset.jenis === 'tanah' ? 'map-marked-alt' : 'building'} me-2"></i>
+                    Detail Aset yang Akan Disewa
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <p class="mb-1"><strong>Alamat:</strong> ${aset.alamat}</p>
+                      <p class="mb-1"><strong>Kecamatan:</strong> ${aset.kecamatan}</p>
+                      <p class="mb-1"><strong>Luas Tanah:</strong> ${aset.luas_tanah} m²</p>
+                      ${aset.luas_bangunan ? `<p class="mb-1"><strong>Luas Bangunan:</strong> ${aset.luas_bangunan} m²</p>` : ''}
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <div class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill mb-2">
+                        ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                      </div>
+                      <h5 class="text-danger">Rp ${formatCurrency(aset.harga_sewa)}/bulan</h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rental Form -->
+              <form id="rentalForm" onsubmit="submitRental(event)">
+                <input type="hidden" name="aset_id" value="${aset.id}">
+                <input type="hidden" name="jenis_aset" value="${aset.jenis}">
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="nama_penyewa" class="form-label">Nama Lengkap *</label>
+                      <input type="text" class="form-control" id="nama_penyewa" name="nama_penyewa" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="email" class="form-label">Email *</label>
+                      <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="telepon" class="form-label">Nomor Telepon *</label>
+                      <input type="tel" class="form-control" id="telepon" name="telepon" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="durasi_sewa" class="form-label">Durasi Sewa (bulan) *</label>
+                      <select class="form-select" id="durasi_sewa" name="durasi_sewa" required onchange="calculateTotal()">
+                        <option value="">Pilih Durasi</option>
+                        <option value="6">6 Bulan</option>
+                        <option value="12">12 Bulan (1 Tahun)</option>
+                        <option value="24">24 Bulan (2 Tahun)</option>
+                        <option value="36">36 Bulan (3 Tahun)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="tanggal_mulai" class="form-label">Tanggal Mulai Sewa</label>
+                      <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" 
+                             min="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Estimasi Total Biaya</label>
+                      <div class="form-control-plaintext">
+                        <h5 class="text-danger" id="totalBiaya">Rp 0</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="pesan" class="form-label">Pesan Tambahan</label>
+                  <textarea class="form-control" id="pesan" name="pesan" rows="3" 
+                            placeholder="Tuliskan pesan atau kebutuhan khusus untuk admin..."></textarea>
+                </div>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <strong>Catatan:</strong> Pengajuan sewa akan diproses oleh admin. 
+                  Anda akan dihubungi melalui email/telepon untuk proses selanjutnya.
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" form="rentalForm" class="btn btn-danger">
+                <i class="fas fa-paper-plane me-1"></i>Kirim Pengajuan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('rentalModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('rentalModal'));
+    modal.show();
+    
+    // Set default values
+    document.getElementById('nama_penyewa').value = '{{ session.get("user_name", "") }}';
+    document.getElementById('email').value = '{{ session.get("user_email", "") }}';
+    
+    // Store asset data for calculation
+    window.currentAsset = aset;
+  }
+
+  function calculateTotal() {
+    const durasi = document.getElementById('durasi_sewa').value;
+    const totalElement = document.getElementById('totalBiaya');
+    
+    if (durasi && window.currentAsset) {
+      const total = window.currentAsset.harga_sewa * parseInt(durasi);
+      totalElement.textContent = `Rp ${formatCurrency(total)}`;
+    } else {
+      totalElement.textContent = 'Rp 0';
+    }
+  }
+
+  async function submitRental(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+      const response = await fetch('/api/submit-rental', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Pengajuan sewa berhasil dikirim!\n\n' + result.message);
+        document.getElementById('rentalModal').querySelector('.btn-close').click();
+      } else {
+        alert('Gagal mengirim pengajuan: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error submitting rental:', error);
+      alert('Terjadi kesalahan saat mengirim pengajuan');
+    }
+  }
+
+  function formatCurrency(number) {
+    return new Intl.NumberFormat('id-ID').format(number);
+  }
+
+  function showError(message) {
+    const container = document.getElementById('asetContainer');
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  // ===== HISTORI SEWA FUNCTIONS =====
+
+  async function loadHistoriData() {
+    try {
+      const filterStatus = document.getElementById('filterStatusHistori').value;
+      const filterJenis = document.getElementById('filterJenisHistori').value;
+      const filterPeriode = document.getElementById('filterPeriode').value;
+      
+      const params = new URLSearchParams();
+      if (filterStatus) params.append('status', filterStatus);
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterPeriode) params.append('periode', filterPeriode);
+      
+      const response = await fetch(`/api/histori-sewa?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayHistoriData(data.data);
+      } else {
+        showHistoriError('Gagal memuat data histori sewa');
+      }
+    } catch (error) {
+      console.error('Error loading histori data:', error);
+      showHistoriError('Terjadi kesalahan saat memuat data');
+    }
+  }
+
+  function displayHistoriData(historiList) {
+    const tbody = document.getElementById('historiSewaTableBody');
+    
+    if (historiList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <i class="fas fa-info-circle text-muted mb-2" style="font-size: 2rem;"></i>
+            <p class="text-muted mb-0">Belum ada histori sewa</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    let html = '';
+    historiList.forEach((item, index) => {
+      const statusBadge = getStatusHistoriBadge(item.status);
+      const jenisBadge = item.jenis_aset === 'tanah' ? 
+        '<span class="badge bg-success">Tanah</span>' : 
+        '<span class="badge bg-primary">Tanah + Bangunan</span>';
+      
+      html += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>
+            <div class="fw-semibold">${item.alamat.substring(0, 30)}${item.alamat.length > 30 ? '...' : ''}</div>
+            <small class="text-muted">${item.kecamatan}</small>
+          </td>
+          <td>${jenisBadge}</td>
+          <td>
+            <div><strong>Mulai:</strong> ${formatDate(item.tanggal_mulai)}</div>
+            <div><strong>Berakhir:</strong> ${formatDate(item.tanggal_berakhir)}</div>
+          </td>
+          <td class="fw-semibold text-success">Rp ${formatCurrency(item.harga_sewa)}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-info" onclick="viewHistoriDetail(${item.id})" title="Lihat Detail">
+                <i class="fas fa-eye"></i>
+              </button>
+              ${item.status === 'aktif' ? 
+                `<button class="btn btn-outline-warning" onclick="extendContract(${item.id})" title="Perpanjang">
+                  <i class="fas fa-calendar-plus"></i>
+                </button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    
+    tbody.innerHTML = html;
+  }
+
+  function getStatusHistoriBadge(status) {
+    const badges = {
+      'aktif': '<span class="badge bg-success">Aktif</span>',
+      'berakhir': '<span class="badge bg-warning text-dark">Berakhir</span>',
+      'dibatalkan': '<span class="badge bg-danger">Dibatalkan</span>'
+    };
+    return badges[status] || '<span class="badge bg-light text-dark">Unknown</span>';
+  }
+
+  function showHistoriError(message) {
+    const tbody = document.getElementById('historiSewaTableBody');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-4">
+          <div class="alert alert-danger mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  function viewHistoriDetail(id) {
+    // Simulate detail view for now
+    alert(`Melihat detail histori sewa dengan ID: ${id}\n\nFitur ini akan menampilkan detail kontrak, dokumen sewa, dan riwayat pembayaran.`);
+    // TODO: Implement actual detail modal
+  }
+
+  function extendContract(id) {
+    if (confirm('Apakah Anda ingin memperpanjang kontrak sewa ini?')) {
+      alert(`Memproses perpanjangan kontrak untuk ID: ${id}\n\nAnda akan diarahkan ke form perpanjangan kontrak.`);
+      // TODO: Implement contract extension
+    }
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  }
+
+  // ===== NOTIFIKASI FUNCTIONS =====
+
+  async function loadNotifikasiData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisNotif').value;
+      const filterStatus = document.getElementById('filterStatusNotif').value;
+      const filterPeriode = document.getElementById('filterPeriodeNotif').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterStatus) params.append('status', filterStatus);
+      if (filterPeriode) params.append('periode', filterPeriode);
+      
+      const response = await fetch(`/api/notifikasi-user?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayNotifikasiData(data.data);
+        updateNotifBadge(data.unread_count || 0);
+      } else {
+        showNotifikasiError('Gagal memuat notifikasi');
+      }
+    } catch (error) {
+      console.error('Error loading notifikasi:', error);
+      showNotifikasiError('Terjadi kesalahan saat memuat notifikasi');
+    }
+  }
+
+  function displayNotifikasiData(notifList) {
+    const container = document.getElementById('notifikasiContainer');
+    const countElement = document.getElementById('notifCount');
+    
+    countElement.textContent = notifList.length;
+    
+    if (notifList.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Tidak ada notifikasi</h5>
+          <p class="text-muted">Anda akan menerima notifikasi terbaru di sini</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    notifList.forEach(notif => {
+      const iconClass = getNotifIcon(notif.jenis);
+      const typeClass = getNotifTypeClass(notif.jenis);
+      const timeAgo = getTimeAgo(notif.created_at);
+      
+      html += `
+        <div class="notification-item p-3 border-bottom ${notif.is_read ? '' : 'notification-unread'} ${typeClass}" 
+             onclick="markAsRead(${notif.id})" data-id="${notif.id}">
+          <div class="d-flex">
+            <div class="me-3">
+              <div class="rounded-circle bg-light p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                <i class="${iconClass} text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <h6 class="mb-0 fw-semibold">${notif.judul}</h6>
+                <div class="d-flex align-items-center">
+                  ${!notif.is_read ? '<span class="badge bg-danger rounded-pill me-2">Baru</span>' : ''}
+                  <small class="text-muted">${timeAgo}</small>
+                </div>
+              </div>
+              <p class="mb-1 text-muted">${notif.pesan}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-light text-dark">${getJenisLabel(notif.jenis)}</span>
+                ${notif.action_url ? `
+                  <button class="btn btn-sm btn-outline-danger" onclick="handleNotifAction('${notif.action_url}', event)">
+                    <i class="fas fa-external-link-alt me-1"></i>Lihat Detail
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function getNotifIcon(jenis) {
+    const icons = {
+      'kontrak': 'fas fa-file-contract',
+      'pembayaran': 'fas fa-credit-card',
+      'sistem': 'fas fa-cog',
+      'promo': 'fas fa-gift'
+    };
+    return icons[jenis] || 'fas fa-bell';
+  }
+
+  function getNotifTypeClass(jenis) {
+    const classes = {
+      'kontrak': 'notification-type-info',
+      'pembayaran': 'notification-type-warning',
+      'sistem': 'notification-type-danger',
+      'promo': 'notification-type-success'
+    };
+    return classes[jenis] || '';
+  }
+
+  function getJenisLabel(jenis) {
+    const labels = {
+      'kontrak': 'Kontrak Sewa',
+      'pembayaran': 'Pembayaran',
+      'sistem': 'Sistem',
+      'promo': 'Promo & Info'
+    };
+    return labels[jenis] || jenis;
+  }
+
+  function getTimeAgo(dateString) {
+    if (!dateString) return '';
+    
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  function updateNotifBadge(count) {
+    const sidebarBadge = document.getElementById('notifBadge');
+    const navbarBadge = document.getElementById('navbarNotifBadge');
+    
+    if (count > 0) {
+      const displayCount = count > 99 ? '99+' : count;
+      if (sidebarBadge) {
+        sidebarBadge.textContent = displayCount;
+        sidebarBadge.style.display = 'flex';
+      }
+      if (navbarBadge) {
+        navbarBadge.textContent = displayCount;
+        navbarBadge.style.display = 'flex';
+      }
+    } else {
+      if (sidebarBadge) sidebarBadge.style.display = 'none';
+      if (navbarBadge) navbarBadge.style.display = 'none';
+    }
+  }
+
+  async function markAsRead(notifId) {
+    try {
+      const response = await fetch(`/api/notifikasi-mark-read/${notifId}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update UI
+        const notifElement = document.querySelector(`[data-id="${notifId}"]`);
+        if (notifElement) {
+          notifElement.classList.remove('notification-unread');
+          const badge = notifElement.querySelector('.badge.bg-danger');
+          if (badge) badge.remove();
+        }
+        
+        // Update badge count
+        loadNotifikasiData();
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }
+
+  async function markAllAsRead() {
+    try {
+      const response = await fetch('/api/notifikasi-mark-all-read', {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah ditandai sebagai dibaca');
+      } else {
+        showNotifError('Gagal menandai notifikasi');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllNotifications() {
+    if (!confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) return;
+    
+    try {
+      const response = await fetch('/api/notifikasi-clear-all', {
+        method: 'DELETE'
+      });
+      
       const data = await response.json();
       
       if (data.success) {
