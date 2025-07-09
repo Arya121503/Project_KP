@@ -59,7 +59,7 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        role = request.form.get('role', 'user')
+        role = request.form.get('role', 'pengguna')
 
         cur = mysql.connection.cursor()
         cur.execute("SELECT id FROM users WHERE email = %s", (email,))
