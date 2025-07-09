@@ -1,0 +1,13 @@
+XGBoost Model Feature Names:
+==============================
+ 1. luas_bangunan
+ 2. luas_tanah
+ 3. kamar_tidur
+ 4. kamar_mandi
+ 5. daya_listrik
+ 6. jumlah_lantai
+ 7. njop_rp_per_m2
+ 8. rasio_bangunan_tanah
+
+Total features: 8
+Created: 2025-07-08 13:23:14

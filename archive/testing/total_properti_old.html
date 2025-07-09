@@ -1,0 +1,694 @@
+{% extends "layout.html" %}
+
+{% block title %}Total Properti - KP Telkom{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Total Properti
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Tanah</h6>
+                                            <h3 class="mb-0" id="totalTanah">{{ total_tanah or 0 }}</h3>
+                                        </div>
+                                        <i class="fas fa-map fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Bangunan</h6>
+                                            <h3 class="mb-0" id="totalBangunan">{{ total_bangunan or 0 }}</h3>
+                                        </div>
+                                        <i class="fas fa-building fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Aset</h6>
+                                            <h3 class="mb-0" id="totalAset">{{ (total_tanah or 0) + (total_bangunan or 0) }}</h3>
+                                        </div>
+                                        <i class="fas fa-home fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Nilai</h6>
+                                            <h3 class="mb-0" id="totalNilai">Rp {{ "{:,.0f}".format(total_nilai or 0) }}</h3>
+                                        </div>
+                                        <i class="fas fa-dollar-sign fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-filter me-2"></i>
+                                        Filter Data
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="filterForm">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label for="filterKecamatan" class="form-label">Kecamatan</label>
+                                                <select class="form-select" id="filterKecamatan" name="kecamatan">
+                                                    <option value="">Semua Kecamatan</option>
+                                                    {% for kecamatan in kecamatan_list %}
+                                                    <option value="{{ kecamatan }}">{{ kecamatan }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterTipe" class="form-label">Tipe Properti</label>
+                                                <select class="form-select" id="filterTipe" name="tipe">
+                                                    <option value="">Semua Tipe</option>
+                                                    <option value="tanah">Tanah</option>
+                                                    <option value="bangunan">Bangunan</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterHarga" class="form-label">Range Harga</label>
+                                                <select class="form-select" id="filterHarga" name="harga">
+                                                    <option value="">Semua Harga</option>
+                                                    <option value="0-100000000">< 100 Juta</option>
+                                                    <option value="100000000-500000000">100 Juta - 500 Juta</option>
+                                                    <option value="500000000-1000000000">500 Juta - 1 Miliar</option>
+                                                    <option value="1000000000-">> 1 Miliar</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterSertifikat" class="form-label">Sertifikat</label>
+                                                <select class="form-select" id="filterSertifikat" name="sertifikat">
+                                                    <option value="">Semua Sertifikat</option>
+                                                    <option value="SHM">SHM</option>
+                                                    <option value="SHGB">SHGB</option>
+                                                    <option value="AJB">AJB</option>
+                                                    <option value="Girik">Girik</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-12">
+                                                <button type="button" class="btn btn-primary me-2" onclick="applyFilter()">
+                                                    <i class="fas fa-search me-2"></i>Terapkan Filter
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="resetFilter()">
+                                                    <i class="fas fa-refresh me-2"></i>Reset
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Tables -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-table me-2"></i>
+                                            Data Properti
+                                        </h6>
+                                        <div>
+                                            <button class="btn btn-success btn-sm" onclick="exportData()">
+                                                <i class="fas fa-download me-2"></i>Export
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                                                <i class="fas fa-sync me-2"></i>Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover" id="propertiTable">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Tipe</th>
+                                                    <th>Kecamatan</th>
+                                                    <th>Kelurahan</th>
+                                                    <th>Luas (m²)</th>
+                                                    <th>Harga</th>
+                                                    <th>Sertifikat</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="propertiTableBody">
+                                                <!-- Data akan dimuat via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Pagination -->
+                                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
+                                        <div class="d-flex align-items-center mb-2 mb-md-0">
+                                            <span class="text-muted me-3">Menampilkan <span id="showingStart">1</span> - <span id="showingEnd">10</span> dari <span id="totalRecords">0</span> data</span>
+                                            <div class="d-flex align-items-center">
+                                                <label class="form-label me-2 mb-0 text-muted">Per halaman:</label>
+                                                <select class="form-select form-select-sm" id="itemsPerPageSelect" style="width: auto;" onchange="changeItemsPerPage()">
+                                                    <option value="10">10</option>
+                                                    <option value="25">25</option>
+                                                    <option value="50">50</option>
+                                                    <option value="100">100</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <nav>
+                                            <ul class="pagination mb-0" id="pagination">
+                                                <!-- Pagination akan dimuat via JavaScript -->
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Memuat Data...</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let itemsPerPage = 10;
+let totalRecords = 0;
+let allData = [];
+let originalData = []; // Store original unfiltered data
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, starting data load...');
+    loadData();
+    
+    // Fallback check after 5 seconds
+    setTimeout(() => {
+        if (allData.length === 0) {
+            console.warn('No data loaded after 5 seconds, retrying...');
+            loadData();
+        }
+    }, 5000);
+});
+
+function loadData() {
+    console.log('Starting to load data...');
+    
+    const tbody = document.getElementById('propertiTableBody');
+    if (!tbody) {
+        console.error('Table body not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Memuat data...</td></tr>';
+    
+    fetch('/api/total-properti')
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API Response received, success:', data.success);
+            
+            if (data.success && data.data && data.data.all_properties) {
+                allData = data.data.all_properties;
+                originalData = [...allData];
+                totalRecords = allData.length;
+                
+                console.log('Data loaded successfully. Count:', allData.length);
+                
+                if (allData.length > 0) {
+                    updateTable();
+                    updatePagination();
+                    updateStatCards(); // Update summary cards
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+                }
+            } else {
+                console.error('API error or invalid structure');
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
+        });
+}
+
+function updateTable() {
+    console.log('Updating table with', allData.length, 'items');
+    
+    const tbody = document.getElementById('propertiTableBody');
+    if (!tbody) {
+        console.error('Table body not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!allData || allData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+        updateShowingInfo();
+        return;
+    }
+    
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageData = allData.slice(start, end);
+    
+    console.log('Displaying page', currentPage, ':', pageData.length, 'items');
+    
+    pageData.forEach((item, index) => {
+        try {
+            const row = document.createElement('tr');
+            
+            const tipe = item.tipe || 'N/A';
+            const kecamatan = item.kecamatan || 'N/A';
+            const kelurahan = item.kelurahan || 'N/A';
+            const luas = item.luas || 0;
+            const harga = item.harga || 0;
+            const sertifikat = item.sertifikat || '-';
+            const id = item.id || 0;
+            
+            row.innerHTML = `
+                <td>${start + index + 1}</td>
+                <td><span class="badge bg-${tipe === 'tanah' ? 'success' : 'primary'}">${tipe}</span></td>
+                <td>${kecamatan}</td>
+                <td>${kelurahan}</td>
+                <td>${formatNumber(luas)}</td>
+                <td>${formatCurrency(harga)}</td>
+                <td>${sertifikat}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewDetail(${id}, '${tipe}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="editData(${id}, '${tipe}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteData(${id}, '${tipe}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        } catch (error) {
+            console.error('Error processing item:', error);
+            const errorRow = document.createElement('tr');
+            errorRow.innerHTML = `<td colspan="8" class="text-center text-danger">Error processing item</td>`;
+            tbody.appendChild(errorRow);
+        }
+    });
+    
+    updateShowingInfo();
+    console.log('Table updated successfully');
+}
+
+function updatePagination() {
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    
+    // If no data or only one page, don't show pagination
+    if (totalPages <= 1) {
+        return;
+    }
+    
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage <= 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;">Previous</a>`;
+    pagination.appendChild(prevLi);
+    
+    // Calculate visible page range
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust startPage if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // First page if not in range
+    if (startPage > 1) {
+        const firstLi = document.createElement('li');
+        firstLi.className = 'page-item';
+        firstLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(1); return false;">1</a>`;
+        pagination.appendChild(firstLi);
+        
+        if (startPage > 2) {
+            const dotsLi = document.createElement('li');
+            dotsLi.className = 'page-item disabled';
+            dotsLi.innerHTML = `<span class="page-link">...</span>`;
+            pagination.appendChild(dotsLi);
+        }
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>`;
+        pagination.appendChild(li);
+    }
+    
+    // Last page if not in range
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dotsLi = document.createElement('li');
+            dotsLi.className = 'page-item disabled';
+            dotsLi.innerHTML = `<span class="page-link">...</span>`;
+            pagination.appendChild(dotsLi);
+        }
+        
+        const lastLi = document.createElement('li');
+        lastLi.className = 'page-item';
+        lastLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${totalPages}); return false;">${totalPages}</a>`;
+        pagination.appendChild(lastLi);
+    }
+    
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage >= totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;">Next</a>`;
+    pagination.appendChild(nextLi);
+}
+
+function goToPage(page) {
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
+    
+    // Validate page number
+    if (page < 1 || page > totalPages || page === currentPage) {
+        return false;
+    }
+    
+    console.log(`Going to page ${page} of ${totalPages}`);
+    currentPage = page;
+    updateTable();
+    updatePagination();
+    
+    // Scroll to top of table
+    document.getElementById('propertiTable').scrollIntoView({ behavior: 'smooth' });
+    
+    return false;
+}
+
+function updateShowingInfo() {
+    if (totalRecords === 0) {
+        document.getElementById('showingStart').textContent = '0';
+        document.getElementById('showingEnd').textContent = '0';
+        document.getElementById('totalRecords').textContent = '0';
+        return;
+    }
+    
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(currentPage * itemsPerPage, totalRecords);
+    
+    document.getElementById('showingStart').textContent = start;
+    document.getElementById('showingEnd').textContent = end;
+    document.getElementById('totalRecords').textContent = totalRecords;
+    
+    console.log(`Showing ${start}-${end} of ${totalRecords} records`);
+}
+
+function applyFilter() {
+    const filters = {
+        kecamatan: document.getElementById('filterKecamatan').value,
+        tipe: document.getElementById('filterTipe').value,
+        harga: document.getElementById('filterHarga').value,
+        sertifikat: document.getElementById('filterSertifikat').value
+    };
+    
+    console.log('Applying filters:', filters);
+    showLoading();
+    
+    // For now, we'll apply client-side filtering since the API doesn't have a filter endpoint
+    // Start with original data
+    let filteredData = [...originalData];
+    
+    // Apply filters
+    if (filters.kecamatan) {
+        filteredData = filteredData.filter(item => 
+            item.kecamatan.toLowerCase().includes(filters.kecamatan.toLowerCase())
+        );
+    }
+    
+    if (filters.tipe) {
+        filteredData = filteredData.filter(item => item.tipe === filters.tipe);
+    }
+    
+    if (filters.sertifikat) {
+        filteredData = filteredData.filter(item => 
+            item.sertifikat && item.sertifikat.toLowerCase().includes(filters.sertifikat.toLowerCase())
+        );
+    }
+    
+    if (filters.harga) {
+        const [min, max] = filters.harga.split('-').map(Number);
+        filteredData = filteredData.filter(item => {
+            const harga = item.harga;
+            if (max) {
+                return harga >= min && harga <= max;
+            } else {
+                return harga >= min;
+            }
+        });
+    }
+    
+    // Update display with filtered data
+    allData = filteredData;
+    totalRecords = allData.length;
+    currentPage = 1;
+    
+    updateTable();
+    updatePagination();
+    hideLoading();
+    
+    console.log(`Filter applied: ${totalRecords} results found`);
+}
+    })
+    .finally(() => {
+        hideLoading();
+    });
+}
+
+function resetFilter() {
+    console.log('Resetting filter...');
+    document.getElementById('filterForm').reset();
+    
+    // Restore original data
+    allData = [...originalData];
+    totalRecords = allData.length;
+    currentPage = 1;
+    
+    updateTable();
+    updatePagination();
+    
+    console.log(`Filter reset: ${totalRecords} total records restored`);
+}
+
+function refreshData() {
+    loadData();
+}
+
+function exportData() {
+    // Implement export functionality
+    alert('Export functionality will be implemented');
+}
+
+function viewDetail(id, tipe) {
+    // Implement view detail functionality
+    alert(`View detail for ${tipe} with ID: ${id}`);
+}
+
+function editData(id, tipe) {
+    // Implement edit functionality
+    if (tipe === 'tanah') {
+        window.location.href = `/edit-tanah/${id}`;
+    } else {
+        window.location.href = `/edit-bangunan/${id}`;
+    }
+}
+
+function deleteData(id, tipe) {
+    if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+        showLoading();
+        
+        fetch(`/delete-${tipe}/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Data berhasil dihapus');
+                loadData();
+            } else {
+                showError('Gagal menghapus data');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Terjadi kesalahan saat menghapus data');
+        })
+        .finally(() => {
+            hideLoading();
+        });
+    }
+}
+
+function formatCurrency(value) {
+    try {
+        const numValue = parseFloat(value) || 0;
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(numValue);
+    } catch (error) {
+        console.error('Error formatting currency:', value, error);
+        return 'Rp 0';
+    }
+}
+
+function formatNumber(value) {
+    try {
+        const numValue = parseFloat(value) || 0;
+        return new Intl.NumberFormat('id-ID').format(numValue);
+    } catch (error) {
+        console.error('Error formatting number:', value, error);
+        return '0';
+    }
+}
+
+function showLoading() {
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+}
+
+function hideLoading() {
+    const loadingModal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (loadingModal) {
+        loadingModal.hide();
+    }
+}
+
+function showSuccess(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: message,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(message);
+    }
+}
+
+function showError(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: message,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(message);
+    }
+}
+
+function changeItemsPerPage() {
+    const select = document.getElementById('itemsPerPageSelect');
+    itemsPerPage = parseInt(select.value);
+    currentPage = 1; // Reset to first page
+    updateTable();
+    updatePagination();
+    console.log(`Changed items per page to: ${itemsPerPage}`);
+}
+
+function updateStatCards() {
+    if (!allData || allData.length === 0) return;
+    
+    // Count by type
+    let totalTanah = 0;
+    let totalBangunan = 0;
+    let totalNilai = 0;
+    
+    allData.forEach(item => {
+        if (item.tipe === 'tanah') {
+            totalTanah++;
+        } else if (item.tipe === 'bangunan') {
+            totalBangunan++;
+        }
+        totalNilai += parseFloat(item.harga || 0);
+    });
+    
+    // Update cards
+    const totalTanahEl = document.getElementById('totalTanah');
+    const totalBangunanEl = document.getElementById('totalBangunan');
+    const totalAsetEl = document.getElementById('totalAset');
+    const totalNilaiEl = document.getElementById('totalNilai');
+    
+    if (totalTanahEl) totalTanahEl.textContent = totalTanah;
+    if (totalBangunanEl) totalBangunanEl.textContent = totalBangunan;
+    if (totalAsetEl) totalAsetEl.textContent = totalTanah + totalBangunan;
+    if (totalNilaiEl) totalNilaiEl.textContent = formatCurrency(totalNilai);
+}
+</script>
+{% endblock %}

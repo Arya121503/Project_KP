@@ -1,436 +1,488 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total Properti | Telkom Aset</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    
-    <!-- Telkom Color Scheme -->
-    <style>
-        :root {
-            --telkom-red: #DC143C;
-            --telkom-dark: #8B0000;
-            --telkom-light: rgba(220, 20, 60, 0.1);
-            --telkom-white: #ffffff;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.2);
-        }
-        .stat-card h3 {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .tab-content {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .nav-tabs .nav-link {
-            border-radius: 10px 10px 0 0;
-            color: #495057;
-            font-weight: 500;
-            border: 2px solid transparent;
-        }
-        .nav-tabs .nav-link.active {
-            background-color: var(--telkom-red);
-            color: white;
-            border-color: var(--telkom-red);
-        }
-        .nav-tabs .nav-link:hover {
-            background-color: var(--telkom-light);
-            color: var(--telkom-dark);
-            border-color: var(--telkom-red);
-        }
-        .table th {
-            background-color: var(--telkom-light);
-            font-weight: 600;
-            border-top: none;
-            color: var(--telkom-dark);
-        }
-        .price-cell {
-            color: var(--telkom-red);
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .btn-primary {
-            background-color: var(--telkom-red);
-            border-color: var(--telkom-red);
-        }
-        .btn-primary:hover {
-            background-color: var(--telkom-dark);
-            border-color: var(--telkom-dark);
-        }
-        .btn-warning:hover {
-            background-color: #e0a800;
-            border-color: #d39e00;
-        }
-        .btn-danger {
-            background-color: var(--telkom-red);
-            border-color: var(--telkom-red);
-        }
-        .btn-danger:hover {
-            background-color: var(--telkom-dark);
-            border-color: var(--telkom-dark);
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.15);
-            transition: all 0.3s ease;
-        }
-        .badge.bg-info {
-            background-color: var(--telkom-red) !important;
-            font-weight: 600;
-        }
-        .back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: var(--telkom-red);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 10px 20px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        .back-btn:hover {
-            background: var(--telkom-dark);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        @media (max-width: 768px) {
-            .container-fluid {
-                margin-top: 20px !important;
-            }
-        }
-    </style>
-</head>
-<body style="background-color: #f8f9fa;">
-    
-    <!-- Back Button -->
-    <a href="{{ url_for('main.manajemen_aset') }}" class="back-btn">
-        <i class="fas fa-arrow-left me-2"></i>Kembali
-    </a>
+{% extends "layout.html" %}
 
-    <div class="container-fluid py-4" style="margin-top: 70px;">
-        
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="display-5 fw-bold text-center mb-3">
-                    <i class="fas fa-home-lg-alt text-primary me-3"></i>
-                    Total Properti Prediksi - SEMUA DATA
-                </h1>
-                <p class="text-center text-muted fs-5">
-                    Data lengkap seluruh prediksi harga properti tanah dan bangunan di Surabaya
-                </p>
-                <div class="text-center">
-                    <span class="badge bg-danger fs-6 me-2">
-                        <i class="fas fa-map me-1"></i>
-                        {{ prediksi_tanah|length }} Data Tanah
-                    </span>
-                    <span class="badge bg-success fs-6">
-                        <i class="fas fa-building me-1"></i>
-                        {{ prediksi_bangunan|length }} Data Bangunan
-                    </span>
-                </div>
-            </div>
-        </div>
+{% block title %}Total Properti - KP Telkom{% endblock %}
 
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-light mb-1">Total Prediksi Tanah</h6>
-                            <h3>{{ stats_tanah[0] if stats_tanah and stats_tanah[0] else 0 }}</h3>
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Total Properti
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Tanah</h6>
+                                            <h3 class="mb-0" id="totalTanah">-</h3>
+                                        </div>
+                                        <i class="fas fa-map fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="fs-1 opacity-75">
-                            <i class="fas fa-map"></i>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Bangunan</h6>
+                                            <h3 class="mb-0" id="totalBangunan">-</h3>
+                                        </div>
+                                        <i class="fas fa-building fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Aset</h6>
+                                            <h3 class="mb-0" id="totalAset">-</h3>
+                                        </div>
+                                        <i class="fas fa-home fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">Total Nilai</h6>
+                                            <h3 class="mb-0" id="totalNilai">-</h3>
+                                        </div>
+                                        <i class="fas fa-dollar-sign fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-light mb-1">Total Prediksi Bangunan</h6>
-                            <h3>{{ stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0 }}</h3>
-                        </div>
-                        <div class="fs-1 opacity-75">
-                            <i class="fas fa-building"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-light mb-1">Rata-rata Harga Tanah</h6>
-                            <h3>Rp {{ "{:,.0f}".format(stats_tanah[1] if stats_tanah and stats_tanah[1] else 0) }}</h3>
-                        </div>
-                        <div class="fs-1 opacity-75">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-light mb-1">Rata-rata Harga Bangunan</h6>
-                            <h3>Rp {{ "{:,.0f}".format(stats_bangunan[1] if stats_bangunan and stats_bangunan[1] else 0) }}</h3>
-                        </div>
-                        <div class="fs-1 opacity-75">
-                            <i class="fas fa-home"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tabs untuk Data -->
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <ul class="nav nav-tabs" id="propertiTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="tanah-tab" data-bs-toggle="tab" data-bs-target="#tanah" 
-                                        type="button" role="tab" aria-controls="tanah" aria-selected="true">
-                                    <i class="fas fa-map me-2"></i>Data Prediksi Tanah
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="bangunan-tab" data-bs-toggle="tab" data-bs-target="#bangunan" 
-                                        type="button" role="tab" aria-controls="bangunan" aria-selected="false">
-                                    <i class="fas fa-building me-2"></i>Data Prediksi Bangunan
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div>
-                        <a href="{{ url_for('main.tambah_tanah') }}" class="btn btn-success me-2">
-                            <i class="fas fa-plus me-2"></i>Tambah Data Tanah
-                        </a>
-                        <a href="{{ url_for('main.tambah_bangunan') }}" class="btn btn-danger">
-                            <i class="fas fa-plus me-2"></i>Tambah Data Bangunan
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="propertiTabsContent">
-                    
-                    <!-- Tab Data Tanah -->
-                    <div class="tab-pane fade show active" id="tanah" role="tabpanel" aria-labelledby="tanah-tab">
-                        <h4 class="mb-3">
-                            <i class="fas fa-map text-success me-2"></i>
-                            Data Prediksi Harga Tanah
-                        </h4>
-                        
-                        <div class="table-responsive">
-                            <table id="tanahTable" class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Kecamatan</th>
-                                        <th>Kelurahan</th>
-                                        <th>Luas Tanah (m²)</th>
-                                        <th>NJOP/m²</th>
-                                        <th>Zona Nilai</th>
-                                        <th>Kelas Tanah</th>
-                                        <th>Sertifikat</th>
-                                        <th>Harga Prediksi</th>
-                                        <th>Harga per m²</th>
-                                        <th>Model</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tanah in prediksi_tanah %}
-                                    <tr>
-                                        <td>{{ tanah[0] }}</td>
-                                        <td>{{ tanah[1] }}</td>
-                                        <td>{{ tanah[2] }}</td>
-                                        <td>{{ "{:,.0f}".format(tanah[3]) }}</td>
-                                        <td>Rp {{ "{:,.0f}".format(tanah[4]) }}</td>
-                                        <td>{{ tanah[5] }}</td>
-                                        <td>{{ tanah[6] }}</td>
-                                        <td>{{ tanah[7] }}</td>
-                                        <td class="price-cell">Rp {{ "{:,.0f}".format(tanah[8]) }}</td>
-                                        <td class="price-cell">Rp {{ "{:,.0f}".format(tanah[9]) }}</td>
-                                        <td><span class="badge bg-info">{{ tanah[10] }}</span></td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ url_for('main.edit_tanah', id=tanah[0]) }}" class="btn btn-sm btn-warning">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form method="POST" action="{{ url_for('main.hapus_tanah', id=tanah[0]) }}" style="display:inline;" 
-                                                      onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <!-- Filter Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-filter me-2"></i>
+                                        Filter Data
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label for="filterKecamatan" class="form-label">Kecamatan</label>
+                                            <select class="form-select" id="filterKecamatan">
+                                                <option value="">Semua Kecamatan</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filterTipe" class="form-label">Tipe Properti</label>
+                                            <select class="form-select" id="filterTipe">
+                                                <option value="">Semua Tipe</option>
+                                                <option value="tanah">Tanah</option>
+                                                <option value="bangunan">Bangunan</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filterSertifikat" class="form-label">Sertifikat</label>
+                                            <select class="form-select" id="filterSertifikat">
+                                                <option value="">Semua Sertifikat</option>
+                                                <option value="SHM">SHM</option>
+                                                <option value="SHGB">SHGB</option>
+                                                <option value="AJB">AJB</option>
+                                                <option value="Girik">Girik</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button type="button" class="btn btn-primary me-2" onclick="applyFilter()">
+                                                <i class="fas fa-search me-1"></i>Filter
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" onclick="resetFilter()">
+                                                <i class="fas fa-refresh me-1"></i>Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Tab Data Bangunan -->
-                    <div class="tab-pane fade" id="bangunan" role="tabpanel" aria-labelledby="bangunan-tab">
-                        <h4 class="mb-3">
-                            <i class="fas fa-building text-primary me-2"></i>
-                            Data Prediksi Harga Bangunan + Tanah
-                        </h4>
-                        
-                        <div class="table-responsive">
-                            <table id="bangunanTable" class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Kecamatan</th>
-                                        <th>Luas Tanah (m²)</th>
-                                        <th>Luas Bangunan (m²)</th>
-                                        <th>Kamar Tidur</th>
-                                        <th>Kamar Mandi</th>
-                                        <th>Lantai</th>
-                                        <th>Tahun Dibangun</th>
-                                        <th>Sertifikat</th>
-                                        <th>Kondisi</th>
-                                        <th>Harga Total</th>
-                                        <th>Harga Tanah</th>
-                                        <th>Harga Bangunan</th>
-                                        <th>Model</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for bangunan in prediksi_bangunan %}
-                                    <tr>
-                                        <td>{{ bangunan[0] }}</td>
-                                        <td>{{ bangunan[1] }}</td>
-                                        <td>{{ "{:,.0f}".format(bangunan[2]) }}</td>
-                                        <td>{{ "{:,.0f}".format(bangunan[3]) }}</td>
-                                        <td>{{ bangunan[4] }}</td>
-                                        <td>{{ bangunan[5] }}</td>
-                                        <td>{{ bangunan[6] or 1 }}</td>
-                                        <td>{{ bangunan[7] }}</td>
-                                        <td>{{ bangunan[9] }}</td>
-                                        <td>{{ bangunan[10] }}</td>
-                                        <td class="price-cell">Rp {{ "{:,.0f}".format(bangunan[17]) }}</td>
-                                        <td class="price-cell">Rp {{ "{:,.0f}".format(bangunan[18]) }}</td>
-                                        <td class="price-cell">Rp {{ "{:,.0f}".format(bangunan[19]) }}</td>
-                                        <td><span class="badge bg-info">{{ bangunan[21] }}</span></td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ url_for('main.edit_bangunan', id=bangunan[0]) }}" class="btn btn-sm btn-warning">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form method="POST" action="{{ url_for('main.hapus_bangunan', id=bangunan[0]) }}" style="display:inline;" 
-                                                      onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+
+                    <!-- Data Table -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-table me-2"></i>
+                                            Data Properti
+                                        </h6>
+                                        <div>
+                                            <button class="btn btn-success btn-sm" onclick="refreshData()">
+                                                <i class="fas fa-refresh me-1"></i>Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Status Info -->
+                                    <div class="alert alert-info" id="statusInfo" style="display: none;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span id="statusText">Memuat data...</span>
+                                    </div>
+
+                                    <!-- Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Tipe</th>
+                                                    <th>Kecamatan</th>
+                                                    <th>Kelurahan</th>
+                                                    <th>Luas (m²)</th>
+                                                    <th>Harga</th>
+                                                    <th>Sertifikat</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dataTableBody">
+                                                <tr>
+                                                    <td colspan="8" class="text-center">
+                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                        Memuat data...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination -->
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span class="text-muted" id="paginationInfo">Menampilkan 0 data</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <label class="form-label me-2 mb-0">Per halaman:</label>
+                                            <select class="form-select form-select-sm me-3" id="itemsPerPage" onchange="changeItemsPerPage()" style="width: 80px;">
+                                                <option value="10">10</option>
+                                                <option value="25">25</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                            <nav>
+                                                <ul class="pagination pagination-sm mb-0" id="pagination">
+                                                    <!-- Pagination will be generated here -->
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Bootstrap Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+// Global variables
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing Total Properti page...');
+    loadData();
+});
+
+// Load data from API
+async function loadData() {
+    showStatus('Memuat data properti...', 'info');
     
-    <script>
-        $(document).ready(function() {
-            // Initialize DataTables dengan pengaturan untuk menampilkan semua data
-            $('#tanahTable').DataTable({
-                "pageLength": 50, // Tampilkan 50 record per halaman
-                "lengthMenu": [[25, 50, 100, 250, -1], [25, 50, 100, 250, "Semua"]],
-                "order": [[ 0, "desc" ]],
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json"
-                },
-                "columnDefs": [
-                    {
-                        "targets": [11], // Kolom Aksi
-                        "orderable": false,
-                        "searchable": false
-                    }
-                ],
-                "scrollX": true, // Enable horizontal scrolling untuk tabel lebar
-                "responsive": true,
-                "processing": true
-            });
+    try {
+        console.log('Fetching data from /api/total-properti...');
+        const response = await fetch('/api/total-properti');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('API Response:', result);
+        
+        if (result.success && result.data && result.data.all_properties) {
+            allData = result.data.all_properties;
+            filteredData = [...allData];
             
-            $('#bangunanTable').DataTable({
-                "pageLength": 50, // Tampilkan 50 record per halaman
-                "lengthMenu": [[25, 50, 100, 250, -1], [25, 50, 100, 250, "Semua"]],
-                "order": [[ 0, "desc" ]],
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json"
-                },
-                "columnDefs": [
-                    {
-                        "targets": [14], // Kolom Aksi
-                        "orderable": false,
-                        "searchable": false
-                    }
-                ],
-                "scrollX": true, // Enable horizontal scrolling untuk tabel lebar
-                "responsive": true,
-                "processing": true
-            });
+            console.log(`Loaded ${allData.length} properties successfully`);
             
-            // Tambahkan informasi total data
-            console.log('Total Data Tanah:', {{ prediksi_tanah|length }});
-            console.log('Total Data Bangunan:', {{ prediksi_bangunan|length }});
-        });
-    </script>
-</body>
-</html>
+            updateStatistics();
+            populateFilters();
+            displayData();
+            hideStatus();
+            
+        } else {
+            throw new Error(result.error || 'Invalid response structure');
+        }
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showStatus(`Error: ${error.message}`, 'danger');
+        showErrorTable(error.message);
+    }
+}
+
+// Update statistics cards
+function updateStatistics() {
+    let totalTanah = 0;
+    let totalBangunan = 0;
+    let totalNilai = 0;
+    
+    allData.forEach(item => {
+        if (item.tipe === 'tanah') {
+            totalTanah++;
+        } else if (item.tipe === 'bangunan') {
+            totalBangunan++;
+        }
+        totalNilai += parseFloat(item.harga || 0);
+    });
+    
+    document.getElementById('totalTanah').textContent = totalTanah.toLocaleString();
+    document.getElementById('totalBangunan').textContent = totalBangunan.toLocaleString();
+    document.getElementById('totalAset').textContent = (totalTanah + totalBangunan).toLocaleString();
+    document.getElementById('totalNilai').textContent = formatCurrency(totalNilai);
+}
+
+// Populate filter dropdowns
+function populateFilters() {
+    const kecamatanSet = new Set();
+    
+    allData.forEach(item => {
+        if (item.kecamatan) {
+            kecamatanSet.add(item.kecamatan);
+        }
+    });
+    
+    const kecamatanSelect = document.getElementById('filterKecamatan');
+    kecamatanSelect.innerHTML = '<option value="">Semua Kecamatan</option>';
+    
+    Array.from(kecamatanSet).sort().forEach(kecamatan => {
+        const option = document.createElement('option');
+        option.value = kecamatan;
+        option.textContent = kecamatan;
+        kecamatanSelect.appendChild(option);
+    });
+}
+
+// Display data in table
+function displayData() {
+    const tbody = document.getElementById('dataTableBody');
+    tbody.innerHTML = '';
+    
+    if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data yang ditemukan</td></tr>';
+        updatePaginationInfo(0, 0, 0);
+        return;
+    }
+    
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageData = filteredData.slice(start, end);
+    
+    pageData.forEach((item, index) => {
+        const row = document.createElement('tr');
+        const globalIndex = start + index + 1;
+        
+        row.innerHTML = `
+            <td>${globalIndex}</td>
+            <td>
+                <span class="badge bg-${item.tipe === 'tanah' ? 'danger' : 'success'}">
+                    ${item.tipe ? item.tipe.toUpperCase() : 'N/A'}
+                </span>
+            </td>
+            <td>${item.kecamatan || '-'}</td>
+            <td>${item.kelurahan || '-'}</td>
+            <td>${formatNumber(item.luas || 0)}</td>
+            <td>${formatCurrency(item.harga || 0)}</td>
+            <td>${item.sertifikat || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-info me-1" onclick="viewDetail(${item.id}, '${item.tipe}')" title="Lihat Detail">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning me-1" onclick="editData(${item.id}, '${item.tipe}')" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id}, '${item.tipe}')" title="Hapus">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    updatePaginationInfo(start + 1, Math.min(end, filteredData.length), filteredData.length);
+    updatePagination();
+}
+
+// Apply filters
+function applyFilter() {
+    const kecamatan = document.getElementById('filterKecamatan').value;
+    const tipe = document.getElementById('filterTipe').value;
+    const sertifikat = document.getElementById('filterSertifikat').value;
+    
+    filteredData = allData.filter(item => {
+        const matchKecamatan = !kecamatan || item.kecamatan === kecamatan;
+        const matchTipe = !tipe || item.tipe === tipe;
+        const matchSertifikat = !sertifikat || item.sertifikat === sertifikat;
+        
+        return matchKecamatan && matchTipe && matchSertifikat;
+    });
+    
+    currentPage = 1;
+    displayData();
+    
+    showStatus(`Filter diterapkan. Ditemukan ${filteredData.length} data.`, 'success');
+    setTimeout(hideStatus, 3000);
+}
+
+// Reset filters
+function resetFilter() {
+    document.getElementById('filterKecamatan').value = '';
+    document.getElementById('filterTipe').value = '';
+    document.getElementById('filterSertifikat').value = '';
+    
+    filteredData = [...allData];
+    currentPage = 1;
+    displayData();
+    
+    showStatus('Filter direset.', 'info');
+    setTimeout(hideStatus, 2000);
+}
+
+// Pagination functions
+function updatePagination() {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    
+    if (totalPages <= 1) return;
+    
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage <= 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;">‹</a>`;
+    pagination.appendChild(prevLi);
+    
+    // Page numbers
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>`;
+        pagination.appendChild(li);
+    }
+    
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage >= totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;">›</a>`;
+    pagination.appendChild(nextLi);
+}
+
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    displayData();
+}
+
+function changeItemsPerPage() {
+    itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+    currentPage = 1;
+    displayData();
+}
+
+function updatePaginationInfo(start, end, total) {
+    document.getElementById('paginationInfo').textContent = 
+        total > 0 ? `Menampilkan ${start}-${end} dari ${total.toLocaleString()} data` : 'Tidak ada data';
+}
+
+// Utility functions
+function formatCurrency(value) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(value || 0);
+}
+
+function formatNumber(value) {
+    return new Intl.NumberFormat('id-ID').format(value || 0);
+}
+
+function showStatus(message, type = 'info') {
+    const statusInfo = document.getElementById('statusInfo');
+    const statusText = document.getElementById('statusText');
+    
+    statusInfo.className = `alert alert-${type}`;
+    statusText.textContent = message;
+    statusInfo.style.display = 'block';
+}
+
+function hideStatus() {
+    document.getElementById('statusInfo').style.display = 'none';
+}
+
+function showErrorTable(message) {
+    const tbody = document.getElementById('dataTableBody');
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${message}</td></tr>`;
+}
+
+function refreshData() {
+    loadData();
+}
+
+// CRUD Functions (placeholders)
+function viewDetail(id, type) {
+    alert(`View detail ${type} ID: ${id}`);
+}
+
+function editData(id, type) {
+    alert(`Edit ${type} ID: ${id}`);
+}
+
+function deleteData(id, type) {
+    if (confirm(`Apakah Anda yakin ingin menghapus ${type} ID: ${id}?`)) {
+        alert(`Delete ${type} ID: ${id}`);
+    }
+}
+</script>
+{% endblock %}

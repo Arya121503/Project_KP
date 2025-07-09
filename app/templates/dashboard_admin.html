@@ -327,10 +327,7 @@
             <span class="material-icons-sharp">apartment</span>
             <h3>Aset Disewa</h3>
           </a>
-          <a href="#" class="menu-link" data-target="aset-jual">
-            <span class="material-icons-sharp">sell</span>
-            <h3>Aset Dijual</h3>
-          </a>
+
           <a href="#" class="menu-link" data-target="manajemen-aset">
             <span class="material-icons-sharp">manage_accounts</span>
             <h3>Manajemen Data Aset</h3>
@@ -478,7 +475,7 @@
               <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
                   <i class="fas fa-chart-line text-danger mb-2 display-6"></i>
-                  <h4 id="avgPrice">Rp 850,000,000</h4>
+                  <h4 id="avgPrice"><i class="fas fa-spinner fa-spin"></i></h4>
                   <small class="text-muted">Harga Rata-rata</small>
                 </div>
               </div>
@@ -487,7 +484,7 @@
               <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
                   <i class="fas fa-arrow-up text-info mb-2 display-6"></i>
-                  <h4 id="maxPrice">Rp 2,500,000,000</h4>
+                  <h4 id="maxPrice"><i class="fas fa-spinner fa-spin"></i></h4>
                   <small class="text-muted">Harga Tertinggi</small>
                 </div>
               </div>
@@ -496,7 +493,7 @@
               <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
                   <i class="fas fa-arrow-down text-warning mb-2 display-6"></i>
-                  <h4 id="minPrice">Rp 150,000,000</h4>
+                  <h4 id="minPrice"><i class="fas fa-spinner fa-spin"></i></h4>
                   <small class="text-muted">Harga Terendah</small>
                 </div>
               </div>
@@ -505,10 +502,25 @@
               <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
                   <i class="fas fa-home text-secondary mb-2 display-6"></i>
-                  <h4 id="totalAssets">1,247</h4>
+                  <h4 id="totalAssets"><i class="fas fa-spinner fa-spin"></i></h4>
                   <small class="text-muted">Total Aset</small>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Refresh Button -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <button class="btn btn-success me-2" onclick="window.refreshVisualizationData ? window.refreshVisualizationData() : (window.visualizationDashboard && window.visualizationDashboard.loadAllData())">
+                <i class="fas fa-sync-alt me-2"></i>Refresh Data
+              </button>
+              <span class="badge bg-success me-2" id="dataStatus">
+                <i class="fas fa-circle me-1"></i>Real-time
+              </span>
+              <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>Data akan terupdate otomatis setelah admin menambahkan data baru
+              </small>
             </div>
           </div>
 
@@ -701,16 +713,16 @@
 
           <!-- Data Tables & Statistics -->
           <div class="row g-4 mb-4">
-            <!-- Top Locations Table -->
+            <!-- All Locations Table -->
             <div class="col-md-6">
               <div class="card shadow-sm border-0">
                 <div class="card-header bg-gradient" style="background: linear-gradient(45deg, #DC143C, #FF6B6B);">
-                  <h6 class="mb-0 text-white"><i class="fas fa-trophy me-2"></i>Top 10 Lokasi Termahal</h6>
+                  <h6 class="mb-0 text-white"><i class="fas fa-map-marker-alt me-2"></i>Semua Kecamatan di Surabaya</h6>
                 </div>
                 <div class="card-body">
-                  <div class="table-responsive">
+                  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-hover table-sm">
-                      <thead>
+                      <thead class="table-dark sticky-top">
                         <tr>
                           <th>Rank</th>
                           <th>Kecamatan</th>
@@ -719,35 +731,11 @@
                         </tr>
                       </thead>
                       <tbody id="topPriceTable">
+                        <!-- Data akan diisi oleh JavaScript -->
                         <tr>
-                          <td>1</td>
-                          <td>Gubeng</td>
-                          <td>Rp 1,200,000,000</td>
-                          <td>45</td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td>Tegalsari</td>
-                          <td>Rp 1,100,000,000</td>
-                          <td>38</td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>Genteng</td>
-                          <td>Rp 950,000,000</td>
-                          <td>42</td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td>Sukolilo</td>
-                          <td>Rp 850,000,000</td>
-                          <td>56</td>
-                        </tr>
-                        <tr>
-                          <td>5</td>
-                          <td>Wonokromo</td>
-                          <td>Rp 780,000,000</td>
-                          <td>62</td>
+                          <td colspan="4" class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> Loading data...
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -857,7 +845,7 @@
                   </div>
                   <div class="text-center">
                     <small class="text-muted">Data terakhir update:</small><br>
-                    <strong>{{ current_date or "6 Juli 2025" }}</strong>
+                    <strong id="lastUpdateTime">{{ current_date or "Loading..." }}</strong>
                   </div>
                 </div>
               </div>
@@ -974,23 +962,7 @@
         </div>
       </section>
       
-      <!-- Aset Dijual -->
-      <section id="aset-jual" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Aset Dijual</h1>
-          <p class="text-muted mb-4">Manajemen data aset yang sedang dijual</p>
-          
-          <div class="text-center">
-            <div class="card shadow-sm border-0">
-              <div class="card-body py-5">
-                <i class="fas fa-sell text-muted mb-3" style="font-size: 4rem;"></i>
-                <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
-                <p class="text-muted">Modul manajemen aset dijual akan segera tersedia</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
       <!-- Manajemen Aset -->
       <section id="manajemen-aset" class="content-section">
         <div class="p-4">
@@ -1117,5 +1089,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Custom Dashboard JS -->
   <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
+  <!-- Visualization JS (Simplified version) -->
+  <script src="{{ url_for('static', filename='js/simple_visualization.js') }}"></script>
 </body>
 </html>
