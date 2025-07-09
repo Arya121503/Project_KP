@@ -89,6 +89,118 @@
     .bg-danger {
       background-color: var(--telkom-red) !important;
     }
+    
+    /* Notification Badge Styling */
+    .notification-badge {
+      position: absolute;
+      top: 8px;
+      right: 15px;
+      background-color: var(--telkom-red);
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .menu-link {
+      position: relative;
+    }
+    
+    .notification-item {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .notification-item:hover {
+      background-color: var(--telkom-light);
+      transform: translateX(5px);
+    }
+    
+    .notification-unread {
+      border-left: 4px solid var(--telkom-red);
+      background-color: #fff8f8;
+    }
+    
+    .notification-type-info {
+      border-color: #17a2b8;
+    }
+    
+    .notification-type-warning {
+      border-color: #ffc107;
+    }
+    
+    .notification-type-success {
+      border-color: #28a745;
+    }
+    
+    .notification-type-danger {
+      border-color: var(--telkom-red);
+    }
+    
+    /* Favorite Badge Styling */
+    .favorite-count-badge {
+      position: absolute;
+      top: 8px;
+      right: 15px;
+      background-color: #e91e63;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .favorite-heart {
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+    }
+    
+    .favorite-heart:hover {
+      color: #e91e63;
+      transform: scale(1.1);
+    }
+    
+    .favorite-heart.favorited {
+      color: #e91e63;
+      animation: heartBeat 0.5s ease;
+    }
+    
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .favorite-item {
+      transition: all 0.3s ease;
+    }
+    
+    .favorite-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -112,6 +224,14 @@
         <div class="dark-mode">
           <span class="material-icons-sharp active">light_mode</span>
           <span class="material-icons-sharp">dark_mode</span>
+        </div>
+        
+        <!-- Notification Bell -->
+        <div class="nav-item position-relative me-3">
+          <button class="btn btn-link text-white p-2 menu-link" data-target="notifikasi-user" style="border: none; background: none;">
+            <span class="material-icons-sharp">notifications</span>
+            <span class="notification-badge" id="navbarNotifBadge" style="display: none;">0</span>
+          </button>
         </div>
         
         <div class="navbar-nav">
@@ -155,9 +275,19 @@
             <span class="material-icons-sharp">dashboard</span>
             <h3>Dashboard</h3>
           </a>
+          <a href="#" class="menu-link" data-target="favorit-aset">
+            <span class="material-icons-sharp">favorite</span>
+            <h3>Favorit</h3>
+            <span class="favorite-count-badge" id="favoriteBadge" style="display: none;">0</span>
+          </a>
           <a href="#" class="menu-link" data-target="histori-sewa">
             <span class="material-icons-sharp">history</span>
             <h3>Histori Sewa</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="notifikasi-user">
+            <span class="material-icons-sharp">notifications</span>
+            <h3>Notifikasi</h3>
+            <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
           </a>
           <a href="{{ url_for('main.logout_user') }}">
             <span class="material-icons-sharp">logout</span>
@@ -210,6 +340,73 @@
                   <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-2 text-muted">Memuat data aset...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Favorit Aset -->
+      <section id="favorit-aset" class="content-section">
+        <div class="user-welcome">
+          <h1><i class="fas fa-heart me-3"></i>Aset Favorit</h1>
+          <p class="mb-0">Koleksi aset properti pilihan Anda. Simpan aset yang menarik untuk disewa di kemudian hari.</p>
+        </div>
+        
+        <!-- Filter & Actions -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filter Favorit
+              </h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-light" onclick="clearAllFavorites()" title="Hapus Semua Favorit">
+                  <i class="fas fa-trash me-1"></i>Hapus Semua
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Jenis Aset</label>
+                <select class="form-select form-select-sm" id="filterJenisFavorit">
+                  <option value="">Semua Jenis</option>
+                  <option value="tanah">Tanah</option>
+                  <option value="tanah_bangunan">Tanah + Bangunan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Kecamatan</label>
+                <select class="form-select form-select-sm" id="filterKecamatanFavorit">
+                  <option value="">Semua Kecamatan</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadFavoritData()">
+                  <i class="fas fa-search me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Favorit List -->
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-heart me-2"></i>Daftar Aset Favorit
+              <span class="badge bg-light text-dark ms-2" id="favoritCount">0</span>
+            </h5>
+          </div>
+          <div class="card-body">
+            <div id="favoritContainer" class="row g-3">
+              <div class="col-12 text-center">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Memuat favorit...</p>
               </div>
             </div>
           </div>
@@ -303,6 +500,89 @@
           </div>
         </div>
       </section>
+
+      <!-- Notifikasi User -->
+      <section id="notifikasi-user" class="content-section">
+        <div class="user-welcome">
+          <h1><i class="fas fa-bell me-3"></i>Notifikasi</h1>
+          <p class="mb-0">Dapatkan informasi terbaru tentang sewa aset, pembayaran, dan pembaruan sistem.</p>
+        </div>
+        
+        <!-- Filter & Actions -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filter Notifikasi
+              </h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-light" onclick="markAllAsRead()" title="Tandai Semua Telah Dibaca">
+                  <i class="fas fa-check-double me-1"></i>Tandai Dibaca
+                </button>
+                <button class="btn btn-light" onclick="clearAllNotifications()" title="Hapus Semua Notifikasi">
+                  <i class="fas fa-trash me-1"></i>Hapus Semua
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Jenis Notifikasi</label>
+                <select class="form-select form-select-sm" id="filterJenisNotif">
+                  <option value="">Semua Jenis</option>
+                  <option value="kontrak">Kontrak Sewa</option>
+                  <option value="pembayaran">Pembayaran</option>
+                  <option value="sistem">Sistem</option>
+                  <option value="promo">Promo & Info</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select form-select-sm" id="filterStatusNotif">
+                  <option value="">Semua Status</option>
+                  <option value="unread">Belum Dibaca</option>
+                  <option value="read">Sudah Dibaca</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Periode</label>
+                <select class="form-select form-select-sm" id="filterPeriodeNotif">
+                  <option value="">Semua Waktu</option>
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                  <option value="month">Bulan Ini</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-sm btn-outline-danger" onclick="loadNotifikasiData()">
+                  <i class="fas fa-search me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notifikasi List -->
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-list me-2"></i>Daftar Notifikasi
+              <span class="badge bg-light text-dark ms-2" id="notifCount">0</span>
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div id="notifikasiContainer">
+              <div class="text-center py-4">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0 text-muted">Memuat notifikasi...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -348,6 +628,11 @@
           // Load data for specific sections
           if (targetId === 'histori-sewa') {
             loadHistoriData();
+          } else if (targetId === 'notifikasi-user') {
+            loadNotifikasiData();
+          } else if (targetId === 'favorit-aset') {
+            loadFavoritData();
+            loadKecamatanOptions(); // For filter
           }
         }
       });
@@ -383,11 +668,23 @@
       const data = await response.json();
       
       if (data.success) {
+        // Update main dashboard filter
         const select = document.getElementById('filterKecamatan');
-        select.innerHTML = '<option value="">Semua Kecamatan</option>';
-        data.data.forEach(kecamatan => {
-          select.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
-        });
+        if (select) {
+          select.innerHTML = '<option value="">Semua Kecamatan</option>';
+          data.data.forEach(kecamatan => {
+            select.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
+          });
+        }
+        
+        // Update favorit filter
+        const favoritSelect = document.getElementById('filterKecamatanFavorit');
+        if (favoritSelect) {
+          favoritSelect.innerHTML = '<option value="">Semua Kecamatan</option>';
+          data.data.forEach(kecamatan => {
+            favoritSelect.innerHTML += `<option value="${kecamatan}">${kecamatan}</option>`;
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading kecamatan options:', error);
@@ -419,9 +716,15 @@
                 <span class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
                   ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
                 </span>
-                <span class="badge bg-warning text-dark rounded-pill">
-                  ${aset.status || 'Tersedia'}
-                </span>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    ${aset.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart" 
+                     onclick="toggleFavorite(${aset.id}, this)" 
+                     title="Tambah ke Favorit"
+                     data-aset-id="${aset.id}"></i>
+                </div>
               </div>
               
               <h6 class="card-title text-truncate">${aset.alamat || 'Alamat tidak tersedia'}</h6>
@@ -698,6 +1001,603 @@
       month: '2-digit', 
       year: 'numeric'
     });
+  }
+
+  // ===== NOTIFIKASI FUNCTIONS =====
+
+  async function loadNotifikasiData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisNotif').value;
+      const filterStatus = document.getElementById('filterStatusNotif').value;
+      const filterPeriode = document.getElementById('filterPeriodeNotif').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterStatus) params.append('status', filterStatus);
+      if (filterPeriode) params.append('periode', filterPeriode);
+      
+      const response = await fetch(`/api/notifikasi-user?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayNotifikasiData(data.data);
+        updateNotifBadge(data.unread_count || 0);
+      } else {
+        showNotifikasiError('Gagal memuat notifikasi');
+      }
+    } catch (error) {
+      console.error('Error loading notifikasi:', error);
+      showNotifikasiError('Terjadi kesalahan saat memuat notifikasi');
+    }
+  }
+
+  function displayNotifikasiData(notifList) {
+    const container = document.getElementById('notifikasiContainer');
+    const countElement = document.getElementById('notifCount');
+    
+    countElement.textContent = notifList.length;
+    
+    if (notifList.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Tidak ada notifikasi</h5>
+          <p class="text-muted">Anda akan menerima notifikasi terbaru di sini</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    notifList.forEach(notif => {
+      const iconClass = getNotifIcon(notif.jenis);
+      const typeClass = getNotifTypeClass(notif.jenis);
+      const timeAgo = getTimeAgo(notif.created_at);
+      
+      html += `
+        <div class="notification-item p-3 border-bottom ${notif.is_read ? '' : 'notification-unread'} ${typeClass}" 
+             onclick="markAsRead(${notif.id})" data-id="${notif.id}">
+          <div class="d-flex">
+            <div class="me-3">
+              <div class="rounded-circle bg-light p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                <i class="${iconClass} text-danger"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <h6 class="mb-0 fw-semibold">${notif.judul}</h6>
+                <div class="d-flex align-items-center">
+                  ${!notif.is_read ? '<span class="badge bg-danger rounded-pill me-2">Baru</span>' : ''}
+                  <small class="text-muted">${timeAgo}</small>
+                </div>
+              </div>
+              <p class="mb-1 text-muted">${notif.pesan}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-light text-dark">${getJenisLabel(notif.jenis)}</span>
+                ${notif.action_url ? `
+                  <button class="btn btn-sm btn-outline-danger" onclick="handleNotifAction('${notif.action_url}', event)">
+                    <i class="fas fa-external-link-alt me-1"></i>Lihat Detail
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function getNotifIcon(jenis) {
+    const icons = {
+      'kontrak': 'fas fa-file-contract',
+      'pembayaran': 'fas fa-credit-card',
+      'sistem': 'fas fa-cog',
+      'promo': 'fas fa-gift'
+    };
+    return icons[jenis] || 'fas fa-bell';
+  }
+
+  function getNotifTypeClass(jenis) {
+    const classes = {
+      'kontrak': 'notification-type-info',
+      'pembayaran': 'notification-type-warning',
+      'sistem': 'notification-type-danger',
+      'promo': 'notification-type-success'
+    };
+    return classes[jenis] || '';
+  }
+
+  function getJenisLabel(jenis) {
+    const labels = {
+      'kontrak': 'Kontrak Sewa',
+      'pembayaran': 'Pembayaran',
+      'sistem': 'Sistem',
+      'promo': 'Promo & Info'
+    };
+    return labels[jenis] || jenis;
+  }
+
+  function getTimeAgo(dateString) {
+    if (!dateString) return '';
+    
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  function updateNotifBadge(count) {
+    const sidebarBadge = document.getElementById('notifBadge');
+    const navbarBadge = document.getElementById('navbarNotifBadge');
+    
+    if (count > 0) {
+      const displayCount = count > 99 ? '99+' : count;
+      if (sidebarBadge) {
+        sidebarBadge.textContent = displayCount;
+        sidebarBadge.style.display = 'flex';
+      }
+      if (navbarBadge) {
+        navbarBadge.textContent = displayCount;
+        navbarBadge.style.display = 'flex';
+      }
+    } else {
+      if (sidebarBadge) sidebarBadge.style.display = 'none';
+      if (navbarBadge) navbarBadge.style.display = 'none';
+    }
+  }
+
+  async function markAsRead(notifId) {
+    try {
+      const response = await fetch(`/api/notifikasi-mark-read/${notifId}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update UI
+        const notifElement = document.querySelector(`[data-id="${notifId}"]`);
+        if (notifElement) {
+          notifElement.classList.remove('notification-unread');
+          const badge = notifElement.querySelector('.badge.bg-danger');
+          if (badge) badge.remove();
+        }
+        
+        // Update badge count
+        loadNotifikasiData();
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }
+
+  async function markAllAsRead() {
+    try {
+      const response = await fetch('/api/notifikasi-mark-all-read', {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah ditandai sebagai dibaca');
+      } else {
+        showNotifError('Gagal menandai notifikasi');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllNotifications() {
+    if (!confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) return;
+    
+    try {
+      const response = await fetch('/api/notifikasi-clear-all', {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        showNotifSuccess('Semua notifikasi telah dihapus');
+      } else {
+        showNotifError('Gagal menghapus notifikasi');
+      }
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      showNotifError('Terjadi kesalahan');
+    }
+  }
+
+  function handleNotifAction(actionUrl, event) {
+    event.stopPropagation();
+    if (actionUrl.startsWith('http')) {
+      window.open(actionUrl, '_blank');
+    } else {
+      window.location.href = actionUrl;
+    }
+  }
+
+  function showNotifikasiError(message) {
+    const container = document.getElementById('notifikasiContainer');
+    container.innerHTML = `
+      <div class="text-center py-4">
+        <div class="alert alert-danger mb-0">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  function showNotifSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-check me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  function showNotifError(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // Load notifikasi count on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load initial notification count
+    setTimeout(() => {
+      loadNotifikasiData();
+      loadFavoriteStatus(); // Load favorite status for current aset
+      loadFavoritCount(); // Load favorite count for badge
+    }, 1000);
+  });
+
+  // ===== FAVORIT FUNCTIONS =====
+
+  async function loadFavoritData() {
+    try {
+      const filterJenis = document.getElementById('filterJenisFavorit').value;
+      const filterKecamatan = document.getElementById('filterKecamatanFavorit').value;
+      
+      const params = new URLSearchParams();
+      if (filterJenis) params.append('jenis', filterJenis);
+      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
+      
+      const response = await fetch(`/api/favorit-aset?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayFavoritData(data.data);
+        updateFavoritBadge(data.total || 0);
+      } else {
+        showFavoritError('Gagal memuat favorit');
+      }
+    } catch (error) {
+      console.error('Error loading favorit:', error);
+      showFavoritError('Terjadi kesalahan saat memuat favorit');
+    }
+  }
+
+  function displayFavoritData(favoritList) {
+    const container = document.getElementById('favoritContainer');
+    const countElement = document.getElementById('favoritCount');
+    
+    countElement.textContent = favoritList.length;
+    
+    if (favoritList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-heart-broken text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada aset favorit</h5>
+          <p class="text-muted">Klik icon ❤️ pada aset yang Anda sukai untuk menambahkannya ke favorit</p>
+          <a href="#" class="btn btn-outline-danger menu-link" data-target="dashboard-home">
+            <i class="fas fa-search me-2"></i>Jelajahi Aset
+          </a>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    favoritList.forEach(favorit => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card favorite-item h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${favorit.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${favorit.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    ${favorit.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart favorited" 
+                     onclick="removeFavorite(${favorit.aset_id}, this)" 
+                     title="Hapus dari Favorit"
+                     data-aset-id="${favorit.aset_id}"></i>
+                </div>
+              </div>
+              
+              <h6 class="card-title text-truncate">${favorit.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${favorit.kecamatan || 'Kecamatan tidak tersedia'}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${favorit.luas_tanah || 0} m²</strong>
+                </div>
+                ${favorit.jenis === 'tanah_bangunan' ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${favorit.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              ${favorit.catatan ? `
+              <div class="mb-3">
+                <small class="text-muted d-block">Catatan:</small>
+                <p class="small text-secondary mb-0">${favorit.catatan}</p>
+              </div>` : ''}
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(favorit.harga_sewa || 0)}/bulan
+                </div>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-danger" onclick="showAsetDetail(${favorit.aset_id})">
+                    <i class="fas fa-eye me-1"></i>Detail
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="editFavoriteNote(${favorit.id}, '${favorit.catatan || ''}')">
+                    <i class="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="fas fa-calendar me-1"></i>
+                  Ditambahkan ${getTimeAgo(favorit.created_at)}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async function toggleFavorite(asetId, element) {
+    try {
+      const isFavorited = element.classList.contains('favorited');
+      const action = isFavorited ? 'remove' : 'add';
+      
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: action
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        if (action === 'add') {
+          element.classList.add('favorited');
+          element.title = 'Hapus dari Favorit';
+          showFavoritSuccess('Aset ditambahkan ke favorit');
+        } else {
+          element.classList.remove('favorited');
+          element.title = 'Tambah ke Favorit';
+          showFavoritSuccess('Aset dihapus dari favorit');
+        }
+        loadFavoritCount(); // Update badge
+      } else {
+        showFavoritError(data.error || 'Gagal mengubah status favorit');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function removeFavorite(asetId, element) {
+    if (!confirm('Hapus aset ini dari favorit?')) return;
+    
+    try {
+      const response = await fetch('/api/favorit-toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          action: 'remove'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Aset dihapus dari favorit');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function editFavoriteNote(favoritId, currentNote) {
+    const newNote = prompt('Edit catatan untuk aset favorit ini:', currentNote);
+    if (newNote === null) return; // User canceled
+    
+    try {
+      const response = await fetch(`/api/favorit-note/${favoritId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          catatan: newNote
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Catatan berhasil diperbarui');
+        loadFavoritData(); // Reload favorit list
+      } else {
+        showFavoritError(data.error || 'Gagal memperbarui catatan');
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function clearAllFavorites() {
+    if (!confirm('Hapus semua aset favorit? Tindakan ini tidak dapat dibatalkan.')) return;
+    
+    try {
+      const response = await fetch('/api/favorit-clear-all', {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Semua favorit telah dihapus');
+        loadFavoritData();
+        loadFavoriteStatus(); // Update heart icons in main dashboard
+      } else {
+        showFavoritError(data.error || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error clearing favorites:', error);
+      showFavoritError('Terjadi kesalahan');
+    }
+  }
+
+  async function loadFavoriteStatus() {
+    // Load favorite status for aset displayed in main dashboard
+    try {
+      const response = await fetch('/api/favorit-status');
+      const data = await response.json();
+      
+      if (data.success) {
+        const favoritedIds = data.favorited_ids || [];
+        
+        // Update heart icons
+        document.querySelectorAll('.favorite-heart').forEach(heart => {
+          const asetId = parseInt(heart.getAttribute('data-aset-id'));
+          if (favoritedIds.includes(asetId)) {
+            heart.classList.add('favorited');
+            heart.title = 'Hapus dari Favorit';
+          } else {
+            heart.classList.remove('favorited');
+            heart.title = 'Tambah ke Favorit';
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading favorite status:', error);
+    }
+  }
+
+  async function loadFavoritCount() {
+    try {
+      const response = await fetch('/api/favorit-count');
+      const data = await response.json();
+      
+      if (data.success) {
+        updateFavoritBadge(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading favorit count:', error);
+    }
+  }
+
+  function updateFavoritBadge(count) {
+    const badge = document.getElementById('favoriteBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function showFavoritError(message) {
+    const container = document.getElementById('favoritContainer');
+    if (container) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function showFavoritSuccess(message) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-heart me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
   }
   </script>
 </body>
