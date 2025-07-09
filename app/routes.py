@@ -1082,7 +1082,7 @@ def api_aset_detail(aset_id):
             return jsonify({
                 'success': False,
                 'error': 'Aset tidak ditemukan'
-            }), 404
+            }, 404)
         
         if jenis == 'tanah':
             harga_sewa = int(aset_data[8] * 0.005) if aset_data[8] else 0
@@ -1123,6 +1123,84 @@ def api_aset_detail(aset_id):
         return jsonify({
             'success': True,
             'data': aset_detail
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/histori-sewa')
+def api_histori_sewa():
+    """
+    API endpoint untuk mendapatkan histori sewa user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        # Get filter parameters
+        status = request.args.get('status', '')
+        jenis = request.args.get('jenis', '')
+        periode = request.args.get('periode', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Build query with filters
+        query = """
+            SELECT id, user_id, aset_id, jenis_aset, alamat, kecamatan, kelurahan,
+                   luas_tanah, luas_bangunan, harga_sewa, status_sewa,
+                   tanggal_mulai, tanggal_berakhir, created_at
+            FROM histori_sewa 
+            WHERE user_id = %s
+        """
+        params = [session['user_id']]
+        
+        if status:
+            query += " AND status_sewa = %s"
+            params.append(status)
+            
+        if jenis:
+            query += " AND jenis_aset = %s"
+            params.append(jenis)
+            
+        if periode:
+            if periode == '6bulan':
+                query += " AND tanggal_mulai >= DATE_SUB(NOW(), INTERVAL 6 MONTH)"
+            elif periode == '1tahun':
+                query += " AND tanggal_mulai >= DATE_SUB(NOW(), INTERVAL 1 YEAR)"
+            # 'semua' tidak menambah filter
+            
+        query += " ORDER BY created_at DESC LIMIT 50"
+        
+        cur.execute(query, params)
+        histori_data = cur.fetchall()
+        cur.close()
+
+        histori_list = []
+        for item in histori_data:
+            histori_list.append({
+                'id': item[0],
+                'user_id': item[1],
+                'aset_id': item[2],
+                'jenis_aset': item[3],
+                'alamat': item[4],
+                'kecamatan': item[5],
+                'kelurahan': item[6],
+                'luas_tanah': item[7],
+                'luas_bangunan': item[8],
+                'harga_sewa': item[9],
+                'status': item[10],
+                'tanggal_mulai': item[11].strftime('%Y-%m-%d') if item[11] else None,
+                'tanggal_berakhir': item[12].strftime('%Y-%m-%d') if item[12] else None,
+                'created_at': item[13].strftime('%Y-%m-%d %H:%M:%S') if item[13] else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': histori_list,
+            'total': len(histori_list)
         })
         
     except Exception as e:
