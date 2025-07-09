@@ -7,3 +7,8 @@ pandas
 numpy
 PyMySQL
 mysql-connector-python
+Flask-MySQLdb
+scikit-learn
+xgboost
+catboost
+joblib

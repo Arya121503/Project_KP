@@ -1091,6 +1091,50 @@ function scheduleReport() {
   console.log('Report scheduling completed');
 }
 
+// Function to show specific section (for user dashboard)
+function showSection(targetId) {
+  // Hide all content sections
+  const contentSections = document.querySelectorAll(".content-section");
+  contentSections.forEach(section => {
+    section.classList.remove("active");
+  });
+  
+  // Show target section
+  const targetSection = document.getElementById(targetId);
+  if (targetSection) {
+    targetSection.classList.add("active");
+  }
+  
+  // Update active menu item
+  const menuLinks = document.querySelectorAll(".menu-link");
+  menuLinks.forEach(link => {
+    link.classList.remove("active");
+    if (link.getAttribute("data-target") === targetId) {
+      link.classList.add("active");
+    }
+  });
+  
+  // Close sidebar on mobile after selection
+  if (window.innerWidth <= 768) {
+    const sidebar = document.querySelector("aside");
+    if (sidebar) {
+      sidebar.classList.remove("show");
+    }
+  }
+  
+  // Scroll to top of main content
+  const mainContent = document.querySelector("main");
+  if (mainContent) {
+    mainContent.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+// Global function for button navigation
+window.showSection = showSection;
+
 // Utility functions
 function getMetricLabel(metric) {
   const labels = {
@@ -1852,58 +1896,13 @@ function generateCustomChart(ctx, type, dataSource, groupBy, metric) {
 // Create section navigation indicators - DISABLED
 /*
 function createSectionIndicators() {
-  // Remove existing indicators
-  const existingIndicator = document.querySelector('.section-nav-indicator');
-  if (existingIndicator) {
-    existingIndicator.remove();
-  }
-
-  const indicatorContainer = document.createElement('div');
-  indicatorContainer.className = 'section-nav-indicator';
-
-  // Create indicators for each section
-  const sectionData = [
-    { id: 'dashboard-home', title: 'Dashboard' },
-    { id: 'visualisasi', title: 'Visualisasi' },
-    { id: 'prediksi-properti', title: 'Prediksi' },
-    { id: 'manajemen-aset', title: 'Manajemen' },
-    { id: 'aset-sewa', title: 'Aset Sewa' },
-    { id: 'aset-jual', title: 'Aset Jual' },
-    { id: 'notifikasi', title: 'Notifikasi' }
-  ];
-
-  sectionData.forEach((section, index) => {
-    const indicator = document.createElement('span');
-    indicator.className = 'section-indicator';
-    indicator.setAttribute('data-title', section.title);
-    indicator.setAttribute('data-target', section.id);
-    
-    // Set first indicator as active
-    if (index === 0) {
-      indicator.classList.add('active');
-    }
-
-    // Click handler for indicators
-    indicator.addEventListener('click', () => {
-      smoothScrollToSection(section.id);
-      updateSectionIndicators(section.id);
-    });
-
-    indicatorContainer.appendChild(indicator);
-  });
-
-  document.body.appendChild(indicatorContainer);
+  // Feature removed - section indicators disabled
+  console.log('Section indicators feature disabled');
 }
 
 // Update section indicators - DISABLED
 function updateSectionIndicators(activeSectionId) {
-  const indicators = document.querySelectorAll('.section-indicator');
-  indicators.forEach(indicator => {
-    indicator.classList.remove('active');
-    if (indicator.getAttribute('data-target') === activeSectionId) {
-      indicator.classList.add('active');
-    }
-  });
+  // Feature removed - section indicators disabled
 }
 */
 
@@ -1957,7 +1956,7 @@ function initializeScrollEnhancements() {
         const sectionId = entry.target.id;
         updateActiveMenuItem(sectionId);
         updateActiveSectionClass(sectionId);
-        updateSectionIndicators(sectionId);
+        // updateSectionIndicators(sectionId); // Disabled - feature removed
       }
     });
   }, {
@@ -1983,7 +1982,7 @@ document.addEventListener('DOMContentLoaded', function() {
     createScrollProgressBar();
     initializeScrollEnhancements();
     
-    console.log('Scroll navigation enhancements initialized');
+    console.log('Scroll navigation enhancements initialized (section indicators disabled)');
   }, 100);
 });
 

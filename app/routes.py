@@ -114,7 +114,7 @@ def user_dashboard():
         return redirect(url_for('main.login'))
     
     stats = data_processor.get_statistics()
-    return render_template('dashboard_user_bootstrap.html', stats=stats)
+    return render_template('dashboard_user.html', stats=stats)
 
 @main.route('/logout')
 def logout_user():
@@ -754,3 +754,885 @@ def api_all_data_bangunan():
         'data': data,
         'total': len(data)
     })
+
+@main.route('/edit-profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        flash('Silakan login terlebih dahulu.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        # Cek apakah ini form ubah password atau edit profil
+        if 'current_password' in request.form:
+            # Handler untuk ubah password
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # Validasi input password
+            if not current_password or not new_password or not confirm_password:
+                flash('Semua field password wajib diisi.', 'error')
+                return render_template('edit_profile.html')
+            
+            if new_password != confirm_password:
+                flash('Password baru dan konfirmasi password tidak cocok.', 'error')
+                return render_template('edit_profile.html')
+            
+            if len(new_password) < 8:
+                flash('Password baru minimal 8 karakter.', 'error')
+                return render_template('edit_profile.html')
+            
+            try:
+                cur = mysql.connection.cursor()
+                
+                # Ambil password lama dari database
+                cur.execute("SELECT password FROM users WHERE id = %s", (session['user_id'],))
+                user_data = cur.fetchone()
+                
+                if not user_data:
+                    flash('User tidak ditemukan.', 'error')
+                    cur.close()
+                    return render_template('edit_profile.html')
+                
+                # Verifikasi password lama
+                if not check_password_hash(user_data[0], current_password):
+                    flash('Password saat ini salah.', 'error')
+                    cur.close()
+                    return render_template('edit_profile.html')
+                
+                # Hash password baru
+                new_password_hash = generate_password_hash(new_password)
+                
+                # Update password di database
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password_hash, session['user_id']))
+                mysql.connection.commit()
+                cur.close()
+                
+                flash('Password berhasil diubah. Silakan login ulang.', 'success')
+                session.clear()  # Logout user setelah ubah password
+                return redirect(url_for('main.login'))
+                
+            except Exception as e:
+                flash(f'Terjadi kesalahan saat mengubah password: {str(e)}', 'error')
+                return render_template('edit_profile.html')
+        
+        else:
+            # Handler untuk edit profil
+            user_name = request.form.get('user_name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            company = request.form.get('company')
+            address = request.form.get('address')
+            
+            # Validasi input
+            if not user_name or not email:
+                flash('Nama dan email wajib diisi.', 'error')
+                return render_template('edit_profile.html')
+            
+            try:
+                cur = mysql.connection.cursor()
+                
+                # Cek apakah email sudah digunakan oleh user lain
+                cur.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, session['user_id']))
+                existing_user = cur.fetchone()
+                
+                if existing_user:
+                    flash('Email sudah digunakan oleh user lain.', 'error')
+                    cur.close()
+                    return render_template('edit_profile.html')
+                
+                # Update data user
+                cur.execute("""
+                    UPDATE users 
+                    SET name = %s, email = %s, phone = %s, company = %s, address = %s 
+                    WHERE id = %s
+                """, (user_name, email, phone, company, address, session['user_id']))
+                
+                mysql.connection.commit()
+                cur.close()
+                
+                # Update session data
+                session['user_name'] = user_name
+                session['user_email'] = email
+                session['user_phone'] = phone
+                session['user_company'] = company
+                session['user_address'] = address
+                
+                flash('Profil berhasil diperbarui.', 'success')
+                return redirect(url_for('main.edit_profile'))
+                
+            except Exception as e:
+                flash(f'Terjadi kesalahan: {str(e)}', 'error')
+                return render_template('edit_profile.html')
+    
+    # GET request - ambil data user dari database
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT name, email, phone, company, address FROM users WHERE id = %s", (session['user_id'],))
+        user_data = cur.fetchone()
+        cur.close()
+        
+        if user_data:
+            session['user_name'] = user_data[0] or session.get('user_name', '')
+            session['user_email'] = user_data[1] or ''
+            session['user_phone'] = user_data[2] or ''
+            session['user_company'] = user_data[3] or ''
+            session['user_address'] = user_data[4] or ''
+    except Exception as e:
+        flash(f'Error mengambil data: {str(e)}', 'error')
+    
+    return render_template('edit_profile.html')
+
+@main.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    """
+    Route untuk backward compatibility - redirect ke edit_profile
+    karena fitur ubah password sudah digabung dengan edit profil
+    """
+    if request.method == 'GET':
+        flash('Fitur ubah password sudah digabung dengan edit profil.', 'info')
+        return redirect(url_for('main.edit_profile'))
+    
+    # Untuk POST request, tetap redirect tapi dengan pesan yang lebih spesifik
+    flash('Silakan gunakan form edit profil untuk mengubah password.', 'info')
+    return redirect(url_for('main.edit_profile'))
+
+# API Routes untuk Dashboard User
+@main.route('/api/aset-tersedia')
+def api_aset_tersedia():
+    """
+    API endpoint untuk mendapatkan daftar aset yang tersedia untuk disewa
+    """
+    try:
+        # Get filter parameters
+        jenis = request.args.get('jenis', '')
+        kecamatan = request.args.get('kecamatan', '')
+        
+        cur = mysql.connection.cursor()
+        
+        aset_list = []
+        
+        # Get data tanah
+        if not jenis or jenis == 'tanah':
+            tanah_query = """
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, 
+                       harga_prediksi_tanah, created_at
+                FROM prediksi_properti_tanah 
+                WHERE 1=1
+            """
+            tanah_params = []
+            
+            if kecamatan:
+                tanah_query += " AND kecamatan = %s"
+                tanah_params.append(kecamatan)
+                
+            tanah_query += " ORDER BY created_at DESC LIMIT 10"
+            
+            cur.execute(tanah_query, tanah_params)
+            tanah_data = cur.fetchall()
+            
+            for tanah in tanah_data:
+                # Calculate estimated rental price (assume 0.5% of property value per month)
+                harga_sewa = int(tanah[4] * 0.005) if tanah[4] else 0
+                
+                aset_list.append({
+                    'id': f"tanah_{tanah[0]}",
+                    'alamat': f"{tanah[2]}, {tanah[1]}" if tanah[2] else tanah[1],
+                    'kecamatan': tanah[1],
+                    'luas_tanah': tanah[3],
+                    'luas_bangunan': 0,
+                    'harga_sewa': harga_sewa,
+                    'jenis': 'tanah',
+                    'status': 'Tersedia'
+                })
+        
+        # Get data bangunan
+        if not jenis or jenis == 'tanah_bangunan':
+            bangunan_query = """
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2,
+                       harga_prediksi_bangunan_tanah, created_at
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE 1=1
+            """
+            bangunan_params = []
+            
+            if kecamatan:
+                bangunan_query += " AND kecamatan = %s"
+                bangunan_params.append(kecamatan)
+                
+            bangunan_query += " ORDER BY created_at DESC LIMIT 10"
+            
+            cur.execute(bangunan_query, bangunan_params)
+            bangunan_data = cur.fetchall()
+            
+            for bangunan in bangunan_data:
+                # Calculate estimated rental price (assume 0.5% of property value per month)
+                harga_sewa = int(bangunan[5] * 0.005) if bangunan[5] else 0
+                
+                aset_list.append({
+                    'id': f"bangunan_{bangunan[0]}",
+                    'alamat': f"{bangunan[2]}, {bangunan[1]}" if bangunan[2] else bangunan[1],
+                    'kecamatan': bangunan[1],
+                    'luas_tanah': bangunan[3],
+                    'luas_bangunan': bangunan[4],
+                    'harga_sewa': harga_sewa,
+                    'jenis': 'tanah_bangunan',
+                    'status': 'Tersedia'
+                })
+        
+        cur.close()
+        
+        # Sort by latest first (since we can't sort by created_at due to potential differences)
+        aset_list.reverse()
+        
+        return jsonify({
+            'success': True,
+            'data': aset_list[:20],  # Limit to 20 results
+            'total': len(aset_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/kecamatan-list')
+def api_kecamatan_list():
+    """
+    API endpoint untuk mendapatkan daftar kecamatan yang tersedia
+    """
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get kecamatan from both tables
+        kecamatan_set = set()
+        
+        # From tanah table
+        cur.execute("SELECT DISTINCT kecamatan FROM prediksi_properti_tanah WHERE kecamatan IS NOT NULL")
+        tanah_kecamatan = cur.fetchall()
+        for kec in tanah_kecamatan:
+            kecamatan_set.add(kec[0])
+        
+        # From bangunan table
+        cur.execute("SELECT DISTINCT kecamatan FROM prediksi_properti_bangunan_tanah WHERE kecamatan IS NOT NULL")
+        bangunan_kecamatan = cur.fetchall()
+        for kec in bangunan_kecamatan:
+            kecamatan_set.add(kec[0])
+        
+        cur.close()
+        
+        kecamatan_list = sorted(list(kecamatan_set))
+        
+        return jsonify({
+            'success': True,
+            'data': kecamatan_list
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/aset-detail/<aset_id>')
+def api_aset_detail(aset_id):
+    """
+    API endpoint untuk mendapatkan detail aset berdasarkan ID
+    """
+    try:
+        # Parse aset_id to get type and actual id
+        if aset_id.startswith('tanah_'):
+            actual_id = aset_id.replace('tanah_', '')
+            table = 'prediksi_properti_tanah'
+            jenis = 'tanah'
+        elif aset_id.startswith('bangunan_'):
+            actual_id = aset_id.replace('bangunan_', '')
+            table = 'prediksi_properti_bangunan_tanah'
+            jenis = 'tanah_bangunan'
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid aset ID format'
+            }), 400
+        
+        cur = mysql.connection.cursor()
+        
+        if jenis == 'tanah':
+            cur.execute("""
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, njop_tanah_per_m2,
+                       zona_nilai_tanah, kelas_tanah, jenis_sertifikat,
+                       harga_prediksi_tanah, harga_per_m2_tanah
+                FROM prediksi_properti_tanah 
+                WHERE id = %s
+            """, (actual_id,))
+        else:
+            cur.execute("""
+                SELECT id, kecamatan, kelurahan, luas_tanah_m2, luas_bangunan_m2,
+                       jumlah_kamar_tidur, jumlah_kamar_mandi, jumlah_lantai,
+                       harga_prediksi_bangunan_tanah, harga_per_m2_bangunan
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE id = %s
+            """, (actual_id,))
+        
+        aset_data = cur.fetchone()
+        cur.close()
+        
+        if not aset_data:
+            return jsonify({
+                'success': False,
+                'error': 'Aset tidak ditemukan'
+            }, 404)
+        
+        if jenis == 'tanah':
+            harga_sewa = int(aset_data[8] * 0.005) if aset_data[8] else 0
+            aset_detail = {
+                'id': aset_id,
+                'jenis': jenis,
+                'alamat': f"{aset_data[2]}, {aset_data[1]}",
+                'kecamatan': aset_data[1],
+                'kelurahan': aset_data[2],
+                'luas_tanah': aset_data[3],
+                'luas_bangunan': 0,
+                'njop_tanah': aset_data[4],
+                'zona_nilai': aset_data[5],
+                'kelas_tanah': aset_data[6],
+                'sertifikat': aset_data[7],
+                'harga_prediksi': aset_data[8],
+                'harga_per_m2': aset_data[9],
+                'harga_sewa': harga_sewa
+            }
+        else:
+            harga_sewa = int(aset_data[8] * 0.005) if aset_data[8] else 0
+            aset_detail = {
+                'id': aset_id,
+                'jenis': jenis,
+                'alamat': f"{aset_data[2]}, {aset_data[1]}",
+                'kecamatan': aset_data[1],
+                'kelurahan': aset_data[2],
+                'luas_tanah': aset_data[3],
+                'luas_bangunan': aset_data[4],
+                'kamar_tidur': aset_data[5],
+                'kamar_mandi': aset_data[6],
+                'jumlah_lantai': aset_data[7],
+                'harga_prediksi': aset_data[8],
+                'harga_per_m2': aset_data[9],
+                'harga_sewa': harga_sewa
+            }
+        
+        return jsonify({
+            'success': True,
+            'data': aset_detail
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/histori-sewa')
+def api_histori_sewa():
+    """
+    API endpoint untuk mendapatkan histori sewa user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        # Get filter parameters
+        status = request.args.get('status', '')
+        jenis = request.args.get('jenis', '')
+        periode = request.args.get('periode', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Build query with filters
+        query = """
+            SELECT id, user_id, aset_id, jenis_aset, alamat, kecamatan, kelurahan,
+                   luas_tanah, luas_bangunan, harga_sewa, status_sewa,
+                   tanggal_mulai, tanggal_berakhir, created_at
+            FROM histori_sewa 
+            WHERE user_id = %s
+        """
+        params = [session['user_id']]
+        
+        if status:
+            query += " AND status_sewa = %s"
+            params.append(status)
+            
+        if jenis:
+            query += " AND jenis_aset = %s"
+            params.append(jenis)
+            
+        if periode:
+            if periode == '6bulan':
+                query += " AND tanggal_mulai >= DATE_SUB(NOW(), INTERVAL 6 MONTH)"
+            elif periode == '1tahun':
+                query += " AND tanggal_mulai >= DATE_SUB(NOW(), INTERVAL 1 YEAR)"
+            # 'semua' tidak menambah filter
+            
+        query += " ORDER BY created_at DESC LIMIT 50"
+        
+        cur.execute(query, params)
+        histori_data = cur.fetchall()
+        cur.close()
+
+        histori_list = []
+        for item in histori_data:
+            histori_list.append({
+                'id': item[0],
+                'user_id': item[1],
+                'aset_id': item[2],
+                'jenis_aset': item[3],
+                'alamat': item[4],
+                'kecamatan': item[5],
+                'kelurahan': item[6],
+                'luas_tanah': item[7],
+                'luas_bangunan': item[8],
+                'harga_sewa': item[9],
+                'status': item[10],
+                'tanggal_mulai': item[11].strftime('%Y-%m-%d') if item[11] else None,
+                'tanggal_berakhir': item[12].strftime('%Y-%m-%d') if item[12] else None,
+                'created_at': item[13].strftime('%Y-%m-%d %H:%M:%S') if item[13] else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': histori_list,
+            'total': len(histori_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ===== USER NOTIFICATION API ENDPOINTS =====
+
+@main.route('/api/notifikasi-user')
+def api_notifikasi_user():
+    """
+    API endpoint untuk mendapatkan notifikasi user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        # Get filter parameters
+        jenis = request.args.get('jenis', '')
+        status = request.args.get('status', '')
+        periode = request.args.get('periode', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Build query with filters
+        query = """
+            SELECT id, user_id, jenis, judul, pesan, is_read, action_url, created_at
+            FROM notifikasi_user 
+            WHERE user_id = %s
+        """
+        params = [session['user_id']]
+        
+        if jenis:
+            query += " AND jenis = %s"
+            params.append(jenis)
+            
+        if status:
+            if status == 'read':
+                query += " AND is_read = 1"
+            elif status == 'unread':
+                query += " AND is_read = 0"
+            
+        if periode:
+            if periode == 'today':
+                query += " AND DATE(created_at) = CURDATE()"
+            elif periode == 'week':
+                query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)"
+            elif periode == 'month':
+                query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)"
+            
+        query += " ORDER BY created_at DESC LIMIT 50"
+        
+        cur.execute(query, params)
+        notif_data = cur.fetchall()
+        
+        # Get unread count
+        cur.execute("SELECT COUNT(*) FROM notifikasi_user WHERE user_id = %s AND is_read = 0", [session['user_id']])
+        unread_count = cur.fetchone()[0]
+        
+        cur.close()
+
+        notif_list = []
+        for item in notif_data:
+            notif_list.append({
+                'id': item[0],
+                'user_id': item[1],
+                'jenis': item[2],
+                'judul': item[3],
+                'pesan': item[4],
+                'is_read': bool(item[5]),
+                'action_url': item[6],
+                'created_at': item[7].strftime('%Y-%m-%d %H:%M:%S') if item[7] else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': notif_list,
+            'unread_count': unread_count,
+            'total': len(notif_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/notifikasi-mark-read/<int:notif_id>', methods=['POST'])
+def api_mark_notification_read(notif_id):
+    """
+    API endpoint untuk menandai notifikasi sebagai telah dibaca
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Update notification as read
+        cur.execute("""
+            UPDATE notifikasi_user 
+            SET is_read = 1 
+            WHERE id = %s AND user_id = %s
+        """, (notif_id, session['user_id']))
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/notifikasi-mark-all-read', methods=['POST'])
+def api_mark_all_notifications_read():
+    """
+    API endpoint untuk menandai semua notifikasi sebagai telah dibaca
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Update all notifications as read for the user
+        cur.execute("""
+            UPDATE notifikasi_user 
+            SET is_read = 1 
+            WHERE user_id = %s
+        """, [session['user_id']])
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/notifikasi-clear-all', methods=['DELETE'])
+def api_clear_all_notifications():
+    """
+    API endpoint untuk menghapus semua notifikasi user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Delete all notifications for the user
+        cur.execute("""
+            DELETE FROM notifikasi_user 
+            WHERE user_id = %s
+        """, [session['user_id']])
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ===== FAVORIT ASET API ENDPOINTS =====
+
+@main.route('/api/favorit-aset')
+def api_favorit_aset():
+    """
+    API endpoint untuk mendapatkan aset favorit user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        # Get filter parameters
+        jenis = request.args.get('jenis', '')
+        kecamatan = request.args.get('kecamatan', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Build query with joins to get aset details
+        query = """
+            SELECT f.id, f.user_id, f.aset_id, f.catatan, f.created_at,
+                   a.jenis, a.alamat, a.kecamatan, a.kelurahan, a.luas_tanah, 
+                   a.luas_bangunan, a.harga_sewa, a.harga_prediksi, a.status
+            FROM favorit_aset f
+            JOIN aset_sewa a ON f.aset_id = a.id
+            WHERE f.user_id = %s
+        """
+        params = [session['user_id']]
+        
+        if jenis:
+            query += " AND a.jenis = %s"
+            params.append(jenis)
+            
+        if kecamatan:
+            query += " AND a.kecamatan = %s"
+            params.append(kecamatan)
+            
+        query += " ORDER BY f.created_at DESC"
+        
+        cur.execute(query, params)
+        favorit_data = cur.fetchall()
+        cur.close()
+
+        favorit_list = []
+        for item in favorit_data:
+            favorit_list.append({
+                'id': item[0],
+                'user_id': item[1],
+                'aset_id': item[2],
+                'catatan': item[3],
+                'created_at': item[4].strftime('%Y-%m-%d %H:%M:%S') if item[4] else None,
+                'jenis': item[5],
+                'alamat': item[6],
+                'kecamatan': item[7],
+                'kelurahan': item[8],
+                'luas_tanah': float(item[9]) if item[9] else 0,
+                'luas_bangunan': float(item[10]) if item[10] else 0,
+                'harga_sewa': float(item[11]) if item[11] else 0,
+                'harga_prediksi': float(item[12]) if item[12] else 0,
+                'status': item[13]
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': favorit_list,
+            'total': len(favorit_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/favorit-toggle', methods=['POST'])
+def api_favorit_toggle():
+    """
+    API endpoint untuk menambah/menghapus aset dari favorit
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        data = request.get_json()
+        aset_id = data.get('aset_id')
+        action = data.get('action', 'add')  # add or remove
+        catatan = data.get('catatan', '')
+        
+        if not aset_id:
+            return jsonify({'success': False, 'error': 'aset_id required'}), 400
+        
+        cur = mysql.connection.cursor()
+        
+        if action == 'add':
+            # Add to favorites
+            try:
+                cur.execute("""
+                    INSERT INTO favorit_aset (user_id, aset_id, catatan)
+                    VALUES (%s, %s, %s)
+                """, (session['user_id'], aset_id, catatan))
+                mysql.connection.commit()
+                message = 'Aset berhasil ditambahkan ke favorit'
+            except mysql.connector.IntegrityError:
+                # Already exists
+                cur.close()
+                return jsonify({'success': False, 'error': 'Aset sudah ada di favorit'}), 400
+                
+        elif action == 'remove':
+            # Remove from favorites
+            cur.execute("""
+                DELETE FROM favorit_aset 
+                WHERE user_id = %s AND aset_id = %s
+            """, (session['user_id'], aset_id))
+            mysql.connection.commit()
+            message = 'Aset berhasil dihapus dari favorit'
+        
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/favorit-note/<int:favorit_id>', methods=['PUT'])
+def api_favorit_update_note(favorit_id):
+    """
+    API endpoint untuk mengupdate catatan favorit
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        data = request.get_json()
+        catatan = data.get('catatan', '')
+        
+        cur = mysql.connection.cursor()
+        
+        # Update catatan hanya jika favorit milik user yang login
+        cur.execute("""
+            UPDATE favorit_aset 
+            SET catatan = %s 
+            WHERE id = %s AND user_id = %s
+        """, (catatan, favorit_id, session['user_id']))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            return jsonify({'success': False, 'error': 'Favorit tidak ditemukan'}), 404
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Catatan berhasil diperbarui'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/favorit-clear-all', methods=['DELETE'])
+def api_favorit_clear_all():
+    """
+    API endpoint untuk menghapus semua favorit user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Delete all favorites for the user
+        cur.execute("""
+            DELETE FROM favorit_aset 
+            WHERE user_id = %s
+        """, [session['user_id']])
+        
+        deleted_count = cur.rowcount
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{deleted_count} favorit berhasil dihapus'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/favorit-status')
+def api_favorit_status():
+    """
+    API endpoint untuk mendapatkan status favorit (IDs yang difavoritkan)
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Get all favorited aset IDs for the user
+        cur.execute("""
+            SELECT aset_id FROM favorit_aset 
+            WHERE user_id = %s
+        """, [session['user_id']])
+        
+        favorited_ids = [row[0] for row in cur.fetchall()]
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'favorited_ids': favorited_ids
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@main.route('/api/favorit-count')
+def api_favorit_count():
+    """
+    API endpoint untuk mendapatkan jumlah favorit user
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        cur = mysql.connection.cursor()
+        
+        # Count favorites for the user
+        cur.execute("""
+            SELECT COUNT(*) FROM favorit_aset 
+            WHERE user_id = %s
+        """, [session['user_id']])
+        
+        count = cur.fetchone()[0]
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'count': count
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

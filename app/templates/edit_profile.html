@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Profil & Password | Telkom Aset</title>
+
+  <!-- Google Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- Custom Dashboard CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashAdmin.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashUser.css') }}" />
+</head>
+<body>
+  <!-- TOP NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <div class="navbar-left">
+        <button class="menu-toggle" id="menu-btn">
+          <span class="material-icons-sharp">menu</span>
+        </button>
+        <button id="sidebar-toggle" class="sidebar-toggle">
+          <span class="material-icons-sharp">menu_open</span>
+        </button>
+        <div class="navbar-brand">
+          <img src="{{ url_for('static', filename='img/telkomLogo.png') }}" alt="Telkom Logo" />
+          <h2>Telkom<span class="danger"> Aset</span></h2>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="dark-mode">
+          <span class="material-icons-sharp active">light_mode</span>
+          <span class="material-icons-sharp">dark_mode</span>
+        </div>
+        
+        <div class="navbar-nav">
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+              <span class="material-icons-sharp">account_circle</span>
+              <span class="user-name">{{ session.get('user_name', 'User') }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}">
+                <i class="fas fa-user-edit me-2"></i>Edit Profil & Password
+              </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.logout_user') }}">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+              </a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="sidebar-content">
+        <div class="close" id="close-btn">
+          <span class="material-icons-sharp">close</span>
+        </div>
+
+        <div class="sidebar">
+          <a href="{{ url_for('main.user_dashboard') }}" class="menu-link">
+            <span class="material-icons-sharp">dashboard</span>
+            <h3>Dashboard</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="aset-sewa">
+            <span class="material-icons-sharp">apartment</span>
+            <h3>Aset Tersedia</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="favorit">
+            <span class="material-icons-sharp">favorite</span>
+            <h3>Favorit Saya</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="riwayat">
+            <span class="material-icons-sharp">history</span>
+            <h3>Riwayat Sewa</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="kalkulator">
+            <span class="material-icons-sharp">calculate</span>
+            <h3>Kalkulator Sewa</h3>
+          </a>
+          <a href="#" class="menu-link" data-target="bantuan">
+            <span class="material-icons-sharp">help</span>
+            <h3>Bantuan</h3>
+          </a>
+          <a href="{{ url_for('main.logout_user') }}">
+            <span class="material-icons-sharp">logout</span>
+            <h3>Logout</h3>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <div class="content-section active">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1><i class="fas fa-user-edit me-3"></i>Edit Profil & Password</h1>
+            <p class="text-muted">Perbarui informasi profil dan ubah password Anda</p>
+          </div>
+          <a href="{{ url_for('main.user_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Kembali
+          </a>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8">
+            <!-- Profile Information Card -->
+            <div class="card mb-4">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Informasi Profil</h5>
+              </div>
+              <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('main.edit_profile') }}">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="user_name" class="form-label">Nama Lengkap</label>
+                      <input type="text" class="form-control" id="user_name" name="user_name" 
+                             value="{{ session.get('user_name', '') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" class="form-control" id="email" name="email" 
+                             value="{{ session.get('user_email', '') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="phone" class="form-label">No. Telepon</label>
+                      <input type="tel" class="form-control" id="phone" name="phone" 
+                             value="{{ session.get('user_phone', '') }}" placeholder="Contoh: 081234567890">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="company" class="form-label">Perusahaan</label>
+                      <input type="text" class="form-control" id="company" name="company" 
+                             value="{{ session.get('user_company', '') }}" placeholder="Nama perusahaan">
+                    </div>
+                    <div class="col-12">
+                      <label for="address" class="form-label">Alamat</label>
+                      <textarea class="form-control" id="address" name="address" rows="3" 
+                                placeholder="Alamat lengkap">{{ session.get('user_address', '') }}</textarea>
+                    </div>
+                  </div>
+                  
+                  <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-danger btn-lg">
+                      <i class="fas fa-save me-2"></i>Simpan Perubahan
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Change Password Card -->
+            <div class="card">
+              <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>Ubah Password</h5>
+              </div>
+              <div class="card-body">
+                <form method="POST" action="{{ url_for('main.edit_profile') }}">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="current_password" class="form-label">Password Saat Ini</label>
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">
+                          <i class="fas fa-eye" id="current_password_icon"></i>
+                        </button>
+                      </div>
+                      <div class="form-text">Masukkan password lama Anda</div>
+                    </div>
+                    
+                    <div class="col-12">
+                      <label for="new_password" class="form-label">Password Baru</label>
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="new_password" name="new_password" 
+                               minlength="8" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">
+                          <i class="fas fa-eye" id="new_password_icon"></i>
+                        </button>
+                      </div>
+                      <div class="form-text">Minimal 8 karakter dengan kombinasi huruf dan angka</div>
+                    </div>
+                    
+                    <div class="col-12">
+                      <label for="confirm_password" class="form-label">Konfirmasi Password Baru</label>
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                               minlength="8" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
+                          <i class="fas fa-eye" id="confirm_password_icon"></i>
+                        </button>
+                      </div>
+                      <div id="password_match_message" class="form-text"></div>
+                    </div>
+                  </div>
+                  
+                  <!-- Password Strength Indicator -->
+                  <div class="mt-3">
+                    <label class="form-label">Kekuatan Password</label>
+                    <div class="progress" style="height: 8px;">
+                      <div id="password_strength" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small id="password_strength_text" class="text-muted">Masukkan password untuk melihat kekuatan</small>
+                  </div>
+                  
+                  <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-warning btn-lg" id="submitBtn" disabled>
+                      <i class="fas fa-key me-2"></i>Ubah Password
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Akun</h6>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <small class="text-muted">Username</small>
+                  <div class="fw-bold">{{ session.get('username', 'N/A') }}</div>
+                </div>
+                <div class="mb-3">
+                  <small class="text-muted">Role</small>
+                  <div class="fw-bold">{{ session.get('user_role', 'User') }}</div>
+                </div>
+                <div class="mb-3">
+                  <small class="text-muted">Bergabung sejak</small>
+                  <div class="fw-bold">{{ session.get('join_date', 'N/A') }}</div>
+                </div>
+                <hr>
+                <div class="d-grid">
+                  <small class="text-muted text-center">
+                    <i class="fas fa-info-circle me-1"></i>Gunakan form di sebelah untuk mengubah profil dan password
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mt-3">
+              <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Keamanan</h6>
+              </div>
+              <div class="card-body">
+                <p class="small text-muted mb-3">
+                  Pastikan informasi profil Anda selalu ter-update untuk keamanan akun.
+                </p>
+                <ul class="list-unstyled small">
+                  <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Gunakan email aktif</li>
+                  <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Verifikasi nomor telepon</li>
+                  <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Update alamat terkini</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Custom Dashboard User JS -->
+  <script src="{{ url_for('static', filename='js/dashUser.js') }}"></script>
+</body>
+</html>
