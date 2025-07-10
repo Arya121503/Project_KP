@@ -411,18 +411,62 @@ function checkPasswordMatch() {
     }
 }
 
-// Attach event listeners for password validation
-if (newPasswordField) {
-    newPasswordField.addEventListener('input', function() {
-        updatePasswordStrength();
-        checkPasswordMatch();
-    });
+// Edit Profile Page Password Validation Initialization
+function initializeEditProfileValidation() {
+    // Check if we're on the edit profile page
+    if (window.location.pathname.includes('edit_profile')) {
+        const newPasswordField = document.getElementById('new_password');
+        const confirmPasswordField = document.getElementById('confirm_password');
+        const strengthBar = document.getElementById('password_strength');
+        const strengthText = document.getElementById('password_strength_text');
+        const matchMessage = document.getElementById('password_match_message');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Initialize password strength and validation
+        if (newPasswordField && strengthBar && strengthText) {
+            newPasswordField.addEventListener('input', updatePasswordStrength);
+            newPasswordField.addEventListener('input', checkPasswordMatch);
+            
+            // Initialize display
+            updatePasswordStrength();
+        }
+        
+        if (confirmPasswordField && matchMessage && submitBtn) {
+            confirmPasswordField.addEventListener('input', checkPasswordMatch);
+            
+            // Initialize validation
+            checkPasswordMatch();
+        }
+        
+        // Form validation to prevent submission with invalid data
+        const profileForm = document.querySelector('form[action*="edit_profile"]');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                // If password fields are filled, validate them
+                if (newPasswordField && newPasswordField.value.length > 0) {
+                    const currentPassword = document.getElementById('current_password');
+                    if (!currentPassword || currentPassword.value.length === 0) {
+                        e.preventDefault();
+                        alert('Password saat ini harus diisi untuk mengubah password');
+                        return;
+                    }
+                    
+                    if (newPasswordField.value !== confirmPasswordField.value) {
+                        e.preventDefault();
+                        alert('Konfirmasi password tidak cocok');
+                        return;
+                    }
+                    
+                    if (newPasswordField.value.length < 8) {
+                        e.preventDefault();
+                        alert('Password baru harus minimal 8 karakter');
+                        return;
+                    }
+                }
+            });
+        }
+    }
 }
 
-if (confirmPasswordField) {
-    confirmPasswordField.addEventListener('input', checkPasswordMatch);
-}
-
-// Initialize password validation on page load
-updatePasswordStrength();
-checkPasswordMatch();
+// Initialize edit profile validation when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeEditProfileValidation);

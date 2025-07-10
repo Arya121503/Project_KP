@@ -15,7 +15,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
   <!-- Custom Dashboard CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashUser.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashAdmin.css') }}" />
   
   <!-- Custom Telkom Color Scheme -->
   <style>
@@ -25,37 +25,76 @@
       --telkom-light: rgba(220, 20, 60, 0.1);
       --color-info-dark: #7d8da1;
       --border-radius-1: 0.4rem;
+      --color-dark: #363949;
+      --color-white: #fff;
     }
     
     /* User-specific styling */
-    .user-welcome {
-      background: linear-gradient(135deg, var(--telkom-red), var(--telkom-dark));
-      color: white !important;
-      padding: 1.5rem;
-      border-radius: var(--border-radius-1);
-      margin-bottom: 2rem;
+    .analyse .sales .status .progresss svg circle:nth-child(1) {
+      stroke: var(--telkom-red);
     }
     
-    .user-welcome h1,
-    .user-welcome p,
-    .user-welcome * {
-      color: white !important;
+    .analyse .visits .status .progresss svg circle:nth-child(1) {
+      stroke: var(--telkom-red);
     }
     
-    .quick-action-card {
-      background: white;
-      border: 2px solid #f1f1f1;
-      transition: all 0.3s ease;
+    .analyse .searches .status .progresss svg circle:nth-child(1) {
+      stroke: var(--telkom-red);
     }
     
-    .quick-action-card:hover {
-      border-color: var(--telkom-red);
-      box-shadow: 0 4px 15px rgba(220, 20, 60, 0.1);
-      transform: translateY(-2px);
+    .analyse .progresss svg circle:nth-child(2) {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 50;
+      stroke: var(--telkom-red);
     }
     
     .asset-card {
       transition: all 0.3s ease;
+    }
+    
+    /* Profile Dropdown Styling */
+    .profile-photo {
+      position: relative;
+    }
+    
+    .profile-photo img {
+      transition: transform 0.2s ease;
+    }
+    
+    .profile-photo img:hover {
+      transform: scale(1.05);
+    }
+    
+    /* Username Link Styling */
+    .username-link {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      position: relative;
+    }
+    
+    .username-link:hover {
+      color: var(--telkom-red) !important;
+      text-decoration: none;
+    }
+    
+    .username-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--telkom-red);
+      transition: width 0.2s ease;
+    }
+    
+    .username-link:hover::after {
+      width: 100%;
+    }
+    
+    .user-name-section {
+      cursor: pointer;
     }
     
     .asset-card:hover {
@@ -90,23 +129,15 @@
       background-color: var(--telkom-red) !important;
     }
     
-    /* Notification Badge Styling */
-    .notification-badge {
-      position: absolute;
-      top: 8px;
-      right: 15px;
-      background-color: var(--telkom-red);
-      color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 10px;
-      font-weight: bold;
-      min-width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: pulse 2s infinite;
+    /* Set icon color based on theme */
+    body {
+      --icon-color: #363949; /* Light mode */
+    }
+    
+    body.dark,
+    body[data-theme="dark"],
+    .dark-theme-variables {
+      --icon-color: #ffffff; /* Dark mode */
     }
     
     @keyframes pulse {
@@ -277,58 +308,39 @@
   </style>
 </head>
 <body>
-  <!-- TOP NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
+  <!-- TOP NAVBAR -->
+  <nav class="top-navbar">
+    <div class="navbar-content">
       <div class="navbar-left">
-        <button class="menu-toggle" id="menu-btn">
+        <button id="menu-btn" class="menu-toggle">
           <span class="material-icons-sharp">menu</span>
         </button>
         <button id="sidebar-toggle" class="sidebar-toggle">
           <span class="material-icons-sharp">menu_open</span>
         </button>
-        <div class="navbar-brand">
+        <div class="navbar-logo">
           <img src="{{ url_for('static', filename='img/telkomLogo.png') }}" alt="Telkom Logo" />
-          <h2>Telkom<span class="danger"> Aset</span></h2>
+          <h2>Telkom<span class="danger">Aset</span></h2>
         </div>
       </div>
-
+      
       <div class="navbar-right">
         <div class="dark-mode">
           <span class="material-icons-sharp active">light_mode</span>
           <span class="material-icons-sharp">dark_mode</span>
         </div>
         
-        <!-- Notification Bell -->
-        <div class="nav-item position-relative me-3">
-          <button class="btn btn-link text-white p-2 menu-link" data-target="notifikasi-user" style="border: none; background: none;">
-            <span class="material-icons-sharp">notifications</span>
-            <span class="notification-badge" id="navbarNotifBadge" style="display: none;">0</span>
-          </button>
-        </div>
-        
-        <div class="navbar-nav">
-          <div class="nav-item dropdown">
-            <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" 
-               data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
-              <span class="material-icons-sharp">account_circle</span>
-              <span class="user-name">{{ session.get('user_name', 'User') }}</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}">
-                <i class="fas fa-user-edit me-2"></i>Edit Profil & Password
-              </a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="{{ url_for('main.logout_user') }}">
-                <i class="fas fa-sign-out-alt me-2"></i>Logout
-              </a></li>
-            </ul>
-          </div>
-          
-          <div class="nav-item">
-            <div class="profile-photo">
-              <img src="{{ url_for('static', filename='img/profile.jpg') }}" />
+        <div class="profile">
+          <div class="info">
+            <div class="user-name-section">
+              <p>Hey, <b><a href="{{ url_for('main.edit_profile') }}" class="username-link" title="Klik untuk edit profil">{{ session.get('user_name', 'User') }}</a></b></p>
+              <small class="text-muted">User</small>
             </div>
+          </div>
+          <div class="profile-photo">
+            <img src="{{ url_for('static', filename='img/profile.jpg') }}" 
+                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" 
+                 alt="Profile Photo" />
           </div>
         </div>
       </div>
@@ -374,63 +386,111 @@
     <main>
       <!-- Dashboard Utama -->
       <section id="dashboard-home" class="content-section active">
-        <div class="user-welcome">
-          <h1><i class="fas fa-home me-3"></i>Selamat Datang, {{ session.get('user_name', 'User') }}!</h1>
-          <p class="mb-0">Temukan aset properti terbaik untuk disewa. Jelajahi berbagai pilihan tanah dan bangunan yang tersedia dari Telkom untuk kebutuhan bisnis Anda.</p>
+        <h1>Dashboard User</h1>
+        <p class="text-muted mb-4">Selamat datang, {{ session.get('user_name', 'User') }}! Temukan aset properti terbaik untuk disewa.</p>
+        
+        <!-- Statistik Utama -->
+        <div class="analyse">
+          <div class="sales">
+            <div class="status">
+              <div class="info">
+                <h3>Aset Tersedia</h3>
+                <h1 id="totalAset">0</h1>
+                <small>Properti</small>
+              </div>
+              <div class="progresss">
+                <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                <div class="percentage"><p>100%</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="visits">
+            <div class="status">
+              <div class="info">
+                <h3>Favorit</h3>
+                <h1 id="totalFavorit">0</h1>
+                <small>Aset Disimpan</small>
+              </div>
+              <div class="progresss">
+                <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                <div class="percentage"><p>Aktif</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="searches">
+            <div class="status">
+              <div class="info">
+                <h3>Histori Sewa</h3>
+                <h1 id="totalHistori">0</h1>
+                <small>Transaksi</small>
+              </div>
+              <div class="progresss">
+                <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                <div class="percentage"><p>Total</p></div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- Aset Tersedia -->
-        <div class="card mt-4">
-          <div class="card-header bg-danger text-white">
-            <h5 class="mb-0">
-              <i class="fas fa-building me-2"></i>Aset Tersedia untuk Disewa
-            </h5>
+        <div class="row mt-4">
+          <div class="col-12">
+            <h3 class="mb-3">Aset Tersedia untuk Disewa</h3>
           </div>
-          <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-md-4">
-                <select class="form-select form-select-sm" id="filterJenis">
-                  <option value="">Semua Jenis</option>
-                  <option value="tanah">Tanah</option>
-                  <option value="tanah_bangunan">Tanah + Bangunan</option>
-                </select>
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-building me-2"></i>Properti Tersedia
+                </h5>
               </div>
-              <div class="col-md-4">
-                <select class="form-select form-select-sm" id="filterKecamatan">
-                  <option value="">Semua Kecamatan</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData(1)">
-                  <i class="fas fa-search me-1"></i>Cari
-                </button>
-              </div>
-            </div>
-            
-            <div id="asetContainer" class="row g-3">
-              <div class="col-12 text-center">
-                <div class="spinner-border text-danger" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2 text-muted">Memuat data aset...</p>
-              </div>
-            </div>
-            
-            <!-- Pagination Controls -->
-            <div id="paginationControls" class="row mt-4" style="display: none;">
-              <div class="col-12">
-                <nav aria-label="Asset pagination">
-                  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="pagination-info">
-                      <small class="text-muted">
-                        Menampilkan <span id="paginationInfo"></span>
-                      </small>
-                    </div>
-                    <ul class="pagination pagination-sm mb-0" id="paginationList">
-                      <!-- Pagination buttons will be generated dynamically -->
-                    </ul>
+              <div class="card-body">
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <select class="form-select form-select-sm" id="filterJenis">
+                      <option value="">Semua Jenis</option>
+                      <option value="tanah">Tanah</option>
+                      <option value="tanah_bangunan">Tanah + Bangunan</option>
+                    </select>
                   </div>
-                </nav>
+                  <div class="col-md-4">
+                    <select class="form-select form-select-sm" id="filterKecamatan">
+                      <option value="">Semua Kecamatan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <button class="btn btn-sm btn-outline-danger" onclick="loadAsetData(1)">
+                      <i class="fas fa-search me-1"></i>Cari
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="asetContainer" class="row g-3">
+                  <div class="col-12 text-center">
+                    <div class="spinner-border text-danger" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Memuat data aset...</p>
+                  </div>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="row mt-4" style="display: none;">
+                  <div class="col-12">
+                    <nav aria-label="Asset pagination">
+                      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <div class="pagination-info">
+                          <small class="text-muted">
+                            Menampilkan <span id="paginationInfo"></span>
+                          </small>
+                        </div>
+                        <ul class="pagination pagination-sm mb-0" id="paginationList">
+                          <!-- Pagination buttons will be generated dynamically -->
+                        </ul>
+                      </div>
+                    </nav>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -439,13 +499,11 @@
 
       <!-- Favorit Aset -->
       <section id="favorit-aset" class="content-section">
-        <div class="user-welcome">
-          <h1><i class="fas fa-heart me-3"></i>Aset Favorit</h1>
-          <p class="mb-0">Koleksi aset properti pilihan Anda. Simpan aset yang menarik untuk disewa di kemudian hari.</p>
-        </div>
+        <h1>Aset Favorit</h1>
+        <p class="text-muted mb-4">Koleksi aset properti pilihan Anda. Simpan aset yang menarik untuk disewa di kemudian hari.</p>
         
         <!-- Filter & Actions -->
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <div class="d-flex justify-content-between align-items-center">
               <h5 class="mb-0">
@@ -484,7 +542,7 @@
         </div>
         
         <!-- Favorit List -->
-        <div class="card">
+        <div class="card shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-heart me-2"></i>Daftar Aset Favorit
@@ -506,13 +564,11 @@
 
       <!-- Histori Sewa -->
       <section id="histori-sewa" class="content-section">
-        <div class="user-welcome">
-          <h1><i class="fas fa-history me-3"></i>Histori Sewa Aset</h1>
-          <p class="mb-0">Lihat riwayat aset yang pernah Anda sewa dari Telkom. Kelola dan lacak semua transaksi sewa Anda.</p>
-        </div>
+        <h1>Histori Sewa Aset</h1>
+        <p class="text-muted mb-4">Lihat riwayat aset yang pernah Anda sewa dari Telkom. Kelola dan lacak semua transaksi sewa Anda.</p>
         
         <!-- Filter Histori -->
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-filter me-2"></i>Filter Histori
@@ -556,7 +612,7 @@
         </div>
         
         <!-- Tabel Histori -->
-        <div class="card">
+        <div class="card shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-list me-2"></i>Daftar Histori Sewa
@@ -594,13 +650,11 @@
 
       <!-- Notifikasi User -->
       <section id="notifikasi-user" class="content-section">
-        <div class="user-welcome">
-          <h1><i class="fas fa-bell me-3"></i>Notifikasi</h1>
-          <p class="mb-0">Dapatkan informasi terbaru tentang sewa aset, pembayaran, dan pembaruan sistem.</p>
-        </div>
+        <h1>Notifikasi</h1>
+        <p class="text-muted mb-4">Dapatkan informasi terbaru tentang sewa aset, pembayaran, dan pembaruan sistem.</p>
         
         <!-- Filter & Actions -->
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <div class="d-flex justify-content-between align-items-center">
               <h5 class="mb-0">
@@ -655,7 +709,7 @@
         </div>
         
         <!-- Notifikasi List -->
-        <div class="card">
+        <div class="card shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-list me-2"></i>Daftar Notifikasi
@@ -681,7 +735,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <!-- Custom Dashboard JS -->
-  <script src="{{ url_for('static', filename='js/dashUser.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
   
   <!-- User Dashboard Specific JS -->
   <script>
@@ -694,10 +748,44 @@
     // Load aset data on page load
     loadAsetData();
     loadKecamatanOptions();
+    updateDashboardStats();
     
     // Handle menu navigation
     setupMenuNavigation();
   });
+
+  // Update dashboard statistics
+  function updateDashboardStats() {
+    // Update total aset
+    fetch('/api/aset-tersedia?per_page=1')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.pagination) {
+          document.getElementById('totalAset').textContent = data.pagination.total_items;
+        }
+      })
+      .catch(error => console.error('Error loading aset count:', error));
+
+    // Update favorit count
+    fetch('/api/favorit-count')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('totalFavorit').textContent = data.count;
+        }
+      })
+      .catch(error => console.error('Error loading favorit count:', error));
+
+    // Update histori count
+    fetch('/api/histori-count')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('totalHistori').textContent = data.count;
+        }
+      })
+      .catch(error => console.error('Error loading histori count:', error));
+  }
 
   // Setup menu navigation
   function setupMenuNavigation() {

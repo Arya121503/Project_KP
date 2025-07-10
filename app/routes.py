@@ -32,14 +32,20 @@ def login():
         password = request.form['password']
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, name, password, role FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT id, name, password, role, email, phone, company, address, created_at FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
 
         if user and check_password_hash(user[2], password):
             session['user_id'] = user[0]
-            session['user_name'] = user[1]  # SIMPAN NAMA
+            session['user_name'] = user[1]
             session['role'] = user[3]
+            session['user_email'] = user[4]
+            session['user_phone'] = user[5] if user[5] else ''
+            session['user_company'] = user[6] if user[6] else ''
+            session['user_address'] = user[7] if user[7] else ''
+            session['join_date'] = user[8].strftime('%d %B %Y') if user[8] else 'N/A'
+            session['username'] = user[4]  # Use email as username display
 
             if user[3] == 'admin':
                 flash('Login admin berhasil.', 'success')
@@ -1367,25 +1373,103 @@ def edit_profile():
         flash('Silakan login terlebih dahulu.', 'error')
         return redirect(url_for('main.login'))
     
+    user_id = session['user_id']
+    
     if request.method == 'POST':
-        # Handle form submission for profile update
-        user_id = session['user_id']
-        new_name = request.form.get('name')
-        new_email = request.form.get('email')
-        current_password = request.form.get('current_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
         try:
-            # Update profile logic here
-            # For now, just flash a success message
-            flash('Profil berhasil diperbarui!', 'success')
-            return redirect(url_for('main.user_dashboard'))
+            cur = mysql.connection.cursor()
+            
+            # Check if this is a password change request
+            if 'current_password' in request.form and request.form.get('current_password'):
+                # Handle password change
+                current_password = request.form.get('current_password')
+                new_password = request.form.get('new_password')
+                confirm_password = request.form.get('confirm_password')
+                
+                # Verify current password
+                cur.execute("SELECT password FROM users WHERE id = %s", (user_id,))
+                user_data = cur.fetchone()
+                
+                if not user_data or not check_password_hash(user_data[0], current_password):
+                    flash('Password saat ini tidak benar.', 'error')
+                    cur.close()
+                    return redirect(url_for('main.edit_profile'))
+                
+                # Validate new password
+                if new_password != confirm_password:
+                    flash('Konfirmasi password tidak cocok.', 'error')
+                    cur.close()
+                    return redirect(url_for('main.edit_profile'))
+                
+                if len(new_password) < 8:
+                    flash('Password baru harus minimal 8 karakter.', 'error')
+                    cur.close()
+                    return redirect(url_for('main.edit_profile'))
+                
+                # Update password
+                hashed_password = generate_password_hash(new_password)
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_password, user_id))
+                mysql.connection.commit()
+                flash('Password berhasil diubah!', 'success')
+                
+            else:
+                # Handle profile update
+                user_name = request.form.get('user_name')
+                email = request.form.get('email')
+                phone = request.form.get('phone')
+                company = request.form.get('company')
+                address = request.form.get('address')
+                
+                # Check if email already exists for other users
+                cur.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id))
+                if cur.fetchone():
+                    flash('Email sudah digunakan oleh user lain.', 'error')
+                    cur.close()
+                    return redirect(url_for('main.edit_profile'))
+                
+                # Update user profile
+                cur.execute("""
+                    UPDATE users 
+                    SET name = %s, email = %s, phone = %s, company = %s, address = %s 
+                    WHERE id = %s
+                """, (user_name, email, phone, company, address, user_id))
+                mysql.connection.commit()
+                
+                # Update session data
+                session['user_name'] = user_name
+                session['user_email'] = email
+                session['user_phone'] = phone if phone else ''
+                session['user_company'] = company if company else ''
+                session['user_address'] = address if address else ''
+                
+                flash('Profil berhasil diperbarui!', 'success')
+            
+            cur.close()
+            return redirect(url_for('main.edit_profile'))
+            
         except Exception as e:
             flash(f'Terjadi kesalahan: {str(e)}', 'error')
             return redirect(url_for('main.edit_profile'))
     
-    # GET request - show edit profile form
+    # GET request - load user data and show edit profile form
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT name, email, phone, company, address, created_at FROM users WHERE id = %s", (user_id,))
+        user_data = cur.fetchone()
+        cur.close()
+        
+        if user_data:
+            # Update session with current data
+            session['user_name'] = user_data[0]
+            session['user_email'] = user_data[1]
+            session['user_phone'] = user_data[2] if user_data[2] else ''
+            session['user_company'] = user_data[3] if user_data[3] else ''
+            session['user_address'] = user_data[4] if user_data[4] else ''
+            session['join_date'] = user_data[5].strftime('%d %B %Y') if user_data[5] else 'N/A'
+            
+    except Exception as e:
+        flash(f'Terjadi kesalahan dalam memuat data: {str(e)}', 'error')
+    
     return render_template('edit_profile.html')
 
 
