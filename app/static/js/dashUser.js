@@ -1,7 +1,7 @@
 console.log("Dashboard User JS Loaded!");
 
 // Dashboard User JavaScript Functions
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function() {
   // Sidebar toggle functionality
   const sideMenu = document.querySelector("aside");
   const menuBtn = document.getElementById("menu-btn");
