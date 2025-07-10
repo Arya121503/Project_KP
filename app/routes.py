@@ -1985,6 +1985,196 @@ def submit_rental():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Favorit Aset API Routes
+@main.route('/api/favorit-aset', methods=['GET'])
+def get_favorit_aset():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        jenis = request.args.get('jenis')
+        kecamatan = request.args.get('kecamatan')
+        
+        cur = mysql.connection.cursor()
+        
+        query = """
+            SELECT f.id, f.aset_id, f.created_at, f.catatan, 
+                  p.kecamatan, p.kelurahan, p.luas_tanah_m2 as luas_tanah, p.luas_bangunan_m2 as luas_bangunan, 
+                  CASE WHEN p.luas_bangunan_m2 > 0 THEN 'tanah_bangunan' ELSE 'tanah' END as jenis,
+                  p.harga_prediksi_total as harga_prediksi, 
+                  ROUND(p.harga_prediksi_total * 0.01) as harga_sewa, 
+                  'Tersedia' as status
+            FROM favorit_aset f
+            LEFT JOIN prediksi_properti_bangunan_tanah p ON f.aset_id = p.id
+            WHERE f.user_id = %s
+        """
+        params = [user_id]
+        
+        if jenis:
+            query += " AND p.jenis = %s"
+            params.append(jenis)
+        
+        if kecamatan:
+            query += " AND p.kecamatan = %s"
+            params.append(kecamatan)
+        
+        query += " ORDER BY f.created_at DESC"
+        
+        cur.execute(query, params)
+        favorit_list = []
+        columns = [col[0] for col in cur.description]
+        for row in cur.fetchall():
+            favorit_list.append(dict(zip(columns, row)))
+        
+        # Get total count
+        cur.execute("SELECT COUNT(*) FROM favorit_aset WHERE user_id = %s", (user_id,))
+        total_count = cur.fetchone()[0]
+        
+        cur.close()
+        
+        return jsonify({
+            'success': True, 
+            'data': favorit_list,
+            'total': total_count
+        })
+        
+    except Exception as e:
+        print(f"Error getting favorit aset: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/api/favorit-aset/toggle', methods=['POST'])
+def toggle_favorit():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        aset_id = request.json.get('aset_id')
+        action = request.json.get('action')  # 'add' or 'remove'
+        catatan = request.json.get('catatan', '')
+        
+        if not aset_id:
+            return jsonify({'success': False, 'message': 'Missing aset_id parameter'}), 400
+        
+        cur = mysql.connection.cursor()
+        
+        if action == 'add':
+            # Check if asset exists in prediksi_properti_bangunan_tanah
+            cur.execute("SELECT id FROM prediksi_properti_bangunan_tanah WHERE id = %s", (aset_id,))
+            if not cur.fetchone():
+                return jsonify({'success': False, 'message': 'Asset tidak ditemukan'}), 404
+            
+            # Check if already favorited
+            cur.execute("SELECT id FROM favorit_aset WHERE user_id = %s AND aset_id = %s", 
+                       (user_id, aset_id))
+            if cur.fetchone():
+                return jsonify({'success': False, 'message': 'Aset sudah ada di favorit'}), 400
+            
+            # Add to favorites - without FK constraint, we can just insert
+            try:
+                cur.execute("""
+                    INSERT INTO favorit_aset (user_id, aset_id, catatan)
+                    VALUES (%s, %s, %s)
+                """, (user_id, aset_id, catatan))
+                mysql.connection.commit()
+            except Exception as e:
+                print(f"Error adding favorite: {e}")
+                return jsonify({'success': False, 'message': f'Gagal menambahkan favorit: {str(e)}'}), 500
+            
+        elif action == 'remove':
+            # Remove from favorites
+            cur.execute("DELETE FROM favorit_aset WHERE user_id = %s AND aset_id = %s", 
+                       (user_id, aset_id))
+            mysql.connection.commit()
+        
+        # Get updated count
+        cur.execute("SELECT COUNT(*) FROM favorit_aset WHERE user_id = %s", (user_id,))
+        total_count = cur.fetchone()[0]
+        
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Berhasil menambahkan ke favorit' if action == 'add' else 'Berhasil menghapus dari favorit',
+            'is_favorite': action == 'add',
+            'total': total_count
+        })
+        
+    except Exception as e:
+        print(f"Error toggling favorit: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/api/favorit-aset/check', methods=['GET'])
+def check_favorit():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        aset_id = request.args.get('aset_id')
+        
+        if not aset_id:
+            return jsonify({'success': False, 'message': 'Missing aset_id parameter'}), 400
+        
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT id FROM favorit_aset WHERE user_id = %s AND aset_id = %s", 
+                   (user_id, aset_id))
+        is_favorite = bool(cur.fetchone())
+        
+        # Get property details if it's a favorite
+        property_data = {}
+        if is_favorite:
+            try:
+                cur.execute("""
+                    SELECT CASE WHEN luas_bangunan_m2 > 0 THEN 'tanah_bangunan' ELSE 'tanah' END as jenis 
+                    FROM prediksi_properti_bangunan_tanah 
+                    WHERE id = %s
+                """, (aset_id,))
+                row = cur.fetchone()
+                if row:
+                    property_data = {'jenis': row[0]}
+                else:
+                    property_data = {'jenis': 'tanah'} # Default if not found
+            except Exception as e:
+                print(f"Error getting property details: {e}")
+                property_data = {'jenis': 'tanah'} # Default if error
+        
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'is_favorite': is_favorite,
+            'data': property_data
+        })
+        
+    except Exception as e:
+        print(f"Error checking favorit status: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/api/favorit-aset/clear', methods=['POST'])
+def clear_favorit():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("DELETE FROM favorit_aset WHERE user_id = %s", (user_id,))
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Berhasil menghapus semua favorit',
+            'total': 0
+        })
+        
+    except Exception as e:
+        print(f"Error clearing favorit: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 
 
