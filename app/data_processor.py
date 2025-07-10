@@ -55,6 +55,14 @@ class AssetDataProcessor:
             # Clean column names (remove spaces)
             self.df.columns = self.df.columns.str.strip()
             
+            # Remove Prajuritkulon data as it's not part of Surabaya
+            if 'kecamatan' in self.df.columns:
+                original_count = len(self.df)
+                self.df = self.df[~self.df['kecamatan'].str.contains('prajurit', case=False, na=False)]
+                removed_count = original_count - len(self.df)
+                if removed_count > 0:
+                    print(f"Removed {removed_count} Prajuritkulon records as they are not part of Surabaya")
+            
             # Create Price column from NJOP and land area if it doesn't exist
             if 'Price' not in self.df.columns and 'NJOP_Rp_per_m2' in self.df.columns and 'Luas Tanah' in self.df.columns:
                 self.df['Price'] = self.df['NJOP_Rp_per_m2'] * self.df['Luas Tanah']
@@ -109,7 +117,7 @@ class AssetDataProcessor:
             'Kondisi Properti': ['Baru', 'Bagus', 'Sudah Renovasi', 'Baru', 'Bagus'] * 100,
             'Daya Listrik': [1300, 2200, 1300, 2200, 1300] * 100,
             'Alamat': ['Jl. Test No.1, Surabaya'] * 500,
-            'Tipe Iklan': ['Dijual', 'Disewa', 'Keduanya', 'Dijual', 'Disewa'] * 100
+            'Tipe Iklan': ['Disewa', 'Investasi', 'Disewa', 'Investasi', 'Disewa'] * 100
         }
         self.df = pd.DataFrame(dummy_data)
     
@@ -144,7 +152,7 @@ class AssetDataProcessor:
                 'address': row['Alamat'] if pd.notna(row['Alamat']) else 'N/A',
                 'ad_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'N/A',
                 'type': 'Rumah',
-                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Jual'
+                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Sewa'
             }
             
             # Calculate price per m2
@@ -230,7 +238,7 @@ class AssetDataProcessor:
                 'address': row['Alamat'] if pd.notna(row['Alamat']) else 'N/A',
                 'ad_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'N/A',
                 'type': 'Rumah',
-                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Jual'
+                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Sewa'
             }
             
             # Calculate price per m2
@@ -330,7 +338,7 @@ class AssetDataProcessor:
                 'address': row['Alamat'] if pd.notna(row['Alamat']) else 'N/A',
                 'ad_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'N/A',
                 'type': 'Rumah',
-                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Jual'
+                'transaction_type': row['Tipe Iklan'] if pd.notna(row['Tipe Iklan']) else 'Sewa'
             }
             
             # Calculate price per m2
@@ -343,3 +351,137 @@ class AssetDataProcessor:
             
         except (IndexError, KeyError):
             return None
+
+class TanahDataProcessor:
+    def __init__(self, csv_path: str = None):
+        """Initialize the processor with land CSV data"""
+        if csv_path is None:
+            csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'dataset_tanah_njop_surabaya_sertifikat.csv')
+        
+        self.csv_path = csv_path
+        self.df = None
+        self.load_data()
+    
+    def load_data(self):
+        """Load and clean the land CSV data"""
+        try:
+            # Read CSV with comma separator
+            self.df = pd.read_csv(self.csv_path, sep=',', encoding='utf-8')
+            
+            # Clean column names (remove spaces)
+            self.df.columns = self.df.columns.str.strip()
+            
+            # Remove Prajuritkulon data as it's not part of Surabaya
+            if 'kecamatan' in self.df.columns:
+                original_count = len(self.df)
+                self.df = self.df[~self.df['kecamatan'].str.contains('prajurit', case=False, na=False)]
+                removed_count = original_count - len(self.df)
+                if removed_count > 0:
+                    print(f"Removed {removed_count} Prajuritkulon records from land data as they are not part of Surabaya")
+            
+            # Clean numeric columns
+            numeric_columns = ['luas_tanah_m2', 'njop_tanah_m2', 'njop_total', 'zona_nilai_tanah', 'tahun']
+            for col in numeric_columns:
+                if col in self.df.columns:
+                    self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
+            
+            # Clean string columns
+            string_columns = ['kecamatan', 'kelurahan', 'kelas_tanah', 'jenis_sertifikat', 'no_sertifikat']
+            for col in string_columns:
+                if col in self.df.columns:
+                    self.df[col] = self.df[col].astype(str).str.strip()
+                    # Replace 'nan' with empty string for better handling
+                    self.df[col] = self.df[col].replace('nan', '')
+            
+            # Remove rows with invalid data
+            if 'njop_total' in self.df.columns:
+                self.df = self.df.dropna(subset=['njop_total'])
+                self.df = self.df[self.df['njop_total'] > 0]
+            
+            print(f"Loaded {len(self.df)} land records from dataset")
+            
+        except Exception as e:
+            print(f"Error loading land data: {e}")
+            self.df = pd.DataFrame()
+    
+    def get_all_kecamatan(self) -> List[str]:
+        """Get all unique kecamatan (districts) from the data"""
+        if self.df is None or self.df.empty:
+            return []
+        
+        if 'kecamatan' in self.df.columns:
+            kecamatan_list = self.df['kecamatan'].dropna().unique().tolist()
+            # Filter out any remaining prajurit data
+            kecamatan_list = [k for k in kecamatan_list if 'prajurit' not in k.lower()]
+            return sorted(kecamatan_list)
+        return []
+    
+    def get_district_statistics(self) -> List[Dict]:
+        """Get statistics per district"""
+        if self.df is None or self.df.empty:
+            return []
+        
+        try:
+            # Group by kecamatan and calculate statistics
+            district_stats = self.df.groupby('kecamatan').agg({
+                'njop_total': ['count', 'mean', 'min', 'max', 'sum'],
+                'luas_tanah_m2': ['mean', 'sum'],
+                'njop_tanah_m2': 'mean'
+            }).reset_index()
+            
+            # Flatten column names
+            district_stats.columns = ['kecamatan', 'total_properties', 'avg_price', 'min_price', 'max_price', 'total_value', 'avg_land_area', 'total_land_area', 'avg_price_per_m2']
+            
+            # Convert to list of dictionaries
+            stats_list = []
+            for _, row in district_stats.iterrows():
+                # Skip any remaining prajurit data
+                if 'prajurit' not in row['kecamatan'].lower():
+                    stats_list.append({
+                        'kecamatan': row['kecamatan'],
+                        'total_properties': int(row['total_properties']),
+                        'avg_price': float(row['avg_price']),
+                        'min_price': float(row['min_price']),
+                        'max_price': float(row['max_price']),
+                        'total_value': float(row['total_value']),
+                        'avg_land_area': float(row['avg_land_area']),
+                        'total_land_area': float(row['total_land_area']),
+                        'avg_price_per_m2': float(row['avg_price_per_m2'])
+                    })
+            
+            return sorted(stats_list, key=lambda x: x['avg_price'], reverse=True)
+            
+        except Exception as e:
+            print(f"Error getting district statistics: {e}")
+            return []
+    
+    def get_certificate_distribution(self) -> List[Dict]:
+        """Get certificate type distribution"""
+        if self.df is None or self.df.empty:
+            return []
+        
+        try:
+            # Filter out empty certificates
+            cert_data = self.df[self.df['jenis_sertifikat'].notna() & (self.df['jenis_sertifikat'] != '')]
+            
+            cert_stats = cert_data.groupby('jenis_sertifikat').agg({
+                'njop_total': ['count', 'mean', 'min', 'max']
+            }).reset_index()
+            
+            cert_stats.columns = ['jenis_sertifikat', 'count', 'avg_price', 'min_price', 'max_price']
+            
+            cert_list = []
+            for _, row in cert_stats.iterrows():
+                cert_list.append({
+                    'jenis_sertifikat': row['jenis_sertifikat'],
+                    'count': int(row['count']),
+                    'avg_price': float(row['avg_price']),
+                    'min_price': float(row['min_price']),
+                    'max_price': float(row['max_price'])
+                })
+            
+            return sorted(cert_list, key=lambda x: x['count'], reverse=True)
+            
+        except Exception as e:
+            print(f"Error getting certificate distribution: {e}")
+            return []

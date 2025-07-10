@@ -67,7 +67,7 @@ class PrediksiPropertiTanah:
 
     @staticmethod
     def get_statistics():
-        """Ambil statistik prediksi tanah"""
+        """Ambil statistik prediksi tanah (excluding Prajuritkulon)"""
         try:
             cur = mysql.connection.cursor()
             cur.execute("""
@@ -79,6 +79,7 @@ class PrediksiPropertiTanah:
                     AVG(harga_per_m2_tanah) as avg_price_per_m2,
                     COUNT(DISTINCT kecamatan) as total_kecamatan
                 FROM prediksi_properti_tanah
+                WHERE kecamatan NOT LIKE '%prajurit%'
             """)
             result = cur.fetchone()
             cur.close()
@@ -86,6 +87,58 @@ class PrediksiPropertiTanah:
         except Exception as e:
             print(f"Error getting statistics: {e}")
             return None
+
+    @staticmethod
+    def get_location_analysis():
+        """Ambil analisis per lokasi untuk data tanah (excluding Prajuritkulon)"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    kecamatan,
+                    COUNT(*) as total_properties,
+                    AVG(harga_prediksi_tanah) as avg_price,
+                    MIN(harga_prediksi_tanah) as min_price,
+                    MAX(harga_prediksi_tanah) as max_price,
+                    SUM(harga_prediksi_tanah) as total_value,
+                    AVG(luas_tanah_m2) as avg_land_area,
+                    COUNT(DISTINCT jenis_sertifikat) as certificate_types
+                FROM prediksi_properti_tanah 
+                WHERE kecamatan NOT LIKE '%prajurit%'
+                GROUP BY kecamatan
+                ORDER BY avg_price DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            return rows
+        except Exception as e:
+            print(f"Error getting location analysis: {e}")
+            return []
+
+    @staticmethod
+    def get_certificate_distribution():
+        """Ambil distribusi sertifikat (excluding Prajuritkulon)"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    jenis_sertifikat,
+                    COUNT(*) as count,
+                    AVG(harga_prediksi_tanah) as avg_price,
+                    MIN(harga_prediksi_tanah) as min_price,
+                    MAX(harga_prediksi_tanah) as max_price
+                FROM prediksi_properti_tanah 
+                WHERE jenis_sertifikat IS NOT NULL AND jenis_sertifikat != ''
+                AND kecamatan NOT LIKE '%prajurit%'
+                GROUP BY jenis_sertifikat
+                ORDER BY count DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            return rows
+        except Exception as e:
+            print(f"Error getting certificate distribution: {e}")
+            return []
 
 class PrediksiPropertiBangunanTanah:
     def __init__(self, id=None, kecamatan=None, luas_tanah_m2=None, luas_bangunan_m2=None,
@@ -204,7 +257,7 @@ class PrediksiPropertiBangunanTanah:
 
     @staticmethod
     def get_statistics():
-        """Ambil statistik prediksi bangunan+tanah"""
+        """Ambil statistik prediksi bangunan+tanah (excluding Prajuritkulon)"""
         try:
             cur = mysql.connection.cursor()
             cur.execute("""
@@ -218,6 +271,7 @@ class PrediksiPropertiBangunanTanah:
                     AVG(luas_tanah_m2) as avg_land_size,
                     COUNT(DISTINCT kecamatan) as total_kecamatan
                 FROM prediksi_properti_bangunan_tanah
+                WHERE kecamatan NOT LIKE '%prajurit%'
             """)
             result = cur.fetchone()
             cur.close()
@@ -248,4 +302,81 @@ class PrediksiPropertiBangunanTanah:
             return rows
         except Exception as e:
             print(f"Error getting kecamatan statistics: {e}")
+            return []
+
+    @staticmethod
+    def get_location_analysis():
+        """Ambil analisis per lokasi untuk data bangunan (excluding Prajuritkulon)"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    kecamatan,
+                    COUNT(*) as total_properties,
+                    AVG(harga_prediksi_total) as avg_price,
+                    MIN(harga_prediksi_total) as min_price,
+                    MAX(harga_prediksi_total) as max_price,
+                    SUM(harga_prediksi_total) as total_value,
+                    AVG(luas_bangunan_m2) as avg_building_area,
+                    AVG(luas_tanah_m2) as avg_land_area,
+                    COUNT(DISTINCT sertifikat) as certificate_types
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE kecamatan NOT LIKE '%prajurit%'
+                GROUP BY kecamatan
+                ORDER BY avg_price DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            return rows
+        except Exception as e:
+            print(f"Error getting location analysis: {e}")
+            return []
+
+    @staticmethod
+    def get_certificate_distribution():
+        """Ambil distribusi sertifikat untuk bangunan (excluding Prajuritkulon)"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    sertifikat,
+                    COUNT(*) as count,
+                    AVG(harga_prediksi_total) as avg_price,
+                    MIN(harga_prediksi_total) as min_price,
+                    MAX(harga_prediksi_total) as max_price
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE sertifikat IS NOT NULL AND sertifikat != ''
+                AND kecamatan NOT LIKE '%prajurit%'
+                GROUP BY sertifikat
+                ORDER BY count DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            return rows
+        except Exception as e:
+            print(f"Error getting certificate distribution: {e}")
+            return []
+
+    @staticmethod
+    def get_building_condition_analysis():
+        """Ambil analisis kondisi bangunan (excluding Prajuritkulon)"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    kondisi_properti,
+                    COUNT(*) as count,
+                    AVG(harga_prediksi_total) as avg_price,
+                    AVG(harga_per_m2_bangunan) as avg_price_per_m2
+                FROM prediksi_properti_bangunan_tanah 
+                WHERE kondisi_properti IS NOT NULL AND kondisi_properti != ''
+                AND kecamatan NOT LIKE '%prajurit%'
+                GROUP BY kondisi_properti
+                ORDER BY avg_price DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            return rows
+        except Exception as e:
+            print(f"Error getting building condition analysis: {e}")
             return []

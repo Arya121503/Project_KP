@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Total Properti</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Testing API...');
+            
+            fetch('/api/total-properti')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response:', data);
+                    
+                    if (data.success) {
+                        console.log('Success! Data received:', data.data);
+                        document.getElementById('result').innerHTML = `
+                            <h3>API Test Success!</h3>
+                            <p>Total properties: ${data.data.all_properties.length}</p>
+                            <p>First property: ${JSON.stringify(data.data.all_properties[0])}</p>
+                        `;
+                    } else {
+                        console.log('API Error:', data.error);
+                        document.getElementById('result').innerHTML = `
+                            <h3>API Error!</h3>
+                            <p>Error: ${data.error}</p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    document.getElementById('result').innerHTML = `
+                        <h3>Fetch Error!</h3>
+                        <p>Error: ${error.message}</p>
+                    `;
+                });
+        });
+    </script>
+</head>
+<body>
+    <h1>Test API Total Properti</h1>
+    <div id="result">Loading...</div>
+</body>
+</html>

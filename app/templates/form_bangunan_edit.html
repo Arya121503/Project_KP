@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data Bangunan + Tanah | Telkom Aset</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --telkom-red: #DC143C;
+            --telkom-dark: #8B0000;
+            --telkom-light: #FFE4E1;
+            --telkom-white: #FFFFFF;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .form-header {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--telkom-red);
+            box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 20, 60, 0.3);
+        }
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--telkom-red) 0%, var(--telkom-dark) 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.admin_dashboard') }}">
+                <i class="fas fa-home me-2"></i>Telkom Aset
+            </a>
+            <div class="ms-auto">
+                <a href="{{ url_for('main.total_properti') }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Kembali
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h3><i class="fas fa-edit me-2"></i>Edit Data Bangunan + Tanah</h3>
+                        <p class="mb-0">Perbarui informasi data bangunan dan tanah</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" id="editBangunanForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="kecamatan" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Kecamatan
+                                    </label>
+                                    <select class="form-select" id="kecamatan" name="kecamatan" required>
+                                        <option value="">Pilih Kecamatan</option>
+                                        <option value="Asemrowo" {{ 'selected' if data.kecamatan == 'Asemrowo' else '' }}>Asemrowo</option>
+                                        <option value="Benowo" {{ 'selected' if data.kecamatan == 'Benowo' else '' }}>Benowo</option>
+                                        <option value="Bubutan" {{ 'selected' if data.kecamatan == 'Bubutan' else '' }}>Bubutan</option>
+                                        <option value="Bulak" {{ 'selected' if data.kecamatan == 'Bulak' else '' }}>Bulak</option>
+                                        <option value="Dukuh Pakis" {{ 'selected' if data.kecamatan == 'Dukuh Pakis' else '' }}>Dukuh Pakis</option>
+                                        <option value="Gayungan" {{ 'selected' if data.kecamatan == 'Gayungan' else '' }}>Gayungan</option>
+                                        <option value="Genteng" {{ 'selected' if data.kecamatan == 'Genteng' else '' }}>Genteng</option>
+                                        <option value="Gubeng" {{ 'selected' if data.kecamatan == 'Gubeng' else '' }}>Gubeng</option>
+                                        <option value="Gunung Anyar" {{ 'selected' if data.kecamatan == 'Gunung Anyar' else '' }}>Gunung Anyar</option>
+                                        <option value="Jambangan" {{ 'selected' if data.kecamatan == 'Jambangan' else '' }}>Jambangan</option>
+                                        <option value="Karang Pilang" {{ 'selected' if data.kecamatan == 'Karang Pilang' else '' }}>Karang Pilang</option>
+                                        <option value="Kenjeran" {{ 'selected' if data.kecamatan == 'Kenjeran' else '' }}>Kenjeran</option>
+                                        <option value="Krembangan" {{ 'selected' if data.kecamatan == 'Krembangan' else '' }}>Krembangan</option>
+                                        <option value="Lakarsantri" {{ 'selected' if data.kecamatan == 'Lakarsantri' else '' }}>Lakarsantri</option>
+                                        <option value="Mulyorejo" {{ 'selected' if data.kecamatan == 'Mulyorejo' else '' }}>Mulyorejo</option>
+                                        <option value="Pabean Cantian" {{ 'selected' if data.kecamatan == 'Pabean Cantian' else '' }}>Pabean Cantian</option>
+                                        <option value="Pakal" {{ 'selected' if data.kecamatan == 'Pakal' else '' }}>Pakal</option>
+                                        <option value="Rungkut" {{ 'selected' if data.kecamatan == 'Rungkut' else '' }}>Rungkut</option>
+                                        <option value="Sambikerep" {{ 'selected' if data.kecamatan == 'Sambikerep' else '' }}>Sambikerep</option>
+                                        <option value="Sawahan" {{ 'selected' if data.kecamatan == 'Sawahan' else '' }}>Sawahan</option>
+                                        <option value="Semampir" {{ 'selected' if data.kecamatan == 'Semampir' else '' }}>Semampir</option>
+                                        <option value="Simokerto" {{ 'selected' if data.kecamatan == 'Simokerto' else '' }}>Simokerto</option>
+                                        <option value="Sukolilo" {{ 'selected' if data.kecamatan == 'Sukolilo' else '' }}>Sukolilo</option>
+                                        <option value="Sukomanunggal" {{ 'selected' if data.kecamatan == 'Sukomanunggal' else '' }}>Sukomanunggal</option>
+                                        <option value="Tambaksari" {{ 'selected' if data.kecamatan == 'Tambaksari' else '' }}>Tambaksari</option>
+                                        <option value="Tandes" {{ 'selected' if data.kecamatan == 'Tandes' else '' }}>Tandes</option>
+                                        <option value="Tegalsari" {{ 'selected' if data.kecamatan == 'Tegalsari' else '' }}>Tegalsari</option>
+                                        <option value="Tenggilis Mejoyo" {{ 'selected' if data.kecamatan == 'Tenggilis Mejoyo' else '' }}>Tenggilis Mejoyo</option>
+                                        <option value="Wiyung" {{ 'selected' if data.kecamatan == 'Wiyung' else '' }}>Wiyung</option>
+                                        <option value="Wonocolo" {{ 'selected' if data.kecamatan == 'Wonocolo' else '' }}>Wonocolo</option>
+                                        <option value="Wonokromo" {{ 'selected' if data.kecamatan == 'Wonokromo' else '' }}>Wonokromo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="kelurahan" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Kelurahan
+                                    </label>
+                                    <input type="text" class="form-control" id="kelurahan" name="kelurahan" 
+                                           value="{{ data.kelurahan or '' }}" required
+                                           placeholder="Masukkan nama kelurahan">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="luas_tanah_m2" class="form-label">
+                                        <i class="fas fa-ruler me-2"></i>Luas Tanah (m²)
+                                    </label>
+                                    <input type="number" class="form-control" id="luas_tanah_m2" name="luas_tanah_m2" 
+                                           value="{{ data.luas_tanah_m2 or '' }}" required min="1" step="0.01"
+                                           placeholder="Contoh: 120">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="luas_bangunan_m2" class="form-label">
+                                        <i class="fas fa-home me-2"></i>Luas Bangunan (m²)
+                                    </label>
+                                    <input type="number" class="form-control" id="luas_bangunan_m2" name="luas_bangunan_m2" 
+                                           value="{{ data.luas_bangunan_m2 or '' }}" required min="1" step="0.01"
+                                           placeholder="Contoh: 90">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="jumlah_kamar_tidur" class="form-label">
+                                        <i class="fas fa-bed me-2"></i>Kamar Tidur
+                                    </label>
+                                    <select class="form-select" id="jumlah_kamar_tidur" name="jumlah_kamar_tidur" required>
+                                        <option value="">Pilih Jumlah</option>
+                                        <option value="1" {{ 'selected' if data.jumlah_kamar_tidur == 1 else '' }}>1 Kamar</option>
+                                        <option value="2" {{ 'selected' if data.jumlah_kamar_tidur == 2 else '' }}>2 Kamar</option>
+                                        <option value="3" {{ 'selected' if data.jumlah_kamar_tidur == 3 else '' }}>3 Kamar</option>
+                                        <option value="4" {{ 'selected' if data.jumlah_kamar_tidur == 4 else '' }}>4 Kamar</option>
+                                        <option value="5" {{ 'selected' if data.jumlah_kamar_tidur == 5 else '' }}>5 Kamar</option>
+                                        <option value="6" {{ 'selected' if data.jumlah_kamar_tidur == 6 else '' }}>6+ Kamar</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="jumlah_kamar_mandi" class="form-label">
+                                        <i class="fas fa-bath me-2"></i>Kamar Mandi
+                                    </label>
+                                    <select class="form-select" id="jumlah_kamar_mandi" name="jumlah_kamar_mandi" required>
+                                        <option value="">Pilih Jumlah</option>
+                                        <option value="1" {{ 'selected' if data.jumlah_kamar_mandi == 1 else '' }}>1 Kamar Mandi</option>
+                                        <option value="2" {{ 'selected' if data.jumlah_kamar_mandi == 2 else '' }}>2 Kamar Mandi</option>
+                                        <option value="3" {{ 'selected' if data.jumlah_kamar_mandi == 3 else '' }}>3 Kamar Mandi</option>
+                                        <option value="4" {{ 'selected' if data.jumlah_kamar_mandi == 4 else '' }}>4+ Kamar Mandi</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="jumlah_lantai" class="form-label">
+                                        <i class="fas fa-layer-group me-2"></i>Jumlah Lantai
+                                    </label>
+                                    <select class="form-select" id="jumlah_lantai" name="jumlah_lantai" required>
+                                        <option value="">Pilih Lantai</option>
+                                        <option value="1" {{ 'selected' if data.jumlah_lantai == 1 else '' }}>1 Lantai</option>
+                                        <option value="2" {{ 'selected' if data.jumlah_lantai == 2 else '' }}>2 Lantai</option>
+                                        <option value="3" {{ 'selected' if data.jumlah_lantai == 3 else '' }}>3 Lantai</option>
+                                        <option value="4" {{ 'selected' if data.jumlah_lantai == 4 else '' }}>4+ Lantai</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tahun_dibangun" class="form-label">
+                                        <i class="fas fa-calendar me-2"></i>Tahun Dibangun
+                                    </label>
+                                    <input type="number" class="form-control" id="tahun_dibangun" name="tahun_dibangun" 
+                                           value="{{ data.tahun_dibangun or '' }}" required min="1900" max="2024"
+                                           placeholder="Contoh: 2015">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="daya_listrik" class="form-label">
+                                        <i class="fas fa-bolt me-2"></i>Daya Listrik
+                                    </label>
+                                    <select class="form-select" id="daya_listrik" name="daya_listrik" required>
+                                        <option value="">Pilih Daya Listrik</option>
+                                        <option value="450" {{ 'selected' if data.daya_listrik == 450 else '' }}>450 VA</option>
+                                        <option value="900" {{ 'selected' if data.daya_listrik == 900 else '' }}>900 VA</option>
+                                        <option value="1300" {{ 'selected' if data.daya_listrik == 1300 else '' }}>1300 VA</option>
+                                        <option value="2200" {{ 'selected' if data.daya_listrik == 2200 else '' }}>2200 VA</option>
+                                        <option value="3500" {{ 'selected' if data.daya_listrik == 3500 else '' }}>3500 VA</option>
+                                        <option value="4400" {{ 'selected' if data.daya_listrik == 4400 else '' }}>4400 VA</option>
+                                        <option value="5500" {{ 'selected' if data.daya_listrik == 5500 else '' }}>5500 VA</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sertifikat" class="form-label">
+                                        <i class="fas fa-certificate me-2"></i>Sertifikat
+                                    </label>
+                                    <select class="form-select" id="sertifikat" name="sertifikat" required>
+                                        <option value="">Pilih Sertifikat</option>
+                                        <option value="SHM" {{ 'selected' if data.sertifikat == 'SHM' else '' }}>SHM (Sertifikat Hak Milik)</option>
+                                        <option value="SHGB" {{ 'selected' if data.sertifikat == 'SHGB' else '' }}>SHGB (Sertifikat Hak Guna Bangunan)</option>
+                                        <option value="AJB" {{ 'selected' if data.sertifikat == 'AJB' else '' }}>AJB (Akta Jual Beli)</option>
+                                        <option value="Girik" {{ 'selected' if data.sertifikat == 'Girik' else '' }}>Girik</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="kondisi_properti" class="form-label">
+                                        <i class="fas fa-tools me-2"></i>Kondisi Properti
+                                    </label>
+                                    <select class="form-select" id="kondisi_properti" name="kondisi_properti" required>
+                                        <option value="">Pilih Kondisi</option>
+                                        <option value="Bagus" {{ 'selected' if data.kondisi_properti == 'Bagus' else '' }}>Bagus</option>
+                                        <option value="Sedang" {{ 'selected' if data.kondisi_properti == 'Sedang' else '' }}>Sedang</option>
+                                        <option value="Butuh Renovasi" {{ 'selected' if data.kondisi_properti == 'Butuh Renovasi' else '' }}>Butuh Renovasi</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="tingkat_keamanan" class="form-label">
+                                        <i class="fas fa-shield-alt me-2"></i>Tingkat Keamanan
+                                    </label>
+                                    <select class="form-select" id="tingkat_keamanan" name="tingkat_keamanan" required>
+                                        <option value="">Pilih Tingkat</option>
+                                        <option value="Tinggi" {{ 'selected' if data.tingkat_keamanan == 'Tinggi' else '' }}>Tinggi</option>
+                                        <option value="Sedang" {{ 'selected' if data.tingkat_keamanan == 'Sedang' else '' }}>Sedang</option>
+                                        <option value="Rendah" {{ 'selected' if data.tingkat_keamanan == 'Rendah' else '' }}>Rendah</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="aksesibilitas" class="form-label">
+                                        <i class="fas fa-road me-2"></i>Aksesibilitas
+                                    </label>
+                                    <select class="form-select" id="aksesibilitas" name="aksesibilitas" required>
+                                        <option value="">Pilih Aksesibilitas</option>
+                                        <option value="Mudah" {{ 'selected' if data.aksesibilitas == 'Mudah' else '' }}>Mudah</option>
+                                        <option value="Sedang" {{ 'selected' if data.aksesibilitas == 'Sedang' else '' }}>Sedang</option>
+                                        <option value="Sulit" {{ 'selected' if data.aksesibilitas == 'Sulit' else '' }}>Sulit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="tipe_iklan" class="form-label">
+                                        <i class="fas fa-tag me-2"></i>Tipe Iklan
+                                    </label>
+                                    <select class="form-select" id="tipe_iklan" name="tipe_iklan" required>
+                                        <option value="">Pilih Tipe</option>
+                                        <option value="Sewa" {{ 'selected' if data.tipe_iklan == 'Sewa' else '' }}>Sewa</option>
+                                        <option value="Jual" {{ 'selected' if data.tipe_iklan == 'Jual' else '' }}>Jual</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="njop_per_m2" class="form-label">
+                                <i class="fas fa-money-bill me-2"></i>NJOP per m² (Rp)
+                            </label>
+                            <input type="number" class="form-control" id="njop_per_m2" name="njop_per_m2" 
+                                   value="{{ data.njop_per_m2 or '' }}" required min="1" step="1000"
+                                   placeholder="Contoh: 5000000">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.total_properti') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,1123 +1,1348 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Admin | Telkom Aset</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin | Telkom Aset</title>
 
-  <!-- Google Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet" />
+    <!-- Google Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp"
+      rel="stylesheet"
+    />
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
 
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
 
-  <!-- Custom Dashboard CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashAdmin.css') }}" />
-  
-  <!-- Custom Telkom Color Scheme -->
-  <style>
-    :root {
-      --telkom-red: #DC143C;
-      --telkom-dark: #8B0000;
-      --telkom-light: rgba(220, 20, 60, 0.1);
-      --color-info-dark: #7d8da1;
-      --border-radius-1: 0.4rem;
-    }
-    
-    .analyse .sales .status .progresss svg circle:nth-child(1) {
-      stroke: var(--telkom-red);
-    }
-    
-    .analyse .visits .status .progresss svg circle:nth-child(1) {
-      stroke: var(--telkom-red);
-    }
-    
-    .analyse .searches .status .progresss svg circle:nth-child(1) {
-      stroke: var(--telkom-red);
-    }
-    
-    /* Sidebar Menu Styling */
-    .sidebar a {
-      display: flex;
-      align-items: center;
-      color: var(--color-info-dark);
-      height: 3.7rem;
-      gap: 1rem;
-      position: relative;
-      margin-left: 2rem;
-    }
-    
-    /* Submenu Styling */
-    .submenu {
-      background-color: rgba(0, 0, 0, 0.05);
-      margin-left: 0;
-      border-left: 3px solid var(--telkom-red);
-    }
-    
-    .submenu-item {
-      margin-left: 3rem !important;
-      height: 3rem !important;
-      font-size: 0.9rem;
-      background-color: transparent;
-    }
-    
-    .submenu-item h3 {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    
-    .submenu-item:hover {
-      background-color: var(--telkom-light) !important;
-      color: var(--telkom-red) !important;
-      margin-left: 3.5rem !important;
-    }
-    
-    .dropdown-toggle::after {
-      display: none;
-    }
-    
-    .dropdown-toggle .material-icons-sharp:last-child {
-      transition: transform 0.3s ease;
-    }
-    
-    .dropdown-toggle[aria-expanded="true"] .material-icons-sharp:last-child {
-      transform: rotate(180deg);
-    }
-    
-    .sidebar a {
-      transition: all 0.3s ease;
-      text-decoration: none;
-      border-radius: var(--border-radius-1);
-    }
-    
-    .sidebar a:hover {
-      background: var(--telkom-light);
-      color: var(--telkom-red) !important;
-      transform: translateX(4px);
-      margin-right: 1rem;
-      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
-    }
-    
-    .sidebar a:hover span,
-    .menu-link:hover span {
-      margin-left: 0.6rem;
-      transition: all 0.3s ease;
-      color: var(--telkom-red) !important;
-    }
-    
-    .sidebar a.active,
-    .menu-link.active {
-      background: var(--telkom-red);
-      color: white !important;
-      position: relative;
-      margin-right: 1rem;
-      box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
-    }
-    
-    .sidebar a.active::before,
-    .menu-link.active::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 4px;
-      height: 60%;
-      background: var(--telkom-dark);
-      border-radius: 0 3px 3px 0;
-    }
-    
-    .menu-link.active {
-      background: var(--telkom-red);
-      color: white !important;
-      position: relative;
-    }
-    
-    .menu-link.active::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 4px;
-      height: 60%;
-      background: var(--telkom-dark);
-      border-radius: 0 3px 3px 0;
-    }
-    
-    .card:hover {
-      box-shadow: 0 8px 25px rgba(220, 20, 60, 0.15);
-      transform: translateY(-2px);
-      transition: all 0.3s ease;
-    }
-    
-    .btn-outline-danger:hover,
-    .menu-link-external:hover,
-    .quick-action-btn:hover {
-      background-color: var(--telkom-red) !important;
-      border-color: var(--telkom-red) !important;
-      color: white !important;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
-      transition: all 0.3s ease;
-    }
-    
-    /* Ensure all quick action buttons have same hover effect */
-    .btn-outline-danger:hover i,
-    .btn-outline-danger:hover strong,
-    .btn-outline-danger:hover small,
-    .menu-link-external:hover i,
-    .menu-link-external:hover strong,
-    .menu-link-external:hover small,
-    .quick-action-btn:hover i,
-    .quick-action-btn:hover strong,
-    .quick-action-btn:hover small {
-      color: white !important;
-    }
-    
-    .btn-outline-danger,
-    .menu-link-external,
-    .quick-action-btn {
-      transition: all 0.3s ease;
-    }
-    
-    /* Force consistent hover for all quick action buttons */
-    a.btn.btn-outline-danger:hover,
-    a.menu-link-external:hover,
-    a.quick-action-btn:hover {
-      background-color: var(--telkom-red) !important;
-      border-color: var(--telkom-red) !important;
-      color: white !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3) !important;
-    }
-    
-    /* Ensure all text elements turn white on hover */
-    a.btn.btn-outline-danger:hover *,
-    a.menu-link-external:hover *,
-    a.quick-action-btn:hover * {
-      color: white !important;
-    }
-    
-    /* Override Bootstrap's default btn-outline-danger hover */
-    .btn-outline-danger:not(:disabled):not(.disabled):hover {
-      background-color: var(--telkom-red) !important;
-      border-color: var(--telkom-red) !important;
-      color: white !important;
-    }
-    
-    /* Ensure all sidebar links have consistent hover */
-    .sidebar a:not(.active):hover,
-    .menu-link:not(.active):hover {
-      background: var(--telkom-light) !important;
-      color: var(--telkom-red) !important;
-      transform: translateX(4px);
-      margin-right: 1rem;
-      box-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
-      transition: all 0.3s ease;
-    }
-    
-    .sidebar a:not(.active):hover h3,
-    .menu-link:not(.active):hover h3 {
-      color: var(--telkom-red) !important;
-    }
-    
-    .text-telkom {
-      color: var(--telkom-red) !important;
-    }
-    
-    .bg-telkom {
-      background-color: var(--telkom-red) !important;
-    }
-    
-    .border-telkom {
-      border-color: var(--telkom-red) !important;
-    }
-    
-    .alert-info {
-      background-color: var(--telkom-light);
-      border-color: var(--telkom-red);
-      color: var(--telkom-dark);
-    }
-    
-    .alert-success {
-      background-color: #d4edda;
-      border-color: #28a745;
-      color: #155724;
-    }
-    
-    .navbar-logo h2 .danger {
-      color: var(--telkom-red) !important;
-      font-weight: bold;
-    }
-    
-    /* Progress circles styling */
-    .analyse .progresss svg circle {
-      fill: none;
-      stroke-width: 10;
-      stroke-linecap: round;
-      transform: translate(5px, 5px);
-    }
-    
-    .analyse .progresss svg circle:nth-child(2) {
-      stroke-dasharray: 200;
-      stroke-dashoffset: 50;
-      stroke: var(--telkom-red);
-    }
-  </style>
-</head>
-<body>
-  <!-- TOP NAVBAR -->
-  <nav class="top-navbar">
-    <div class="navbar-content">
-      <div class="navbar-left">
-        <button id="menu-btn" class="menu-toggle">
-          <span class="material-icons-sharp">menu</span>
-        </button>
-        <button id="sidebar-toggle" class="sidebar-toggle">
-          <span class="material-icons-sharp">menu_open</span>
-        </button>
-        <div class="navbar-logo">
-          <img src="{{ url_for('static', filename='img/telkomLogo.png') }}" alt="Telkom Logo" />
-          <h2>Telkom<span class="danger">Aset</span></h2>
+    <!-- Custom Dashboard CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashAdmin.css') }}"
+    />
+
+    <!-- Custom Telkom Color Scheme -->
+    <style>
+      :root {
+        --telkom-red: #DC143C;
+        --telkom-dark: #8B0000;
+        --telkom-light: rgba(220, 20, 60, 0.1);
+        --color-info-dark: #7d8da1;
+        --border-radius-1: 0.4rem;
+      }
+
+      .analyse .sales .status .progresss svg circle:nth-child(1) {
+        stroke: var(--telkom-red);
+      }
+
+      .analyse .visits .status .progresss svg circle:nth-child(1) {
+        stroke: var(--telkom-red);
+      }
+
+      .analyse .searches .status .progresss svg circle:nth-child(1) {
+        stroke: var(--telkom-red);
+      }
+
+      /* Sidebar Menu Styling */
+      .sidebar a {
+        display: flex;
+        align-items: center;
+        color: var(--color-info-dark);
+        height: 3.7rem;
+        gap: 1rem;
+        position: relative;
+        margin-left: 2rem;
+      }
+
+      /* Submenu Styling */
+      .submenu {
+        background-color: rgba(0, 0, 0, 0.05);
+        margin-left: 0;
+        border-left: 3px solid var(--telkom-red);
+      }
+
+      .submenu-item {
+        margin-left: 3rem !important;
+        height: 3rem !important;
+        font-size: 0.9rem;
+        background-color: transparent;
+      }
+
+      .submenu-item h3 {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .submenu-item:hover {
+        background-color: var(--telkom-light) !important;
+        color: var(--telkom-red) !important;
+        margin-left: 3.5rem !important;
+      }
+
+      .dropdown-toggle::after {
+        display: none;
+      }
+
+      .dropdown-toggle .material-icons-sharp:last-child {
+        transition: transform 0.3s ease;
+      }
+
+      .dropdown-toggle[aria-expanded="true"] .material-icons-sharp:last-child {
+        transform: rotate(180deg);
+      }
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border-radius: var(--border-radius-1);
+      }
+
+      .sidebar a:hover {
+        background: var(--telkom-light);
+        color: var(--telkom-red) !important;
+        transform: translateX(4px);
+        margin-right: 1rem;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+      }
+
+      .sidebar a:hover span,
+      .menu-link:hover span {
+        margin-left: 0.6rem;
+        transition: all 0.3s ease;
+        color: var(--telkom-red) !important;
+      }
+
+      .sidebar a.active,
+      .menu-link.active {
+        background: var(--telkom-red);
+        color: white !important;
+        position: relative;
+        margin-right: 1rem;
+        box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
+      }
+
+      .sidebar a.active::before,
+      .menu-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 60%;
+        background: var(--telkom-dark);
+        border-radius: 0 3px 3px 0;
+      }
+
+      .menu-link.active {
+        background: var(--telkom-red);
+        color: white !important;
+        position: relative;
+      }
+
+      .menu-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 60%;
+        background: var(--telkom-dark);
+        border-radius: 0 3px 3px 0;
+      }
+
+      .card:hover {
+        box-shadow: 0 8px 25px rgba(220, 20, 60, 0.15);
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+      }
+
+      .btn-outline-danger:hover,
+      .menu-link-external:hover,
+      .quick-action-btn:hover {
+        background-color: var(--telkom-red) !important;
+        border-color: var(--telkom-red) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      /* Ensure all quick action buttons have same hover effect */
+      .btn-outline-danger:hover i,
+      .btn-outline-danger:hover strong,
+      .btn-outline-danger:hover small,
+      .menu-link-external:hover i,
+      .menu-link-external:hover strong,
+      .menu-link-external:hover small,
+      .quick-action-btn:hover i,
+      .quick-action-btn:hover strong,
+      .quick-action-btn:hover small {
+        color: white !important;
+      }
+
+      .btn-outline-danger,
+      .menu-link-external,
+      .quick-action-btn {
+        transition: all 0.3s ease;
+      }
+
+      /* Force consistent hover for all quick action buttons */
+      a.btn.btn-outline-danger:hover,
+      a.menu-link-external:hover,
+      a.quick-action-btn:hover {
+        background-color: var(--telkom-red) !important;
+        border-color: var(--telkom-red) !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3) !important;
+      }
+
+      /* Ensure all text elements turn white on hover */
+      a.btn.btn-outline-danger:hover *,
+      a.menu-link-external:hover *,
+      a.quick-action-btn:hover * {
+        color: white !important;
+      }
+
+      /* Override Bootstrap's default btn-outline-danger hover */
+      .btn-outline-danger:not(:disabled):not(.disabled):hover {
+        background-color: var(--telkom-red) !important;
+        border-color: var(--telkom-red) !important;
+        color: white !important;
+      }
+
+      /* Ensure all sidebar links have consistent hover */
+      .sidebar a:not(.active):hover,
+      .menu-link:not(.active):hover {
+        background: var(--telkom-light) !important;
+        color: var(--telkom-red) !important;
+        transform: translateX(4px);
+        margin-right: 1rem;
+        box-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .sidebar a:not(.active):hover h3,
+      .menu-link:not(.active):hover h3 {
+        color: var(--telkom-red) !important;
+      }
+
+      .text-telkom {
+        color: var(--telkom-red) !important;
+      }
+
+      .bg-telkom {
+        background-color: var(--telkom-red) !important;
+      }
+
+      .border-telkom {
+        border-color: var(--telkom-red) !important;
+      }
+
+      .alert-info {
+        background-color: var(--telkom-light);
+        border-color: var(--telkom-red);
+        color: var(--telkom-dark);
+      }
+
+      .alert-success {
+        background-color: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+      }
+
+      .navbar-logo h2 .danger {
+        color: var(--telkom-red) !important;
+        font-weight: bold;
+      }
+
+      /* Progress circles styling */
+      .analyse .progresss svg circle {
+        fill: none;
+        stroke-width: 10;
+        stroke-linecap: round;
+        transform: translate(5px, 5px);
+      }
+
+      .analyse .progresss svg circle:nth-child(2) {
+        stroke-dasharray: 200;
+        stroke-dashoffset: 50;
+        stroke: var(--telkom-red);
+      }
+
+      /* Username link styling */
+      .username-link {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .username-link:hover {
+        color: var(--telkom-red);
+        text-decoration: underline;
+      }
+
+      /* Ensure proper color in dark mode */
+      [data-theme="dark"] .username-link {
+        color: var(--color-white, #ffffff);
+      }
+
+      [data-theme="dark"] .username-link:hover {
+        color: var(--telkom-red);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- TOP NAVBAR -->
+    <nav class="top-navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <button id="menu-btn" class="menu-toggle">
+            <span class="material-icons-sharp">menu</span>
+          </button>
+          <button id="sidebar-toggle" class="sidebar-toggle">
+            <span class="material-icons-sharp">menu_open</span>
+          </button>
+          <div class="navbar-logo">
+            <img
+              src="{{ url_for('static', filename='img/telkomLogo.png') }}"
+              alt="Telkom Logo"
+            />
+            <h2>Telkom<span class="danger">Aset</span></h2>
+          </div>
+        </div>
+
+        <div class="navbar-right">
+          <div class="dark-mode">
+            <span class="material-icons-sharp active">light_mode</span>
+            <span class="material-icons-sharp">dark_mode</span>
+          </div>
+          <div class="profile">
+            <div class="info">
+              <p>
+                Hey,
+                <b
+                  ><a href="#" class="username-link" data-target="edit-profil"
+                    >{{ session.user_name or 'Admin' }}</a
+                  ></b
+                >
+              </p>
+              <small class="text-muted">Admin</small>
+            </div>
+            <div class="profile-photo">
+              <img src="{{ url_for('static', filename='img/profile.jpg') }}" />
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="navbar-right">
-        <div class="dark-mode">
-          <span class="material-icons-sharp active">light_mode</span>
-          <span class="material-icons-sharp">dark_mode</span>
-        </div>
-        <div class="profile">
-          <div class="info">
-            <p>Hey, <b>{{ session.user_name or 'Admin' }}</b></p>
-            <small class="text-muted">Admin</small>
+    </nav>
+
+    <div class="container">
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="sidebar-content">
+          <div class="close" id="close-btn">
+            <span class="material-icons-sharp">close</span>
           </div>
-          <div class="profile-photo">
-            <img src="{{ url_for('static', filename='img/profile.jpg') }}" />
+
+          <div class="sidebar">
+            <a href="#" class="menu-link active" data-target="dashboard-home">
+              <span class="material-icons-sharp">dashboard</span>
+              <h3>Dashboard</h3>
+            </a>
+            <a href="#" class="menu-link" data-target="visualisasi">
+              <span class="material-icons-sharp">insights</span>
+              <h3>Visualisasi Data</h3>
+            </a>
+            <a href="#" class="menu-link" data-target="prediksi-properti">
+              <span class="material-icons-sharp">analytics</span>
+              <h3>Prediksi Properti</h3>
+            </a>
+            <a href="#" class="menu-link" data-target="aset-sewa">
+              <span class="material-icons-sharp">apartment</span>
+              <h3>Aset Disewa</h3>
+            </a>
+
+            <a href="#" class="menu-link" data-target="manajemen-aset">
+              <span class="material-icons-sharp">manage_accounts</span>
+              <h3>Manajemen Data Aset</h3>
+            </a>
+            <a href="#" class="menu-link" data-target="notifikasi">
+              <span class="material-icons-sharp">notifications</span>
+              <h3>Notifikasi</h3>
+            </a>
+            <a href="{{ url_for('main.logout_user') }}">
+              <span class="material-icons-sharp">logout</span>
+              <h3>Logout</h3>
+            </a>
           </div>
         </div>
-      </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main>
+        <!-- Dashboard Utama -->
+        <section id="dashboard-home" class="content-section active">
+          <h1>Dashboard Utama Admin</h1>
+          <p class="text-muted mb-4">
+            Ringkasan lengkap data prediksi properti Telkom
+          </p>
+
+          <!-- Statistik Utama -->
+          <div class="analyse">
+            <div class="sales">
+              <div class="status">
+                <div class="info">
+                  <h3>Total Prediksi</h3>
+                  <h1>{{ stats.total_properties or 0 }}</h1>
+                  <small>Data Properti</small>
+                </div>
+                <div class="progresss">
+                  <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                  <div class="percentage"><p>100%</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="visits">
+              <div class="status">
+                <div class="info">
+                  <h3>Harga Rata-rata</h3>
+                  <h1>Rp {{ "{:,.0f}".format(stats.avg_price or 0) }}</h1>
+                  <small>Per Properti</small>
+                </div>
+                <div class="progresss">
+                  <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                  <div class="percentage"><p>Valid</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="searches">
+              <div class="status">
+                <div class="info">
+                  <h3>Total Kecamatan</h3>
+                  <h1>{{ stats.total_locations or 0 }}</h1>
+                  <small>Area Surabaya</small>
+                </div>
+                <div class="progresss">
+                  <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                  <div class="percentage"><p>31</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <h3 class="mb-3">Menu Utama</h3>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a
+                href="#"
+                class="btn btn-outline-danger w-100 py-3 menu-link quick-action-btn"
+                data-target="prediksi-properti"
+              >
+                <i class="fas fa-chart-area d-block fs-1 mb-2"></i>
+                <strong>Prediksi Properti</strong><br />
+                <small>Hitung Harga Bangunan</small>
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a
+                href="#"
+                class="btn btn-outline-danger w-100 py-3 menu-link quick-action-btn"
+                data-target="manajemen-aset"
+              >
+                <i class="fas fa-cogs d-block fs-1 mb-2"></i>
+                <strong>Manajemen CRUD</strong><br />
+                <small>Kelola Data Aset</small>
+              </a>
+            </div>
+          </div>
+
+          <!-- Ringkasan Data -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <h3 class="mb-3">Ringkasan Data</h3>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-success text-white">
+                  <h5 class="mb-0">
+                    <i class="fas fa-map me-2"></i>Data Prediksi Tanah
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-6">
+                      <h3 class="text-success">
+                        {{ stats_tanah[0] if stats_tanah and stats_tanah[0] else
+                        0 }}
+                      </h3>
+                      <small class="text-muted">Total Data</small>
+                    </div>
+                    <div class="col-6">
+                      <h6 class="text-success">
+                        Rp {{ "{:,.0f}".format(stats_tanah[1] if stats_tanah and
+                        stats_tanah[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Harga Rata-rata</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-danger text-white">
+                  <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Data Prediksi
+                    Bangunan+Tanah
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-6">
+                      <h3 class="text-danger">
+                        {{ stats_bangunan[0] if stats_bangunan and
+                        stats_bangunan[0] else 0 }}
+                      </h3>
+                      <small class="text-muted">Total Data</small>
+                    </div>
+                    <div class="col-6">
+                      <h6 class="text-danger">
+                        Rp {{ "{:,.0f}".format(stats_bangunan[1] if
+                        stats_bangunan and stats_bangunan[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Harga Rata-rata</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Visualisasi Data -->
+        <section id="visualisasi" class="content-section">
+          <div class="p-4">
+            <h1 class="fw-bold mb-3">
+              <i class="fas fa-chart-area me-2"></i>Visualisasi Data Properti
+            </h1>
+            <p class="text-muted mb-4">
+              Analisis lengkap data properti dengan berbagai jenis visualisasi
+              dan insight
+            </p>
+
+            <!-- Quick Stats Overview -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-3 col-sm-6">
+                <div class="card text-center shadow-sm border-0">
+                  <div class="card-body">
+                    <i class="fas fa-chart-line text-danger mb-2 display-6"></i>
+                    <h4 id="avgPrice">
+                      <i class="fas fa-spinner fa-spin"></i>
+                    </h4>
+                    <small class="text-muted">Harga Rata-rata</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card text-center shadow-sm border-0">
+                  <div class="card-body">
+                    <i class="fas fa-arrow-up text-info mb-2 display-6"></i>
+                    <h4 id="maxPrice">
+                      <i class="fas fa-spinner fa-spin"></i>
+                    </h4>
+                    <small class="text-muted">Harga Tertinggi</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card text-center shadow-sm border-0">
+                  <div class="card-body">
+                    <i
+                      class="fas fa-arrow-down text-warning mb-2 display-6"
+                    ></i>
+                    <h4 id="minPrice">
+                      <i class="fas fa-spinner fa-spin"></i>
+                    </h4>
+                    <small class="text-muted">Harga Terendah</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card text-center shadow-sm border-0">
+                  <div class="card-body">
+                    <i class="fas fa-home text-secondary mb-2 display-6"></i>
+                    <h4 id="totalAssets">
+                      <i class="fas fa-spinner fa-spin"></i>
+                    </h4>
+                    <small class="text-muted">Total Aset</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Refresh Button -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <button
+                  class="btn btn-success me-2"
+                  onclick="window.refreshVisualizationData ? window.refreshVisualizationData() : (window.visualizationDashboard && window.visualizationDashboard.loadAllData())"
+                >
+                  <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                </button>
+                <span class="badge bg-success me-2" id="dataStatus">
+                  <i class="fas fa-circle me-1"></i>Real-time
+                </span>
+                <small class="text-muted">
+                  <i class="fas fa-clock me-1"></i>Data akan terupdate otomatis
+                  setelah admin menambahkan data baru
+                </small>
+              </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card shadow-sm border-0 mb-4">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">
+                  <i class="fas fa-sliders-h me-2"></i>Filter & Kontrol
+                  Visualisasi
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-2">
+                    <label class="form-label">Jenis Chart</label>
+                    <select class="form-select" id="chartType">
+                      <option value="bar">Bar Chart</option>
+                      <option value="line">Line Chart</option>
+                      <option value="pie">Pie Chart</option>
+                      <option value="doughnut">Doughnut</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Data Source</label>
+                    <select class="form-select" id="dataSource">
+                      <option value="both">Semua Data</option>
+                      <option value="tanah">Data Tanah</option>
+                      <option value="bangunan">Data Bangunan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Group By</label>
+                    <select class="form-select" id="groupBy">
+                      <option value="location">Lokasi</option>
+                      <option value="type">Jenis Aset</option>
+                      <option value="price_range">Range Harga</option>
+                      <option value="certificate">Sertifikat</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Metrik</label>
+                    <select class="form-select" id="metric">
+                      <option value="avgPrice">Harga Rata-rata</option>
+                      <option value="totalValue">Total Nilai</option>
+                      <option value="count">Jumlah Aset</option>
+                      <option value="price_per_sqm">Harga per M²</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Periode</label>
+                    <select class="form-select" id="timePeriod">
+                      <option value="all">Semua Waktu</option>
+                      <option value="month">Bulanan</option>
+                      <option value="quarter">Kuartalan</option>
+                      <option value="year">Tahunan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Aksi</label>
+                    <button class="btn btn-danger w-100" id="updateChart">
+                      <i class="fas fa-sync-alt me-1"></i>Update
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Charts Section -->
+            <div class="row g-4 mb-4">
+              <!-- Primary Chart -->
+              <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-chart-bar me-2"></i>Analisis Utama -
+                      Distribusi Harga per Kecamatan
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="mainChart" height="350"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Property Type Distribution -->
+              <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-pie-chart me-2"></i>Jenis Properti
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="propertyTypeChart" height="350"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary Charts Row -->
+            <div class="row g-4 mb-4">
+              <!-- Location Analysis -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-map-marker-alt me-2"></i>Analisis Lokasi
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="locationChart" height="300"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trend Analysis -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                      <i class="fas fa-chart-line me-2"></i>Trend Harga
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="trendChart" height="300"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Model Performance & Additional Analysis -->
+            <div class="row g-4 mb-4">
+              <!-- Model Performance -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-brain me-2"></i>Performa Model ML
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row text-center mb-3">
+                      <div class="col-4">
+                        <div class="d-flex flex-column align-items-center">
+                          <small class="text-muted mb-1">Random Forest</small>
+                          <h4 class="text-info mb-0">94.2%</h4>
+                          <div
+                            class="progress mt-2"
+                            style="width: 80%; height: 8px"
+                          >
+                            <div
+                              class="progress-bar bg-info"
+                              style="width: 94.2%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="d-flex flex-column align-items-center">
+                          <small class="text-muted mb-1">XGBoost</small>
+                          <h4 class="text-warning mb-0">92.8%</h4>
+                          <div
+                            class="progress mt-2"
+                            style="width: 80%; height: 8px"
+                          >
+                            <div
+                              class="progress-bar bg-warning"
+                              style="width: 92.8%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="d-flex flex-column align-items-center">
+                          <small class="text-muted mb-1">CatBoost</small>
+                          <h4 class="text-success mb-0">93.5%</h4>
+                          <div
+                            class="progress mt-2"
+                            style="width: 80%; height: 8px"
+                          >
+                            <div
+                              class="progress-bar bg-success"
+                              style="width: 93.5%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-center">
+                      <canvas id="modelMetricsChart" height="150"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Certificate Analysis -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-certificate me-2"></i>Analisis Sertifikat
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="certificateChart" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Price per SQM Analysis -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-12">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-calculator me-2"></i>Analisis Harga per
+                      M²
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="pricePerSqmChart" height="300"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Tables & Statistics -->
+            <div class="row g-4 mb-4">
+              <!-- All Locations Table -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div
+                    class="card-header bg-gradient"
+                    style="background: linear-gradient(45deg, #dc143c, #ff6b6b)"
+                  >
+                    <h6 class="mb-0 text-white">
+                      <i class="fas fa-map-marker-alt me-2"></i>Semua Kecamatan
+                      di Surabaya
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div
+                      class="table-responsive"
+                      style="max-height: 400px; overflow-y: auto"
+                    >
+                      <table class="table table-hover table-sm">
+                        <thead class="table-dark sticky-top">
+                          <tr>
+                            <th>Rank</th>
+                            <th>Kecamatan</th>
+                            <th>Rata-rata</th>
+                            <th>Jumlah</th>
+                          </tr>
+                        </thead>
+                        <tbody id="topPriceTable">
+                          <!-- Data akan diisi oleh JavaScript -->
+                          <tr>
+                            <td colspan="4" class="text-center">
+                              <i class="fas fa-spinner fa-spin"></i> Loading
+                              data...
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Statistical Summary -->
+              <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-chart-area me-2"></i>Ringkasan Statistik
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row text-center mb-3">
+                      <div class="col-6">
+                        <small class="text-muted">Std Deviation</small>
+                        <h5 class="text-primary">Rp 245M</h5>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted">Median</small>
+                        <h5 class="text-success">Rp 820M</h5>
+                      </div>
+                    </div>
+                    <div class="row text-center mb-3">
+                      <div class="col-6">
+                        <small class="text-muted">Range</small>
+                        <h5 class="text-warning">Rp 2.35B</h5>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted">Variance</small>
+                        <h5 class="text-danger">60,025M²</h5>
+                      </div>
+                    </div>
+                    <!-- Growth Indicators -->
+                    <div class="mt-3">
+                      <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <small>Growth Rate (YoY)</small>
+                        <span class="badge bg-success">+5.2%</span>
+                      </div>
+                      <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <small>Market Volatility</small>
+                        <span class="badge bg-warning">Medium</span>
+                      </div>
+                      <div
+                        class="d-flex justify-content-between align-items-center"
+                      >
+                        <small>Market Trend</small>
+                        <span class="badge bg-info">Bullish</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export & Custom Reports -->
+            <div class="row g-4">
+              <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                      <i class="fas fa-download me-2"></i>Export & Laporan
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row g-3">
+                      <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100">
+                          <i class="fas fa-file-excel me-2"></i>Excel
+                        </button>
+                      </div>
+                      <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100">
+                          <i class="fas fa-file-pdf me-2"></i>PDF
+                        </button>
+                      </div>
+                      <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100">
+                          <i class="fas fa-file-csv me-2"></i>CSV
+                        </button>
+                      </div>
+                      <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100">
+                          <i class="fas fa-image me-2"></i>PNG
+                        </button>
+                      </div>
+                    </div>
+                    <div class="mt-3">
+                      <button class="btn btn-success me-2" id="generateReport">
+                        <i class="fas fa-magic me-2"></i>Generate Custom Report
+                      </button>
+                      <button class="btn btn-warning" id="scheduleReport">
+                        <i class="fas fa-clock me-2"></i>Schedule Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                  <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                      <i class="fas fa-info-circle me-2"></i>Informasi
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="alert alert-info border-0">
+                      <i class="fas fa-lightbulb me-2"></i>
+                      <strong>Tips:</strong> Gunakan filter untuk melihat data
+                      yang lebih spesifik dan relevan dengan kebutuhan analisis
+                      Anda.
+                    </div>
+                    <div class="text-center">
+                      <small class="text-muted">Data terakhir update:</small
+                      ><br />
+                      <strong id="lastUpdateTime"
+                        >{{ current_date or "Loading..." }}</strong
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Prediksi Properti -->
+        <section id="prediksi-properti" class="content-section">
+          <div class="p-4">
+            <h1 class="fw-bold mb-3">Prediksi Harga Properti</h1>
+            <p class="text-muted mb-4">
+              Sistem prediksi harga tanah dan bangunan menggunakan machine
+              learning
+            </p>
+
+            <!-- Model Information -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-4">
+                <div class="card text-center border-0 h-100 bg-info text-white">
+                  <div class="card-body">
+                    <i class="fas fa-brain mb-2 display-6"></i>
+                    <h4>Random Forest</h4>
+                    <p class="mb-0 text-white">Model Utama Prediksi</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div
+                  class="card text-center border-0 h-100 bg-warning text-white"
+                >
+                  <div class="card-body">
+                    <i class="fas fa-chart-area mb-2 display-6"></i>
+                    <h4>XGBoost</h4>
+                    <p class="mb-0 text-white">Model Pendukung</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div
+                  class="card text-center border-0 h-100 bg-success text-white"
+                >
+                  <div class="card-body">
+                    <i class="fas fa-cogs mb-2 display-6"></i>
+                    <h4>CatBoost</h4>
+                    <p class="mb-0 text-white">Model Validasi</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prediction Options -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-6">
+                <div class="card border-0 h-100">
+                  <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                      <i class="fas fa-map me-2"></i>Prediksi Harga Tanah
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">
+                      Prediksi harga tanah berdasarkan lokasi, luas, dan faktor
+                      geografis
+                    </p>
+                    <ul class="list-unstyled">
+                      <li>
+                        <i class="fas fa-check text-success me-2"></i>Lokasi dan
+                        Kecamatan
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-success me-2"></i>Luas Tanah
+                        (m²)
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-success me-2"></i>Jenis
+                        Sertifikat
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-success me-2"></i>Akses
+                        Jalan
+                      </li>
+                    </ul>
+                    <a
+                      href="{{ url_for('main.prediksi_tanah') }}"
+                      class="btn btn-success"
+                    >
+                      <i class="fas fa-calculator me-2"></i>Mulai Prediksi Tanah
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="card border-0 h-100">
+                  <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                      <i class="fas fa-building me-2"></i>Prediksi Harga
+                      Bangunan+Tanah
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">
+                      Prediksi harga properti lengkap dengan bangunan dan tanah
+                    </p>
+                    <ul class="list-unstyled">
+                      <li>
+                        <i class="fas fa-check text-danger me-2"></i>Semua Fitur
+                        Tanah
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-danger me-2"></i>Luas
+                        Bangunan (m²)
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-danger me-2"></i>Jumlah
+                        Kamar
+                      </li>
+                      <li>
+                        <i class="fas fa-check text-danger me-2"></i>Kondisi
+                        Bangunan
+                      </li>
+                    </ul>
+                    <a
+                      href="{{ url_for('main.prediksi_bangunan_tanah') }}"
+                      class="btn btn-danger"
+                    >
+                      <i class="fas fa-home me-2"></i>Mulai Prediksi Properti
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accuracy Information -->
+            <div class="text-center">
+              <div class="alert alert-info border-2">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Akurasi Model:</strong> Sistem menggunakan ensemble
+                learning dengan akurasi tinggi berdasarkan data properti
+                PT.TELKOM REGIONAL III.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Aset Disewa -->
+        <section id="aset-sewa" class="content-section">
+          <div class="p-4">
+            <h1 class="fw-bold mb-3">Aset Disewa</h1>
+            <p class="text-muted mb-4">
+              Manajemen data aset yang sedang disewa
+            </p>
+
+            <div class="text-center">
+              <div class="card shadow-sm border-0">
+                <div class="card-body py-5">
+                  <i
+                    class="fas fa-apartment text-muted mb-3"
+                    style="font-size: 4rem"
+                  ></i>
+                  <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
+                  <p class="text-muted">
+                    Modul manajemen aset disewa akan segera tersedia
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Manajemen Aset -->
+        <section id="manajemen-aset" class="content-section">
+          <div class="p-4">
+            <h1 class="fw-bold mb-3">Manajemen Data Aset (CRUD)</h1>
+            <p class="text-muted mb-4">
+              Kelola, tambah, edit, dan hapus data aset properti secara lengkap
+            </p>
+
+            <!-- Status Data Saat Ini -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-6">
+                <div class="card text-center shadow-sm border-0 h-100 bg-light">
+                  <div class="card-body">
+                    <i class="fas fa-database text-danger mb-2 display-6"></i>
+                    <h4>Data Saat Ini</h4>
+                    <div class="row">
+                      <div class="col-6">
+                        <h3 class="text-success">
+                          {{ stats_tanah[0] if stats_tanah and stats_tanah[0]
+                          else 0 }}
+                        </h3>
+                        <small class="text-muted">Data Tanah</small>
+                      </div>
+                      <div class="col-6">
+                        <h3 class="text-danger">
+                          {{ stats_bangunan[0] if stats_bangunan and
+                          stats_bangunan[0] else 0 }}
+                        </h3>
+                        <small class="text-muted">Data Bangunan</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card text-center shadow-sm border-0 h-100 bg-light">
+                  <div class="card-body">
+                    <i class="fas fa-cogs text-dark mb-2 display-6"></i>
+                    <h4>Operasi CRUD</h4>
+                    <p class="text-success"><strong>Sistem Aktif</strong></p>
+                    <p class="text-muted">Create, Read, Update, Delete</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CRUD Operations -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-6">
+                <div
+                  class="card text-center shadow-sm border-0 h-100 border-success"
+                >
+                  <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                      <i class="fas fa-plus-circle me-2"></i>CREATE - Tambah
+                      Data
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">
+                      Tambahkan data prediksi baru dengan form validasi
+                    </p>
+                    <div class="d-grid gap-2">
+                      <a
+                        href="{{ url_for('main.tambah_tanah') }}"
+                        class="btn btn-success"
+                      >
+                        <i class="fas fa-map me-2"></i>Tambah Data Tanah
+                      </a>
+                      <a
+                        href="{{ url_for('main.tambah_bangunan') }}"
+                        class="btn btn-success"
+                      >
+                        <i class="fas fa-building me-2"></i>Tambah Data Bangunan
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div
+                  class="card text-center shadow-sm border-0 h-100 border-danger"
+                >
+                  <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                      <i class="fas fa-eye me-2"></i>READ, UPDATE & DELETE
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">
+                      Lihat, edit, dan hapus data dengan tabel interaktif
+                    </p>
+                    <div class="d-grid gap-2">
+                      <a
+                        href="{{ url_for('main.total_properti') }}"
+                        class="btn btn-danger"
+                      >
+                        <i class="fas fa-table me-2"></i>Lihat Semua Data
+                      </a>
+                      <a
+                        href="{{ url_for('main.manajemen_aset') }}"
+                        class="btn btn-outline-danger"
+                      >
+                        <i class="fas fa-list me-2"></i>Halaman Manajemen
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Access -->
+            <div class="text-center">
+              <div class="alert alert-success border-2">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Sistem CRUD Aktif!</strong> Anda dapat mengelola data
+                aset sesuai dengan struktur tabel database.
+              </div>
+              <a
+                href="{{ url_for('main.manajemen_aset') }}"
+                class="btn btn-lg btn-danger me-3"
+              >
+                <i class="fas fa-cogs me-2"></i>Halaman Manajemen Lengkap
+              </a>
+              <a
+                href="{{ url_for('main.total_properti') }}"
+                class="btn btn-lg btn-outline-danger"
+              >
+                <i class="fas fa-database me-2"></i>Lihat Semua Data
+              </a>
+            </div>
+          </div>
+        </section>
+        <!-- Notifikasi -->
+        <section id="notifikasi" class="content-section">
+          <div class="p-4">
+            <h1 class="fw-bold mb-3">Notifikasi</h1>
+            <p class="text-muted mb-4">Sistem notifikasi dan peringatan</p>
+
+            <div class="text-center">
+              <div class="card shadow-sm border-0">
+                <div class="card-body py-5">
+                  <i
+                    class="fas fa-bell text-muted mb-3"
+                    style="font-size: 4rem"
+                  ></i>
+                  <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
+                  <p class="text-muted">
+                    Sistem notifikasi akan segera tersedia
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
-  </nav>
 
-  <div class="container">
-    <!-- SIDEBAR -->
-    <aside>
-      <div class="sidebar-content">
-        <div class="close" id="close-btn">
-          <span class="material-icons-sharp">close</span>
-        </div>
-
-        <div class="sidebar">
-          <a href="#" class="menu-link active" data-target="dashboard-home">
-            <span class="material-icons-sharp">dashboard</span>
-            <h3>Dashboard</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="visualisasi">
-            <span class="material-icons-sharp">insights</span>
-            <h3>Visualisasi Data</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="prediksi-properti">
-            <span class="material-icons-sharp">analytics</span>
-            <h3>Prediksi Properti</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="aset-sewa">
-            <span class="material-icons-sharp">apartment</span>
-            <h3>Aset Disewa</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="aset-jual">
-            <span class="material-icons-sharp">sell</span>
-            <h3>Aset Dijual</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="manajemen-aset">
-            <span class="material-icons-sharp">manage_accounts</span>
-            <h3>Manajemen Data Aset</h3>
-          </a>
-          <a href="#" class="menu-link" data-target="notifikasi">
-            <span class="material-icons-sharp">notifications</span>
-            <h3>Notifikasi</h3>
-          </a>
-          <a href="{{ url_for('main.logout_user') }}">
-            <span class="material-icons-sharp">logout</span>
-            <h3>Logout</h3>
-          </a>
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main>
-      <!-- Dashboard Utama -->
-      <section id="dashboard-home" class="content-section active">
-        <h1>Dashboard Utama Admin</h1>
-        <p class="text-muted mb-4">Ringkasan lengkap data prediksi properti Telkom</p>
-        
-        <!-- Statistik Utama -->
-        <div class="analyse">
-          <div class="sales">
-            <div class="status">
-              <div class="info">
-                <h3>Total Prediksi</h3>
-                <h1>{{ stats.total_properties if stats and stats.total_properties else 0 }}</h1>
-                <small>Data Properti</small>
-              </div>
-              <div class="progresss">
-                <svg><circle cx="38" cy="38" r="36"></circle></svg>
-                <div class="percentage"><p>100%</p></div>
-              </div>
-            </div>
-          </div>
-          <div class="visits">
-            <div class="status">
-              <div class="info">
-                <h3>Harga Rata-rata</h3>
-                <h1>Rp {{ "{:,.0f}".format(stats.avg_price if stats and stats.avg_price else 0) }}</h1>
-                <small>Per Properti</small>
-              </div>
-              <div class="progresss">
-                <svg><circle cx="38" cy="38" r="36"></circle></svg>
-                <div class="percentage"><p>Valid</p></div>
-              </div>
-            </div>
-          </div>
-          <div class="searches">
-            <div class="status">
-              <div class="info">
-                <h3>Total Kecamatan</h3>
-                <h1>{{ stats.total_locations if stats and stats.total_locations else 0 }}</h1>
-                <small>Area Surabaya</small>
-              </div>
-              <div class="progresss">
-                <svg><circle cx="38" cy="38" r="36"></circle></svg>
-                <div class="percentage"><p>31</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <h3 class="mb-3">Menu Utama</h3>
-          </div>
-          <div class="col-md-3 mb-3">
-            <a href="#" class="btn btn-outline-danger w-100 py-3 menu-link quick-action-btn" data-target="prediksi-properti">
-              <i class="fas fa-chart-area d-block fs-1 mb-2"></i>
-              <strong>Prediksi Properti</strong><br>
-              <small>Hitung Harga Bangunan</small>
-            </a>
-          </div>
-          <div class="col-md-3 mb-3">
-            <a href="#" class="btn btn-outline-danger w-100 py-3 menu-link quick-action-btn" data-target="manajemen-aset">
-              <i class="fas fa-cogs d-block fs-1 mb-2"></i>
-              <strong>Manajemen CRUD</strong><br>
-              <small>Kelola Data Aset</small>
-            </a>
-          </div>
-        </div>
-
-        <!-- Ringkasan Data -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <h3 class="mb-3">Ringkasan Data</h3>
-          </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-map me-2"></i>Data Prediksi Tanah</h5>
-              </div>
-              <div class="card-body">
-                <div class="row text-center">
-                  <div class="col-6">
-                    <h3 class="text-success">{{ stats_tanah[0] if stats_tanah and stats_tanah[0] else 0 }}</h3>
-                    <small class="text-muted">Total Data</small>
-                  </div>
-                  <div class="col-6">
-                    <h6 class="text-success">Rp {{ "{:,.0f}".format(stats_tanah[1] if stats_tanah and stats_tanah[1] else 0) }}</h6>
-                    <small class="text-muted">Harga Rata-rata</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Data Prediksi Bangunan+Tanah</h5>
-              </div>
-              <div class="card-body">
-                <div class="row text-center">
-                  <div class="col-6">
-                    <h3 class="text-danger">{{ stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0 }}</h3>
-                    <small class="text-muted">Total Data</small>
-                  </div>
-                  <div class="col-6">
-                    <h6 class="text-danger">Rp {{ "{:,.0f}".format(stats_bangunan[1] if stats_bangunan and stats_bangunan[1] else 0) }}</h6>
-                    <small class="text-muted">Harga Rata-rata</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Visualisasi Data -->
-      <section id="visualisasi" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3"><i class="fas fa-chart-area me-2"></i>Visualisasi Data Properti</h1>
-          <p class="text-muted mb-4">Analisis lengkap data properti dengan berbagai jenis visualisasi dan insight</p>
-
-          <!-- Quick Stats Overview -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-3 col-sm-6">
-              <div class="card text-center shadow-sm border-0">
-                <div class="card-body">
-                  <i class="fas fa-chart-line text-danger mb-2 display-6"></i>
-                  <h4 id="avgPrice">Rp 850,000,000</h4>
-                  <small class="text-muted">Harga Rata-rata</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-              <div class="card text-center shadow-sm border-0">
-                <div class="card-body">
-                  <i class="fas fa-arrow-up text-info mb-2 display-6"></i>
-                  <h4 id="maxPrice">Rp 2,500,000,000</h4>
-                  <small class="text-muted">Harga Tertinggi</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-              <div class="card text-center shadow-sm border-0">
-                <div class="card-body">
-                  <i class="fas fa-arrow-down text-warning mb-2 display-6"></i>
-                  <h4 id="minPrice">Rp 150,000,000</h4>
-                  <small class="text-muted">Harga Terendah</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-              <div class="card text-center shadow-sm border-0">
-                <div class="card-body">
-                  <i class="fas fa-home text-secondary mb-2 display-6"></i>
-                  <h4 id="totalAssets">1,247</h4>
-                  <small class="text-muted">Total Aset</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Filter Controls -->
-          <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-light">
-              <h6 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Filter & Kontrol Visualisasi</h6>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-md-2">
-                  <label class="form-label">Jenis Chart</label>
-                  <select class="form-select" id="chartType">
-                    <option value="bar">Bar Chart</option>
-                    <option value="line">Line Chart</option>
-                    <option value="pie">Pie Chart</option>
-                    <option value="doughnut">Doughnut</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Data Source</label>
-                  <select class="form-select" id="dataSource">
-                    <option value="both">Semua Data</option>
-                    <option value="tanah">Data Tanah</option>
-                    <option value="bangunan">Data Bangunan</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Group By</label>
-                  <select class="form-select" id="groupBy">
-                    <option value="location">Lokasi</option>
-                    <option value="type">Jenis Aset</option>
-                    <option value="price_range">Range Harga</option>
-                    <option value="certificate">Sertifikat</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Metrik</label>
-                  <select class="form-select" id="metric">
-                    <option value="avgPrice">Harga Rata-rata</option>
-                    <option value="totalValue">Total Nilai</option>
-                    <option value="count">Jumlah Aset</option>
-                    <option value="price_per_sqm">Harga per M²</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Periode</label>
-                  <select class="form-select" id="timePeriod">
-                    <option value="all">Semua Waktu</option>
-                    <option value="month">Bulanan</option>
-                    <option value="quarter">Kuartalan</option>
-                    <option value="year">Tahunan</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Aksi</label>
-                  <button class="btn btn-danger w-100" id="updateChart">
-                    <i class="fas fa-sync-alt me-1"></i>Update
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Main Charts Section -->
-          <div class="row g-4 mb-4">
-            <!-- Primary Chart -->
-            <div class="col-md-8">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-danger text-white">
-                  <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Analisis Utama - Distribusi Harga per Kecamatan</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="mainChart" height="350"></canvas>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Property Type Distribution -->
-            <div class="col-md-4">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-success text-white">
-                  <h6 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Jenis Properti</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="propertyTypeChart" height="350"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Secondary Charts Row -->
-          <div class="row g-4 mb-4">
-            <!-- Location Analysis -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-info text-white">
-                  <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Analisis Lokasi</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="locationChart" height="300"></canvas>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Trend Analysis -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-warning text-dark">
-                  <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Trend Harga</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="trendChart" height="300"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Model Performance & Additional Analysis -->
-          <div class="row g-4 mb-4">
-            <!-- Model Performance -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white">
-                  <h6 class="mb-0"><i class="fas fa-brain me-2"></i>Performa Model ML</h6>
-                </div>
-                <div class="card-body">
-                  <div class="row text-center mb-3">
-                    <div class="col-4">
-                      <div class="d-flex flex-column align-items-center">
-                        <small class="text-muted mb-1">Random Forest</small>
-                        <h4 class="text-info mb-0">94.2%</h4>
-                        <div class="progress mt-2" style="width: 80%; height: 8px;">
-                          <div class="progress-bar bg-info" style="width: 94.2%"></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-4">
-                      <div class="d-flex flex-column align-items-center">
-                        <small class="text-muted mb-1">XGBoost</small>
-                        <h4 class="text-warning mb-0">92.8%</h4>
-                        <div class="progress mt-2" style="width: 80%; height: 8px;">
-                          <div class="progress-bar bg-warning" style="width: 92.8%"></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-4">
-                      <div class="d-flex flex-column align-items-center">
-                        <small class="text-muted mb-1">CatBoost</small>
-                        <h4 class="text-success mb-0">93.5%</h4>
-                        <div class="progress mt-2" style="width: 80%; height: 8px;">
-                          <div class="progress-bar bg-success" style="width: 93.5%"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="text-center">
-                    <canvas id="modelMetricsChart" height="150"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Certificate Analysis -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
-                  <h6 class="mb-0"><i class="fas fa-certificate me-2"></i>Analisis Sertifikat</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="certificateChart" height="200"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Price per SQM Analysis -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-12">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                  <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Analisis Harga per M²</h6>
-                </div>
-                <div class="card-body">
-                  <canvas id="pricePerSqmChart" height="300"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Data Tables & Statistics -->
-          <div class="row g-4 mb-4">
-            <!-- Top Locations Table -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-gradient" style="background: linear-gradient(45deg, #DC143C, #FF6B6B);">
-                  <h6 class="mb-0 text-white"><i class="fas fa-trophy me-2"></i>Top 10 Lokasi Termahal</h6>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                      <thead>
-                        <tr>
-                          <th>Rank</th>
-                          <th>Kecamatan</th>
-                          <th>Rata-rata</th>
-                          <th>Jumlah</th>
-                        </tr>
-                      </thead>
-                      <tbody id="topPriceTable">
-                        <tr>
-                          <td>1</td>
-                          <td>Gubeng</td>
-                          <td>Rp 1,200,000,000</td>
-                          <td>45</td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td>Tegalsari</td>
-                          <td>Rp 1,100,000,000</td>
-                          <td>38</td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>Genteng</td>
-                          <td>Rp 950,000,000</td>
-                          <td>42</td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td>Sukolilo</td>
-                          <td>Rp 850,000,000</td>
-                          <td>56</td>
-                        </tr>
-                        <tr>
-                          <td>5</td>
-                          <td>Wonokromo</td>
-                          <td>Rp 780,000,000</td>
-                          <td>62</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Statistical Summary -->
-            <div class="col-md-6">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-info text-white">
-                  <h6 class="mb-0"><i class="fas fa-chart-area me-2"></i>Ringkasan Statistik</h6>
-                </div>
-                <div class="card-body">
-                  <div class="row text-center mb-3">
-                    <div class="col-6">
-                      <small class="text-muted">Std Deviation</small>
-                      <h5 class="text-primary">Rp 245M</h5>
-                    </div>
-                    <div class="col-6">
-                      <small class="text-muted">Median</small>
-                      <h5 class="text-success">Rp 820M</h5>
-                    </div>
-                  </div>
-                  <div class="row text-center mb-3">
-                    <div class="col-6">
-                      <small class="text-muted">Range</small>
-                      <h5 class="text-warning">Rp 2.35B</h5>
-                    </div>
-                    <div class="col-6">
-                      <small class="text-muted">Variance</small>
-                      <h5 class="text-danger">60,025M²</h5>
-                    </div>
-                  </div>
-                  <!-- Growth Indicators -->
-                  <div class="mt-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <small>Growth Rate (YoY)</small>
-                      <span class="badge bg-success">+5.2%</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <small>Market Volatility</small>
-                      <span class="badge bg-warning">Medium</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                      <small>Market Trend</small>
-                      <span class="badge bg-info">Bullish</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Export & Custom Reports -->
-          <div class="row g-4">
-            <div class="col-md-8">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-success text-white">
-                  <h6 class="mb-0"><i class="fas fa-download me-2"></i>Export & Laporan</h6>
-                </div>
-                <div class="card-body">
-                  <div class="row g-3">
-                    <div class="col-md-3">
-                      <button class="btn btn-outline-primary w-100">
-                        <i class="fas fa-file-excel me-2"></i>Excel
-                      </button>
-                    </div>
-                    <div class="col-md-3">
-                      <button class="btn btn-outline-danger w-100">
-                        <i class="fas fa-file-pdf me-2"></i>PDF
-                      </button>
-                    </div>
-                    <div class="col-md-3">
-                      <button class="btn btn-outline-success w-100">
-                        <i class="fas fa-file-csv me-2"></i>CSV
-                      </button>
-                    </div>
-                    <div class="col-md-3">
-                      <button class="btn btn-outline-info w-100">
-                        <i class="fas fa-image me-2"></i>PNG
-                      </button>
-                    </div>
-                  </div>
-                  <div class="mt-3">
-                    <button class="btn btn-success me-2" id="generateReport">
-                      <i class="fas fa-magic me-2"></i>Generate Custom Report
-                    </button>
-                    <button class="btn btn-warning" id="scheduleReport">
-                      <i class="fas fa-clock me-2"></i>Schedule Report
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-4">
-              <div class="card shadow-sm border-0">
-                <div class="card-header bg-warning text-dark">
-                  <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi</h6>
-                </div>
-                <div class="card-body">
-                  <div class="alert alert-info border-0">
-                    <i class="fas fa-lightbulb me-2"></i>
-                    <strong>Tips:</strong> Gunakan filter untuk melihat data yang lebih spesifik dan relevan dengan kebutuhan analisis Anda.
-                  </div>
-                  <div class="text-center">
-                    <small class="text-muted">Data terakhir update:</small><br>
-                    <strong>{{ current_date or "6 Juli 2025" }}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Prediksi Properti -->
-      <section id="prediksi-properti" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Prediksi Harga Properti</h1>
-          <p class="text-muted mb-4">Sistem prediksi harga tanah dan bangunan menggunakan machine learning</p>
-          
-          <!-- Model Information -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-4">
-              <div class="card text-center border-0 h-100 bg-info text-white">
-                <div class="card-body">
-                  <i class="fas fa-brain mb-2 display-6"></i>
-                  <h4>Random Forest</h4>
-                  <p class="mb-0 text-white">Model Utama Prediksi</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card text-center border-0 h-100 bg-warning text-white">
-                <div class="card-body">
-                  <i class="fas fa-chart-area mb-2 display-6"></i>
-                  <h4>XGBoost</h4>
-                  <p class="mb-0 text-white">Model Pendukung</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card text-center border-0 h-100 bg-success text-white">
-                <div class="card-body">
-                  <i class="fas fa-cogs mb-2 display-6"></i>
-                  <h4>CatBoost</h4>
-                  <p class="mb-0 text-white">Model Validasi</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Prediction Options -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-6">
-              <div class="card border-0 h-100">
-                <div class="card-header bg-success text-white">
-                  <h5 class="mb-0"><i class="fas fa-map me-2"></i>Prediksi Harga Tanah</h5>
-                </div>
-                <div class="card-body">
-                  <p class="text-muted">Prediksi harga tanah berdasarkan lokasi, luas, dan faktor geografis</p>
-                  <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success me-2"></i>Lokasi dan Kecamatan</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Luas Tanah (m²)</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Jenis Sertifikat</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Akses Jalan</li>
-                  </ul>
-                  <a href="{{ url_for('main.prediksi_tanah') }}" class="btn btn-success">
-                    <i class="fas fa-calculator me-2"></i>Mulai Prediksi Tanah
-                  </a>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="card border-0 h-100">
-                <div class="card-header bg-danger text-white">
-                  <h5 class="mb-0"><i class="fas fa-building me-2"></i>Prediksi Harga Bangunan+Tanah</h5>
-                </div>
-                <div class="card-body">
-                  <p class="text-muted">Prediksi harga properti lengkap dengan bangunan dan tanah</p>
-                  <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-danger me-2"></i>Semua Fitur Tanah</li>
-                    <li><i class="fas fa-check text-danger me-2"></i>Luas Bangunan (m²)</li>
-                    <li><i class="fas fa-check text-danger me-2"></i>Jumlah Kamar</li>
-                    <li><i class="fas fa-check text-danger me-2"></i>Kondisi Bangunan</li>
-                  </ul>
-                  <a href="{{ url_for('main.prediksi_bangunan_tanah') }}" class="btn btn-danger">
-                    <i class="fas fa-home me-2"></i>Mulai Prediksi Properti
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Accuracy Information -->
-          <div class="text-center">
-            <div class="alert alert-info border-2">
-              <i class="fas fa-info-circle me-2"></i>
-              <strong>Akurasi Model:</strong> Sistem menggunakan ensemble learning dengan akurasi tinggi berdasarkan data properti PT.TELKOM REGIONAL III.
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      <!-- Aset Disewa -->
-      <section id="aset-sewa" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Aset Disewa</h1>
-          <p class="text-muted mb-4">Manajemen data aset yang sedang disewa</p>
-          
-          <div class="text-center">
-            <div class="card shadow-sm border-0">
-              <div class="card-body py-5">
-                <i class="fas fa-apartment text-muted mb-3" style="font-size: 4rem;"></i>
-                <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
-                <p class="text-muted">Modul manajemen aset disewa akan segera tersedia</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      <!-- Aset Dijual -->
-      <section id="aset-jual" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Aset Dijual</h1>
-          <p class="text-muted mb-4">Manajemen data aset yang sedang dijual</p>
-          
-          <div class="text-center">
-            <div class="card shadow-sm border-0">
-              <div class="card-body py-5">
-                <i class="fas fa-sell text-muted mb-3" style="font-size: 4rem;"></i>
-                <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
-                <p class="text-muted">Modul manajemen aset dijual akan segera tersedia</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Manajemen Aset -->
-      <section id="manajemen-aset" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Manajemen Data Aset (CRUD)</h1>
-          <p class="text-muted mb-4">Kelola, tambah, edit, dan hapus data aset properti secara lengkap</p>
-          
-          <!-- Status Data Saat Ini -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-6">
-              <div class="card text-center shadow-sm border-0 h-100 bg-light">
-                <div class="card-body">
-                  <i class="fas fa-database text-danger mb-2 display-6"></i>
-                  <h4>Data Saat Ini</h4>
-                  <div class="row">
-                    <div class="col-6">
-                      <h3 class="text-success">{{ stats_tanah[0] if stats_tanah and stats_tanah[0] else 0 }}</h3>
-                      <small class="text-muted">Data Tanah</small>
-                    </div>
-                    <div class="col-6">
-                      <h3 class="text-danger">{{ stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0 }}</h3>
-                      <small class="text-muted">Data Bangunan</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card text-center shadow-sm border-0 h-100 bg-light">
-                <div class="card-body">
-                  <i class="fas fa-cogs text-dark mb-2 display-6"></i>
-                  <h4>Operasi CRUD</h4>
-                  <p class="text-success"><strong>Sistem Aktif</strong></p>
-                  <p class="text-muted">Create, Read, Update, Delete</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- CRUD Operations -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-6">
-              <div class="card text-center shadow-sm border-0 h-100 border-success">
-                <div class="card-header bg-success text-white">
-                  <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>CREATE - Tambah Data</h5>
-                </div>
-                <div class="card-body">
-                  <p class="text-muted">Tambahkan data prediksi baru dengan form validasi</p>
-                  <div class="d-grid gap-2">
-                    <a href="{{ url_for('main.tambah_tanah') }}" class="btn btn-success">
-                      <i class="fas fa-map me-2"></i>Tambah Data Tanah
-                    </a>
-                    <a href="{{ url_for('main.tambah_bangunan') }}" class="btn btn-success">
-                      <i class="fas fa-building me-2"></i>Tambah Data Bangunan
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="card text-center shadow-sm border-0 h-100 border-danger">
-                <div class="card-header bg-danger text-white">
-                  <h5 class="mb-0"><i class="fas fa-eye me-2"></i>READ, UPDATE & DELETE</h5>
-                </div>
-                <div class="card-body">
-                  <p class="text-muted">Lihat, edit, dan hapus data dengan tabel interaktif</p>
-                  <div class="d-grid gap-2">
-                    <a href="{{ url_for('main.total_properti') }}" class="btn btn-danger">
-                      <i class="fas fa-table me-2"></i>Lihat Semua Data
-                    </a>
-                    <a href="{{ url_for('main.manajemen_aset') }}" class="btn btn-outline-danger">
-                      <i class="fas fa-list me-2"></i>Halaman Manajemen
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Access -->
-          <div class="text-center">
-            <div class="alert alert-success border-2">
-              <i class="fas fa-check-circle me-2"></i>
-              <strong>Sistem CRUD Aktif!</strong> Anda dapat mengelola data aset sesuai dengan struktur tabel database.
-            </div>
-            <a href="{{ url_for('main.manajemen_aset') }}" class="btn btn-lg btn-danger me-3">
-              <i class="fas fa-cogs me-2"></i>Halaman Manajemen Lengkap
-            </a>
-            <a href="{{ url_for('main.total_properti') }}" class="btn btn-lg btn-outline-danger">
-              <i class="fas fa-database me-2"></i>Lihat Semua Data
-            </a>
-          </div>
-        </div>
-      </section>
-      <!-- Notifikasi -->
-      <section id="notifikasi" class="content-section">
-        <div class="p-4">
-          <h1 class="fw-bold mb-3">Notifikasi</h1>
-          <p class="text-muted mb-4">Sistem notifikasi dan peringatan</p>
-          
-          <div class="text-center">
-            <div class="card shadow-sm border-0">
-              <div class="card-body py-5">
-                <i class="fas fa-bell text-muted mb-3" style="font-size: 4rem;"></i>
-                <h4 class="text-muted">Fitur Dalam Pengembangan</h4>
-                <p class="text-muted">Sistem notifikasi akan segera tersedia</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Bootstrap Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Font Awesome -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- jsPDF for PDF generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- SheetJS for Excel generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- Custom Dashboard JS -->
-  <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
-</body>
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SheetJS for Excel generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Custom Dashboard JS -->
+    <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
+    <!-- Visualization JS (Simplified version) -->
+    <script src="{{ url_for('static', filename='js/simple_visualization.js') }}"></script>
+  </body>
 </html>
