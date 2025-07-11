@@ -33,7 +33,7 @@ def login():
         password = request.form['password']
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, name, password, role, email, phone, company, address, created_at FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT id, name, password, role, email, phone, address, updated_at FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
 
@@ -43,9 +43,8 @@ def login():
             session['role'] = user[3]
             session['user_email'] = user[4]
             session['user_phone'] = user[5] if user[5] else ''
-            session['user_company'] = user[6] if user[6] else ''
-            session['user_address'] = user[7] if user[7] else ''
-            session['join_date'] = user[8].strftime('%d %B %Y') if user[8] else 'N/A'
+            session['user_address'] = user[6] if user[6] else ''
+            session['join_date'] = user[7].strftime('%d %B %Y') if user[7] else 'N/A'
             session['username'] = user[4]  # Use email as username display
 
             if user[3] == 'admin':
@@ -1499,7 +1498,6 @@ def edit_profile():
                 user_name = request.form.get('user_name')
                 email = request.form.get('email')
                 phone = request.form.get('phone')
-                company = request.form.get('company')
                 address = request.form.get('address')
                 
                 # Check if email already exists for other users
@@ -1512,16 +1510,15 @@ def edit_profile():
                 # Update user profile
                 cur.execute("""
                     UPDATE users 
-                    SET name = %s, email = %s, phone = %s, company = %s, address = %s 
+                    SET name = %s, email = %s, phone = %s, address = %s 
                     WHERE id = %s
-                """, (user_name, email, phone, company, address, user_id))
+                """, (user_name, email, phone, address, user_id))
                 mysql.connection.commit()
                 
                 # Update session data
                 session['user_name'] = user_name
                 session['user_email'] = email
                 session['user_phone'] = phone if phone else ''
-                session['user_company'] = company if company else ''
                 session['user_address'] = address if address else ''
                 
                 flash('Profil berhasil diperbarui!', 'success')
@@ -1536,7 +1533,7 @@ def edit_profile():
     # GET request - load user data and show edit profile form
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT name, email, phone, company, address, created_at FROM users WHERE id = %s", (user_id,))
+        cur.execute("SELECT name, email, phone, address, updated_at FROM users WHERE id = %s", (user_id,))
         user_data = cur.fetchone()
         cur.close()
         
@@ -1545,9 +1542,8 @@ def edit_profile():
             session['user_name'] = user_data[0]
             session['user_email'] = user_data[1]
             session['user_phone'] = user_data[2] if user_data[2] else ''
-            session['user_company'] = user_data[3] if user_data[3] else ''
-            session['user_address'] = user_data[4] if user_data[4] else ''
-            session['join_date'] = user_data[5].strftime('%d %B %Y') if user_data[5] else 'N/A'
+            session['user_address'] = user_data[3] if user_data[3] else ''
+            session['join_date'] = user_data[4].strftime('%d %B %Y') if user_data[4] else 'N/A'
             
     except Exception as e:
         flash(f'Terjadi kesalahan dalam memuat data: {str(e)}', 'error')
@@ -2164,7 +2160,13 @@ def get_main_chart_data():
         })
 
     except Exception as e:
-        return jsonify({
-            'success': False, 
-            'error': f'An internal error occurred: {str(e)}'
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+
+
+
+
+
+
