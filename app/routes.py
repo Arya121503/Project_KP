@@ -168,10 +168,14 @@ def logout_user():
 @main.route('/api/visualization/stats')
 def get_visualization_stats():
     """Get statistics for visualization dashboard"""
+    data_type = request.args.get('data_type', 'prediksi')
     try:
-        # Get statistics from both tables
-        stats_tanah = PrediksiPropertiTanah.get_statistics()
-        stats_bangunan = PrediksiPropertiBangunanTanah.get_statistics()
+        if data_type == 'real':
+            stats_tanah = HargaTanahReal.get_statistics()
+            stats_bangunan = HargaBangunanTanahReal.get_statistics()
+        else:
+            stats_tanah = PrediksiPropertiTanah.get_statistics()
+            stats_bangunan = PrediksiPropertiBangunanTanah.get_statistics()
         
         # Calculate combined statistics
         total_tanah = stats_tanah[0] if stats_tanah and stats_tanah[0] else 0
@@ -211,11 +215,54 @@ def get_visualization_stats():
 @main.route('/api/visualization/location-analysis')
 def get_location_analysis():
     """Get location-based analysis for all kecamatan (Optimized and cleaned)"""
+    data_type = request.args.get('data_type', 'prediksi')
     try:
         cur = mysql.connection.cursor()
         
-        # Optimized single query with subqueries and filter for Prajuritkulon
-        cur.execute("""
+        if data_type == 'real':
+            query = """
+                SELECT 
+                    k.kecamatan,
+                    COALESCE(t.tanah_count, 0) as tanah_count,
+                    COALESCE(t.tanah_total_value, 0) as tanah_total_value,
+                    COALESCE(t.tanah_avg_price, 0) as tanah_avg_price,
+                    COALESCE(b.bangunan_count, 0) as bangunan_count,
+                    COALESCE(b.bangunan_total_value, 0) as bangunan_total_value,
+                    COALESCE(b.bangunan_avg_price, 0) as bangunan_avg_price,
+                    (COALESCE(t.tanah_count, 0) + COALESCE(b.bangunan_count, 0)) as total_properties,
+                    (COALESCE(t.tanah_total_value, 0) + COALESCE(b.bangunan_total_value, 0)) as total_value
+                FROM (
+                    SELECT DISTINCT pt.kecamatan FROM harga_tanah_real htr JOIN prediksi_properti_tanah pt ON htr.prediksi_id = pt.id
+                    WHERE pt.kecamatan NOT LIKE '%prajurit%'
+                    UNION
+                    SELECT DISTINCT pbt.kecamatan FROM harga_bangunan_tanah_real hbtr JOIN prediksi_properti_bangunan_tanah pbt ON hbtr.prediksi_id = pbt.id
+                    WHERE pbt.kecamatan NOT LIKE '%prajurit%'
+                ) k
+                LEFT JOIN (
+                    SELECT 
+                        pt.kecamatan,
+                        COUNT(*) as tanah_count,
+                        SUM(htr.harga_real) as tanah_total_value,
+                        AVG(htr.harga_real) as tanah_avg_price
+                    FROM harga_tanah_real htr JOIN prediksi_properti_tanah pt ON htr.prediksi_id = pt.id
+                    WHERE pt.kecamatan NOT LIKE '%prajurit%'
+                    GROUP BY pt.kecamatan
+                ) t ON k.kecamatan = t.kecamatan
+                LEFT JOIN (
+                    SELECT 
+                        pbt.kecamatan,
+                        COUNT(*) as bangunan_count,
+                        SUM(hbtr.harga_real) as bangunan_total_value,
+                        AVG(hbtr.harga_real) as bangunan_avg_price
+                    FROM harga_bangunan_tanah_real hbtr JOIN prediksi_properti_bangunan_tanah pbt ON hbtr.prediksi_id = pbt.id
+                    WHERE pbt.kecamatan NOT LIKE '%prajurit%'
+                    GROUP BY pbt.kecamatan
+                ) b ON k.kecamatan = b.kecamatan
+                WHERE (COALESCE(t.tanah_count, 0) + COALESCE(b.bangunan_count, 0)) > 0
+                ORDER BY total_value DESC
+            """
+        else: # default to 'prediksi'
+            query = """
             SELECT 
                 k.kecamatan,
                 COALESCE(t.tanah_count, 0) as tanah_count,
@@ -259,8 +306,9 @@ def get_location_analysis():
             ) b ON k.kecamatan = b.kecamatan
             WHERE (COALESCE(t.tanah_count, 0) + COALESCE(b.bangunan_count, 0)) > 0
             ORDER BY total_value DESC
-        """)
+        """
         
+        cur.execute(query)
         rows = cur.fetchall()
         cur.close()
         
@@ -1950,109 +1998,173 @@ def get_aset_detail(aset_id):
                        htr.harga_real, htr.catatan, htr.updated_at
                 FROM prediksi_properti_tanah pt
                 INNER JOIN harga_tanah_real htr ON pt.id = htr.prediksi_id
-                WHERE pt.id = %s AND htr.harga_real IS NOT NULL AND htr.harga_real > 0
+                WHERE pt.id = %s
             """, (aset_id,))
-        else:  # tanah_bangunan
+        else:
             cur.execute("""
-                SELECT pbt.id, pbt.kecamatan, 
-                       CASE WHEN pbt.kelurahan IS NOT NULL THEN pbt.kelurahan ELSE '' END as kelurahan, 
-                       pbt.luas_tanah_m2, pbt.luas_bangunan_m2, pbt.jumlah_kamar_tidur, 
-                       pbt.jumlah_kamar_mandi, pbt.jumlah_lantai, pbt.harga_prediksi_total, 
-                       pbt.sertifikat, hbtr.harga_real, hbtr.catatan, hbtr.updated_at
+                SELECT pbt.id, pbt.kecamatan, pbt.kelurahan, pbt.luas_tanah_m2, 
+                       pbt.luas_bangunan, pbt.kamar_tidur, 
+                       pbt.kamar_mandi, pbt.jumlah_lantai, 
+                       pbt.harga_prediksi_total, pbt.jenis_sertifikat,
+                       hbr.harga_real, hbr.catatan, hbr.updated_at
                 FROM prediksi_properti_bangunan_tanah pbt
-                INNER JOIN harga_bangunan_tanah_real hbtr ON pbt.id = hbtr.prediksi_id
-                WHERE pbt.id = %s AND hbtr.harga_real IS NOT NULL AND hbtr.harga_real > 0
+                INNER JOIN harga_bangunan_tanah_real hbr ON pbt.id = hbr.prediksi_id
+                WHERE pbt.id = %s
             """, (aset_id,))
         
         result = cur.fetchone()
         cur.close()
         
-        if not result:
-            return jsonify({'success': False, 'error': 'Aset tidak ditemukan atau belum ada harga real'}), 404
-        
-        harga_prediksi = float(result[8]) if result[8] else 0
-        harga_real = float(result[10]) if result[10] else 0
-        aset_detail = {
-            'id': result[0],
-            'jenis': jenis,
-            'alamat': f"Kelurahan {result[2]}, Kecamatan {result[1]}" if result[2] else f"Kecamatan {result[1]}",
-            'kecamatan': result[1],
-            'kelurahan': result[2],
-            'luas_tanah': result[3],
-            'luas_bangunan': result[4],
-            'kamar_tidur': result[5],
-            'kamar_mandi': result[6],
-            'jumlah_lantai': result[7],
-            'harga_prediksi': harga_prediksi,
-            'harga_real': harga_real,
-            'harga_sewa': int(harga_real * 0.01) if harga_real else 0,  # 1% dari harga real
-            'sertifikat': result[9],
-            'catatan_admin': result[11],
-            'status': 'tersedia',
-            'updated_at': result[12]
-        }
-        
-        return jsonify({
-            'success': True,
-            'data': aset_detail
-        })
-        
+        if result:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'id': result[0],
+                    'kecamatan': result[1],
+                    'kelurahan': result[2],
+                    'luas_tanah_m2': result[3],
+                    'luas_bangunan': result[4],
+                    'kamar_tidur': result[5],
+                    'kamar_mandi': result[6],
+                    'jumlah_lantai': result[7],
+                    'harga_prediksi': result[8],
+                    'jenis_sertifikat': result[9],
+                    'harga_real': result[10],
+                    'catatan': result[11],
+                    'updated_at': result[12]
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Aset tidak ditemukan'
+            }), 404
+            
     except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
 
-@main.route('/api/submit-rental', methods=['POST'])
-def submit_rental():
-    """API untuk submit pengajuan sewa aset"""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Anda harus login terlebih dahulu'}), 401
-    
+@main.route('/api/visualization/main-chart')
+def get_main_chart_data():
+    """Endpoint to provide data for the main chart in the visualization dashboard."""
     try:
-        data = request.get_json()
-        
-        # Validasi data
-        required_fields = ['aset_id', 'jenis_aset', 'nama_penyewa', 'email', 'telepon', 'durasi_sewa']
-        for field in required_fields:
-            if not data.get(field):
-                return jsonify({'success': False, 'error': f'Field {field} harus diisi'}), 400
-        
+        # Get parameters from request
+        data_type = request.args.get('data_type', 'prediksi')
+        data_source = request.args.get('data_source', 'both')
+        group_by = request.args.get('group_by', 'location')
+        metric = request.args.get('metric', 'avgPrice')
+
+        # Determine table and price columns based on data type
+        if data_type == 'real':
+            tanah_table = 'harga_tanah_real'
+            bangunan_table = 'harga_bangunan_tanah_real'
+            tanah_price_col = 'harga_real'
+            bangunan_price_col = 'harga_real'
+            tanah_join_col = 'prediksi_id'
+            bangunan_join_col = 'prediksi_id'
+            tanah_pred_table = 'prediksi_properti_tanah'
+            bangunan_pred_table = 'prediksi_properti_bangunan_tanah'
+        else:  # default is 'prediksi'
+            tanah_table = 'prediksi_properti_tanah'
+            bangunan_table = 'prediksi_properti_bangunan_tanah'
+            tanah_price_col = 'harga_prediksi_tanah'
+            bangunan_price_col = 'harga_prediksi_total'
+
+        # Build SQL query based on parameters
+        query = ""
+        params = []
+
+        if group_by == 'location':
+            group_field = 'kecamatan'
+            # Query for tanah data
+            tanah_query = f"""
+                SELECT pt.kecamatan as label, COUNT(*) as count, AVG(t.{tanah_price_col}) as avg_price, SUM(t.{tanah_price_col}) as total_value
+                FROM {tanah_table} t JOIN {tanah_pred_table} pt ON t.{tanah_join_col} = pt.id
+                WHERE pt.kecamatan IS NOT NULL AND pt.kecamatan != ''
+                GROUP BY pt.kecamatan
+            """ if data_type == 'real' else f"""
+                SELECT kecamatan as label, COUNT(*) as count, AVG({tanah_price_col}) as avg_price, SUM({tanah_price_col}) as total_value
+                FROM {tanah_table}
+                WHERE kecamatan IS NOT NULL AND kecamatan != ''
+                GROUP BY kecamatan
+            """
+            # Query for bangunan data
+            bangunan_query = f"""
+                SELECT pbt.kecamatan as label, COUNT(*) as count, AVG(b.{bangunan_price_col}) as avg_price, SUM(b.{bangunan_price_col}) as total_value
+                FROM {bangunan_table} b JOIN {bangunan_pred_table} pbt ON b.{bangunan_join_col} = pbt.id
+                WHERE pbt.kecamatan IS NOT NULL AND pbt.kecamatan != ''
+                GROUP BY pbt.kecamatan
+            """ if data_type == 'real' else f"""
+                SELECT kecamatan as label, COUNT(*) as count, AVG({bangunan_price_col}) as avg_price, SUM({bangunan_price_col}) as total_value
+                FROM {bangunan_table}
+                WHERE kecamatan IS NOT NULL AND kecamatan != ''
+                GROUP BY kecamatan
+            """
+
+        elif group_by == 'type':
+            pass
+
+        # Execute query
         cur = mysql.connection.cursor()
+        data = {}
+
+        if data_source == 'tanah' or data_source == 'both':
+            cur.execute(tanah_query)
+            for row in cur.fetchall():
+                label, count, avg_price, total_value = row
+                if label not in data:
+                    data[label] = {'count': 0, 'total_value': 0}
+                data[label]['count'] += count
+                data[label]['total_value'] += total_value
+
+        if data_source == 'bangunan' or data_source == 'both':
+            cur.execute(bangunan_query)
+            for row in cur.fetchall():
+                label, count, avg_price, total_value = row
+                if label not in data:
+                    data[label] = {'count': 0, 'total_value': 0}
+                data[label]['count'] += count
+                data[label]['total_value'] += total_value
         
-        # Simpan data pengajuan sewa
-        cur.execute("""
-            INSERT INTO pengajuan_sewa (
-                user_id, aset_id, jenis_aset, nama_penyewa, email, telepon, 
-                durasi_sewa, tanggal_mulai, pesan, status, created_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', NOW())
-        """, (
-            session['user_id'],
-            data['aset_id'],
-            data['jenis_aset'],
-            data['nama_penyewa'],
-            data['email'],
-            data['telepon'],
-            data['durasi_sewa'],
-            data.get('tanggal_mulai'),
-            data.get('pesan', ''),
-        ))
-        
-        mysql.connection.commit()
         cur.close()
-        
+
+        # Prepare data for Chart.js
+        labels = sorted(data.keys())
+        chart_data = []
+
+        for label in labels:
+            item = data[label]
+            if metric == 'avgPrice':
+                value = item['total_value'] / item['count'] if item['count'] > 0 else 0
+            elif metric == 'totalValue':
+                value = item['total_value']
+            elif metric == 'count':
+                value = item['count']
+            else:
+                value = 0
+            chart_data.append(value)
+
+        # Create dataset for Chart.js
+        dataset = {
+            'label': f'{metric} by {group_by}',
+            'data': chart_data,
+            'backgroundColor': 'rgba(220, 20, 60, 0.7)',
+            'borderColor': 'rgba(220, 20, 60, 1)',
+            'borderWidth': 1
+        }
+
         return jsonify({
             'success': True,
-            'message': 'Pengajuan sewa berhasil dikirim. Admin akan menghubungi Anda segera.'
+            'data': {
+                'labels': labels,
+                'datasets': [dataset]
+            }
         })
-        
+
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-
-
-
-
-
-
+        return jsonify({
+            'success': False, 
+            'error': f'An internal error occurred: {str(e)}'
+        }), 500

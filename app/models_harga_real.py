@@ -113,7 +113,7 @@ class HargaTanahReal:
         try:
             cur = mysql.connection.cursor()
             cur.execute("""
-                SELECT COUNT(*), AVG(harga_real) 
+                SELECT COUNT(*), AVG(harga_real), MIN(harga_real), MAX(harga_real)
                 FROM harga_tanah_real 
                 WHERE harga_real IS NOT NULL AND harga_real > 0
             """)
@@ -122,7 +122,7 @@ class HargaTanahReal:
             return stats
         except Exception as e:
             print(f"Error getting statistics for harga real tanah: {e}")
-            return (0, 0)
+            return (0, 0, 0, 0)
 
 
 class HargaBangunanTanahReal:
@@ -234,7 +234,7 @@ class HargaBangunanTanahReal:
         try:
             cur = mysql.connection.cursor()
             cur.execute("""
-                SELECT COUNT(*), AVG(harga_real) 
+                SELECT COUNT(*), AVG(harga_real), MIN(harga_real), MAX(harga_real)
                 FROM harga_bangunan_tanah_real 
                 WHERE harga_real IS NOT NULL AND harga_real > 0
             """)
@@ -243,4 +243,4 @@ class HargaBangunanTanahReal:
             return stats
         except Exception as e:
             print(f"Error getting statistics for harga real bangunan tanah: {e}")
-            return (0, 0)
+            return (0, 0, 0, 0)

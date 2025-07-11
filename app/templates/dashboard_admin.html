@@ -710,6 +710,14 @@
                     </select>
                   </div>
                   <div class="col-md-2">
+                    <label class="form-label">Tipe Data</label>
+                    <select class="form-select" id="dataType">
+                      <option value="prediksi">Data Prediksi</option>
+                      <option value="real">Data Real</option>
+                      <option value="perbandingan">Perbandingan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
                     <label class="form-label">Data Source</label>
                     <select class="form-select" id="dataSource">
                       <option value="both">Semua Data</option>
@@ -754,8 +762,13 @@
               </div>
             </div>
 
+            <!-- Message for insufficient data -->
+            <div id="visualization-message" class="alert alert-warning text-center" style="display: none;">
+              <i class="fas fa-info-circle me-2"></i>Tidak cukup data untuk menampilkan visualisasi grafik.
+            </div>
+
             <!-- Main Charts Section -->
-            <div class="row g-4 mb-4">
+            <div id="main-charts-container" class="row g-4 mb-4">
               <!-- Primary Chart -->
               <div class="col-md-8">
                 <div class="card shadow-sm border-0">
@@ -1308,7 +1321,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Custom Dashboard JS -->
     <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
-    <!-- Visualization JS (Simplified version) -->
-    <script src="{{ url_for('static', filename='js/simple_visualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/visualization_handler.js') }}"></script>
   </body>
 </html>
