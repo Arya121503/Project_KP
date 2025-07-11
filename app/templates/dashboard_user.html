@@ -895,11 +895,10 @@
     
     if (asetList.length === 0) {
       container.innerHTML = `
-        <div class="col-12 text-center">
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            Tidak ada aset yang tersedia saat ini
-          </div>
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-home text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada aset untuk saat ini</h5>
+          <p class="text-muted">Admin belum menambahkan aset yang tersedia untuk disewa. Silakan cek kembali nanti.</p>
         </div>
       `;
       return;
@@ -915,9 +914,17 @@
                 <span class="badge bg-${aset.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
                   ${aset.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
                 </span>
-                <span class="badge bg-success text-white rounded-pill">
-                  ${aset.status || 'Tersedia'}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success text-white rounded-pill">
+                    ${aset.status || 'Tersedia'}
+                  </span>
+                  <i class="fas fa-heart favorite-heart" 
+                     data-aset-id="${aset.id}" 
+                     onclick="toggleFavorite(${aset.id}, this)"
+                     title="Tambah ke Favorit"
+                     style="cursor: pointer; color: #ddd; font-size: 1.2rem;">
+                  </i>
+                </div>
               </div>
               
               <h6 class="card-title text-truncate" title="${aset.alamat || 'Alamat tidak tersedia'}">
@@ -955,12 +962,18 @@
                 </div>
               </div>` : ''}
               
+              ${aset.catatan_admin ? `
+              <div class="mb-2">
+                <small class="text-muted d-block">Catatan Admin:</small>
+                <p class="small text-secondary mb-0" style="font-style: italic;">${aset.catatan_admin}</p>
+              </div>` : ''}
+              
               <div class="text-center">
                 <div class="h6 text-danger mb-2">
                   Rp ${formatCurrency(aset.harga_sewa || 0)}/bulan
                 </div>
                 <small class="text-muted d-block mb-3">
-                  Estimasi dari nilai: Rp ${formatCurrency(aset.harga_prediksi || 0)}
+                  <span class="badge bg-info text-white">Harga Real: Rp ${formatCurrency(aset.harga_real || 0)}</span>
                 </small>
                 <div class="btn-group btn-group-sm w-100">
                   <button class="btn btn-outline-info" onclick="showAsetDetail(${aset.id}, '${aset.jenis}')">
@@ -978,6 +991,9 @@
     });
     
     container.innerHTML = html;
+    
+    // Load favorite status after displaying assets
+    loadFavoriteStatus();
   }
 
   function updatePaginationControls(pagination) {
@@ -1417,14 +1433,18 @@
     return new Intl.NumberFormat('id-ID').format(number);
   }
 
+  // Updated showError function for better user experience
   function showError(message) {
     const container = document.getElementById('asetContainer');
     container.innerHTML = `
-      <div class="col-12">
-        <div class="alert alert-danger">
+      <div class="col-12 text-center py-5">
+        <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+        <h5 class="text-muted">Terjadi Kesalahan</h5>
+        <div class="alert alert-warning">
           <i class="fas fa-exclamation-triangle me-2"></i>
           ${message}
         </div>
+        <p class="text-muted">Silakan coba lagi atau hubungi administrator jika masalah berlanjut.</p>
       </div>
     `;
   }
@@ -2479,18 +2499,6 @@
     return new Intl.NumberFormat('id-ID').format(number);
   }
 
-  function showError(message) {
-    const container = document.getElementById('asetContainer');
-    container.innerHTML = `
-      <div class="col-12">
-        <div class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          ${message}
-        </div>
-      </div>
-    `;
-  }
-
   // ===== HISTORI SEWA FUNCTIONS =====
 
   async function loadHistoriData() {
@@ -2850,54 +2858,6 @@
     }
   }
 
-  function showNotifikasiError(message) {
-    const container = document.getElementById('notifikasiContainer');
-    container.innerHTML = `
-      <div class="text-center py-4">
-        <div class="alert alert-danger mb-0">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          ${message}
-        </div>
-      </div>
-    `;
-  }
-
-  function showNotifSuccess(message) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = 'alert alert-success position-fixed';
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-    toast.innerHTML = `<i class="fas fa-check me-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
-  }
-
-  function showNotifError(message) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = 'alert alert-danger position-fixed';
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-    toast.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
-  }
-
-  // Load notifikasi count on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    // Load initial notification count
-    setTimeout(() => {
-      loadNotifikasiData();
-      loadFavoriteStatus(); // Load favorite status for current aset
-      loadFavoritCount(); // Load favorite count for badge
-    }, 1000);
-  });
-
   // ===== FAVORIT FUNCTIONS =====
 
   async function loadFavoritData() {
@@ -3138,82 +3098,6 @@
       console.error('Error clearing favorites:', error);
       showFavoritError('Terjadi kesalahan');
     }
-  }
-
-  async function loadFavoriteStatus() {
-    // Load favorite status for aset displayed in main dashboard
-    try {
-      const response = await fetch('/api/favorit-status');
-      const data = await response.json();
-      
-      if (data.success) {
-        const favoritedIds = data.favorited_ids || [];
-        
-        // Update heart icons
-        document.querySelectorAll('.favorite-heart').forEach(heart => {
-          const asetId = parseInt(heart.getAttribute('data-aset-id'));
-          if (favoritedIds.includes(asetId)) {
-            heart.classList.add('favorited');
-            heart.title = 'Hapus dari Favorit';
-          } else {
-            heart.classList.remove('favorited');
-            heart.title = 'Tambah ke Favorit';
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error loading favorite status:', error);
-    }
-  }
-
-  async function loadFavoritCount() {
-    try {
-      const response = await fetch('/api/favorit-count');
-      const data = await response.json();
-      
-      if (data.success) {
-        updateFavoritBadge(data.count || 0);
-      }
-    } catch (error) {
-      console.error('Error loading favorit count:', error);
-    }
-  }
-
-  function updateFavoritBadge(count) {
-    const badge = document.getElementById('favoriteBadge');
-    if (count > 0) {
-      badge.textContent = count > 99 ? '99+' : count;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  function showFavoritError(message) {
-    const container = document.getElementById('favoritContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            ${message}
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  function showFavoritSuccess(message) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = 'alert alert-success position-fixed';
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-    toast.innerHTML = `<i class="fas fa-heart me-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
   }
   </script>
 </body>

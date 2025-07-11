@@ -36,6 +36,32 @@ def init_mysql_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
+        
+        # Create harga_tanah_real table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS harga_tanah_real (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                prediksi_id INT NOT NULL,
+                harga_real DECIMAL(20,2) NOT NULL,
+                catatan TEXT,
+                updated_by VARCHAR(100) NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_prediksi_id (prediksi_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        
+        # Create harga_bangunan_tanah_real table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS harga_bangunan_tanah_real (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                prediksi_id INT NOT NULL,
+                harga_real DECIMAL(20,2) NOT NULL,
+                catatan TEXT,
+                updated_by VARCHAR(100) NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_prediksi_id (prediksi_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
 
         # Create default admin if none exists
         cur.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')
@@ -48,9 +74,9 @@ def init_mysql_db():
 
         mysql.connection.commit()
         cur.close()
-        print("✅ DB check done: users table ready, admin ensured, pengajuan_sewa table created.")
+        print("[OK] DB check done: users table ready, admin ensured, pengajuan_sewa table created, harga_real tables created.")
     except Exception as e:
-        print(f"❌ Error init DB: {e}")
+        print(f"[ERROR] Error init DB: {e}")
 
 class Database:
     """Database connection class for SQLite operations"""

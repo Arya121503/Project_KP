@@ -23,8 +23,15 @@ def create_app():
     # Init MySQL ke app
     mysql.init_app(app)
 
-    # Register blueprint
+    # Register blueprints
     from .routes import main
+    from .routes_harga_real import harga_real
     app.register_blueprint(main)
+    app.register_blueprint(harga_real)
+
+    # Initialize DB tables
+    with app.app_context():
+        from .database import init_mysql_db
+        init_mysql_db()
 
     return app

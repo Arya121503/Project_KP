@@ -6,34 +6,49 @@
 class SimpleVisualizationDashboard {
     constructor() {
         this.data = {};
+        this.charts = {};
         this.init();
     }
 
     init() {
         console.log('Initializing Simple Visualization Dashboard...');
-        this.loadAllData();
         this.setupEventListeners();
+        this.loadAllData(); // Initial load
     }
 
     setupEventListeners() {
-        // Update chart button
         document.getElementById('updateChart')?.addEventListener('click', () => {
             this.loadAllData();
         });
 
-        // Manual refresh button
-        document.getElementById('refreshData')?.addEventListener('click', () => {
-            this.loadAllData();
-        });
+        // Disable comparison option for now
+        const dataTypeElement = document.getElementById('dataType');
+        if(dataTypeElement) {
+            const comparisonOption = dataTypeElement.querySelector('option[value="perbandingan"]');
+            if(comparisonOption) {
+                comparisonOption.disabled = true;
+            }
+        }
     }
 
     async loadAllData() {
         try {
             this.showLoading();
+            const dataType = document.getElementById('dataType')?.value || 'prediksi';
+            const dataSource = document.getElementById('dataSource')?.value || 'both';
+
+            // Validasi: Jika "Data Real" dipilih, "Data Source" harus "Semua Data"
+            if (dataType === 'real' && dataSource !== 'both') {
+                this.showError('Filter "Data Source" tidak berlaku untuk "Data Real". Harap pilih "Semua Data".');
+                this.hideLoading();
+                // Reset filter ke opsi yang valid
+                document.getElementById('dataSource').value = 'both';
+                return;
+            }
             
-            // Load data sequentially to avoid overload
-            await this.loadStats();
-            await this.loadLocationData();
+            // Muat data secara berurutan
+            await this.loadStats(dataType, dataSource);
+            await this.loadLocationData(dataType, dataSource);
             
             this.hideLoading();
             this.showSuccess('Data berhasil dimuat!');
@@ -45,9 +60,9 @@ class SimpleVisualizationDashboard {
         }
     }
 
-    async loadStats() {
+    async loadStats(dataType, dataSource) {
         try {
-            const response = await fetch('/api/visualization/stats');
+            const response = await fetch(`/api/visualization/stats?data_type=${dataType}&data_source=${dataSource}`);
             const result = await response.json();
             
             if (result.success) {
@@ -62,9 +77,9 @@ class SimpleVisualizationDashboard {
         }
     }
 
-    async loadLocationData() {
+    async loadLocationData(dataType, dataSource) {
         try {
-            const response = await fetch('/api/visualization/location-analysis');
+            const response = await fetch(`/api/visualization/location-analysis?data_type=${dataType}&data_source=${dataSource}`);
             const result = await response.json();
             
             if (result.success) {
@@ -89,26 +104,48 @@ class SimpleVisualizationDashboard {
         this.updateElement('maxPrice', this.formatCurrency(stats.max_price));
         this.updateElement('minPrice', this.formatCurrency(stats.min_price));
         this.updateElement('totalAssets', this.formatNumber(stats.total_assets));
+
+        this.toggleVisualizationDisplay();
+    }
+
+    toggleVisualizationDisplay() {
+        const chartsContainer = document.getElementById('main-charts-container');
+        const messageContainer = document.getElementById('visualization-message');
+        
+        if (!chartsContainer || !messageContainer) return;
+
+        // Tampilkan visualisasi jika ada data, jika tidak tampilkan pesan
+        const hasData = this.data.stats && this.data.stats.total_assets > 0;
+        
+        if (hasData) {
+            chartsContainer.style.display = 'flex'; // atau 'block' sesuai layout
+            messageContainer.style.display = 'none';
+        } else {
+            chartsContainer.style.display = 'none';
+            messageContainer.style.display = 'block';
+        }
     }
 
     updateLocationTable() {
         const tableBody = document.getElementById('topPriceTable');
-        if (!tableBody || !this.data.locationAnalysis) return;
+        if (!tableBody) return;
 
+        // Hapus data lama
         tableBody.innerHTML = '';
-        
-        if (this.data.locationAnalysis.length === 0) {
+
+        // Periksa apakah ada data untuk ditampilkan
+        if (!this.data.locationAnalysis || this.data.locationAnalysis.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        <i class="fas fa-info-circle me-2"></i>Tidak ada data tersedia
+                    <td colspan="4" class="text-center text-muted p-4">
+                        <i class="fas fa-info-circle me-2"></i>Tidak ada data yang cocok dengan filter yang dipilih.
                     </td>
                 </tr>
             `;
             return;
         }
         
-        // Show all kecamatan data
+        // Tampilkan semua data kecamatan
         this.data.locationAnalysis.forEach((location, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -123,7 +160,7 @@ class SimpleVisualizationDashboard {
                     <strong class="text-success">${this.formatCurrency(location.avg_price)}</strong>
                 </td>
                 <td class="text-center">
-                    <span class="badge bg-primary">${location.total_properties}</span>
+                    <span class="badge bg-primary">${this.formatNumber(location.total_properties)}</span>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -209,7 +246,7 @@ class SimpleVisualizationDashboard {
     }
 
     formatNumber(number) {
-        if (!number || isNaN(number)) return '0';
+        if (number === null || typeof number === 'undefined' || isNaN(number)) return '0';
         
         return new Intl.NumberFormat('id-ID').format(number);
     }

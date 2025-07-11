@@ -373,7 +373,7 @@
 
             <a href="#" class="menu-link" data-target="manajemen-aset">
               <span class="material-icons-sharp">manage_accounts</span>
-              <h3>Manajemen Data Aset</h3>
+              <h3>Manajemen Harga Real Aset</h3>
             </a>
             <a href="#" class="menu-link" data-target="notifikasi">
               <span class="material-icons-sharp">notifications</span>
@@ -403,7 +403,7 @@
                 <div class="info">
                   <h3>Total Prediksi</h3>
                   <h1>{{ stats.total_properties or 0 }}</h1>
-                  <small>Data Properti</small>
+                  <small>Data Properti (Hasil Prediksi ML)</small>
                 </div>
                 <div class="progresss">
                   <svg><circle cx="38" cy="38" r="36"></circle></svg>
@@ -414,26 +414,39 @@
             <div class="visits">
               <div class="status">
                 <div class="info">
-                  <h3>Harga Rata-rata</h3>
+                  <h3>Harga Rata-rata (Prediksi)</h3>
                   <h1>Rp {{ "{:,.0f}".format(stats.avg_price or 0) }}</h1>
-                  <small>Per Properti</small>
+                  <small>Per Properti (Prediksi ML)</small>
                 </div>
                 <div class="progresss">
                   <svg><circle cx="38" cy="38" r="36"></circle></svg>
-                  <div class="percentage"><p>Valid</p></div>
+                  <div class="percentage"><p>ML</p></div>
                 </div>
               </div>
             </div>
             <div class="searches">
               <div class="status">
                 <div class="info">
-                  <h3>Total Kecamatan</h3>
-                  <h1>{{ stats.total_locations or 0 }}</h1>
-                  <small>Area Surabaya</small>
+                  <h3>Harga Rata-rata (Real)</h3>
+                  <h1>Rp {{ "{:,.0f}".format(stats.avg_real_price or 0) }}</h1>
+                  <small>Per Properti (Ditetapkan Admin)</small>
                 </div>
                 <div class="progresss">
                   <svg><circle cx="38" cy="38" r="36"></circle></svg>
-                  <div class="percentage"><p>31</p></div>
+                  <div class="percentage"><p>Real</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="searches">
+              <div class="status">
+                <div class="info">
+                  <h3>Total Pengguna</h3>
+                  <h1>{{ stats.total_users or 0 }}</h1>
+                  <small>Jumlah Pengguna Terdaftar</small>
+                </div>
+                <div class="progresss">
+                  <svg><circle cx="38" cy="38" r="36"></circle></svg>
+                  <div class="percentage"><p><i class="fas fa-users"></i></p></div>
                 </div>
               </div>
             </div>
@@ -468,34 +481,37 @@
             </div>
           </div>
 
-          <!-- Ringkasan Data -->
+          <!-- Ringkasan Data Aset -->
           <div class="row mt-4">
             <div class="col-12">
-              <h3 class="mb-3">Ringkasan Data</h3>
+              <h3 class="mb-3">Ringkasan Data Aset</h3>
             </div>
-
             <div class="col-md-6 mb-4">
               <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-success text-white">
                   <h5 class="mb-0">
-                    <i class="fas fa-map me-2"></i>Data Prediksi Tanah
+                    <i class="fas fa-map me-2"></i>Data Tanah
                   </h5>
                 </div>
                 <div class="card-body">
                   <div class="row text-center">
-                    <div class="col-6">
+                    <div class="col-4">
                       <h3 class="text-success">
-                        {{ stats_tanah[0] if stats_tanah and stats_tanah[0] else
-                        0 }}
+                        {{ stats_tanah[0] if stats_tanah and stats_tanah[0] else 0 }}
                       </h3>
-                      <small class="text-muted">Total Data</small>
+                      <small class="text-muted">Total Prediksi</small>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                       <h6 class="text-success">
-                        Rp {{ "{:,.0f}".format(stats_tanah[1] if stats_tanah and
-                        stats_tanah[1] else 0) }}
+                        Rp {{ "{:,.0f}".format(stats_tanah[1] if stats_tanah and stats_tanah[1] else 0) }}
                       </h6>
-                      <small class="text-muted">Harga Rata-rata</small>
+                      <small class="text-muted">Rata-rata Prediksi</small>
+                    </div>
+                    <div class="col-4">
+                      <h6 class="text-info">
+                        Rp {{ "{:,.0f}".format(stats_tanah_real[1] if stats_tanah_real and stats_tanah_real[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Rata-rata Real</small>
                     </div>
                   </div>
                 </div>
@@ -506,25 +522,86 @@
               <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-danger text-white">
                   <h5 class="mb-0">
-                    <i class="fas fa-building me-2"></i>Data Prediksi
-                    Bangunan+Tanah
+                    <i class="fas fa-building me-2"></i>Data Bangunan+Tanah
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <h3 class="text-danger">
+                        {{ stats_bangunan[0] if stats_bangunan and stats_bangunan[0] else 0 }}
+                      </h3>
+                      <small class="text-muted">Total Prediksi</small>
+                    </div>
+                    <div class="col-4">
+                      <h6 class="text-danger">
+                        Rp {{ "{:,.0f}".format(stats_bangunan[1] if stats_bangunan and stats_bangunan[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Rata-rata Prediksi</small>
+                    </div>
+                    <div class="col-4">
+                      <h6 class="text-primary">
+                        Rp {{ "{:,.0f}".format(stats_bangunan_real[1] if stats_bangunan_real and stats_bangunan_real[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Rata-rata Real</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+          
+          <div class="row mt-2">
+            <div class="col-12">
+              <h3 class="mb-3">Ringkasan Data Harga Real (Ditetapkan Admin)</h3>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-info text-white">
+                  <h5 class="mb-0">
+                    <i class="fas fa-tags me-2"></i>Data Harga Real Tanah
                   </h5>
                 </div>
                 <div class="card-body">
                   <div class="row text-center">
                     <div class="col-6">
-                      <h3 class="text-danger">
-                        {{ stats_bangunan[0] if stats_bangunan and
-                        stats_bangunan[0] else 0 }}
+                      <h3 class="text-info">
+                        {{ stats_tanah_real[0] if stats_tanah_real and stats_tanah_real[0] else 0 }}
                       </h3>
                       <small class="text-muted">Total Data</small>
                     </div>
                     <div class="col-6">
-                      <h6 class="text-danger">
-                        Rp {{ "{:,.0f}".format(stats_bangunan[1] if
-                        stats_bangunan and stats_bangunan[1] else 0) }}
+                      <h6 class="text-info">
+                        Rp {{ "{:,.0f}".format(stats_tanah_real[1] if stats_tanah_real and stats_tanah_real[1] else 0) }}
                       </h6>
-                      <small class="text-muted">Harga Rata-rata</small>
+                      <small class="text-muted">Harga Rata-rata Real</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                  <h5 class="mb-0">
+                    <i class="fas fa-city me-2"></i>Data Harga Real Bangunan+Tanah
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-6">
+                      <h3 class="text-primary">
+                        {{ stats_bangunan_real[0] if stats_bangunan_real and stats_bangunan_real[0] else 0 }}
+                      </h3>
+                      <small class="text-muted">Total Data</small>
+                    </div>
+                    <div class="col-6">
+                      <h6 class="text-primary">
+                        Rp {{ "{:,.0f}".format(stats_bangunan_real[1] if stats_bangunan_real and stats_bangunan_real[1] else 0) }}
+                      </h6>
+                      <small class="text-muted">Harga Rata-rata Real</small>
                     </div>
                   </div>
                 </div>
@@ -633,6 +710,14 @@
                     </select>
                   </div>
                   <div class="col-md-2">
+                    <label class="form-label">Tipe Data</label>
+                    <select class="form-select" id="dataType">
+                      <option value="prediksi">Data Prediksi</option>
+                      <option value="real">Data Real</option>
+                      <option value="perbandingan">Perbandingan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
                     <label class="form-label">Data Source</label>
                     <select class="form-select" id="dataSource">
                       <option value="both">Semua Data</option>
@@ -677,8 +762,13 @@
               </div>
             </div>
 
+            <!-- Message for insufficient data -->
+            <div id="visualization-message" class="alert alert-warning text-center" style="display: none;">
+              <i class="fas fa-info-circle me-2"></i>Tidak cukup data untuk menampilkan visualisasi grafik.
+            </div>
+
             <!-- Main Charts Section -->
-            <div class="row g-4 mb-4">
+            <div id="main-charts-container" class="row g-4 mb-4">
               <!-- Primary Chart -->
               <div class="col-md-8">
                 <div class="card shadow-sm border-0">
@@ -1051,84 +1141,66 @@
               </div>
             </div>
 
-            <!-- Prediction Options -->
+            
+            <!-- CRUD Operations -->
             <div class="row g-4 mb-4">
               <div class="col-md-6">
-                <div class="card border-0 h-100">
+                <div
+                  class="card text-center shadow-sm border-0 h-100 border-success"
+                >
                   <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
-                      <i class="fas fa-map me-2"></i>Prediksi Harga Tanah
+                      <i class="fas fa-plus-circle me-2"></i>CREATE - Tambah
+                      Data Prediksi
                     </h5>
                   </div>
                   <div class="card-body">
                     <p class="text-muted">
-                      Prediksi harga tanah berdasarkan lokasi, luas, dan faktor
-                      geografis
+                      Tambahkan data prediksi baru dengan form validasi
                     </p>
-                    <ul class="list-unstyled">
-                      <li>
-                        <i class="fas fa-check text-success me-2"></i>Lokasi dan
-                        Kecamatan
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-success me-2"></i>Luas Tanah
-                        (m²)
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-success me-2"></i>Jenis
-                        Sertifikat
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-success me-2"></i>Akses
-                        Jalan
-                      </li>
-                    </ul>
-                    <a
-                      href="{{ url_for('main.prediksi_tanah') }}"
-                      class="btn btn-success"
-                    >
-                      <i class="fas fa-calculator me-2"></i>Mulai Prediksi Tanah
-                    </a>
+                    <div class="d-grid gap-2">
+                      <a
+                        href="{{ url_for('main.tambah_tanah') }}"
+                        class="btn btn-success"
+                      >
+                        <i class="fas fa-map me-2"></i>Tambah Data Tanah (Prediksi Aset)
+                      </a>
+                      <a
+                        href="{{ url_for('main.tambah_bangunan') }}"
+                        class="btn btn-success"
+                      >
+                        <i class="fas fa-building me-2"></i>Tambah Data Bangunan (Prediksi Aset)
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="card border-0 h-100">
+              </div>                <div class="col-md-6">
+                <div
+                  class="card text-center shadow-sm border-0 h-100 border-danger"
+                >
                   <div class="card-header bg-danger text-white">
                     <h5 class="mb-0">
-                      <i class="fas fa-building me-2"></i>Prediksi Harga
-                      Bangunan+Tanah
+                      <i class="fas fa-eye me-2"></i>READ, UPDATE & DELETE - Data Prediksi
                     </h5>
                   </div>
                   <div class="card-body">
                     <p class="text-muted">
-                      Prediksi harga properti lengkap dengan bangunan dan tanah
+                      Lihat, edit, dan hapus data dengan tabel interaktif
                     </p>
-                    <ul class="list-unstyled">
-                      <li>
-                        <i class="fas fa-check text-danger me-2"></i>Semua Fitur
-                        Tanah
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-danger me-2"></i>Luas
-                        Bangunan (m²)
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-danger me-2"></i>Jumlah
-                        Kamar
-                      </li>
-                      <li>
-                        <i class="fas fa-check text-danger me-2"></i>Kondisi
-                        Bangunan
-                      </li>
-                    </ul>
-                    <a
-                      href="{{ url_for('main.prediksi_bangunan_tanah') }}"
-                      class="btn btn-danger"
-                    >
-                      <i class="fas fa-home me-2"></i>Mulai Prediksi Properti
-                    </a>
+                    <div class="d-grid gap-2">
+                      <a
+                        href="{{ url_for('main.total_properti_prediksi') }}"
+                        class="btn btn-danger"
+                      >
+                        <i class="fas fa-table me-2"></i>Lihat Semua Data Prediksi
+                      </a>
+                      <a
+                        href="{{ url_for('main.manajemen_aset') }}"
+                        class="btn btn-outline-danger"
+                      >
+                        <i class="fas fa-list me-2"></i>Halaman Manajemen Prediksi
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1174,135 +1246,42 @@
         <!-- Manajemen Aset -->
         <section id="manajemen-aset" class="content-section">
           <div class="p-4">
-            <h1 class="fw-bold mb-3">Manajemen Data Aset (CRUD)</h1>
+            <h1 class="fw-bold mb-3">Manajemen Harga Real Aset</h1>
             <p class="text-muted mb-4">
-              Kelola, tambah, edit, dan hapus data aset properti secara lengkap
+              Kelola harga real aset tanah dan bangunan setelah prediksi
             </p>
-
-            <!-- Status Data Saat Ini -->
-            <div class="row g-4 mb-4">
-              <div class="col-md-6">
-                <div class="card text-center shadow-sm border-0 h-100 bg-light">
-                  <div class="card-body">
-                    <i class="fas fa-database text-danger mb-2 display-6"></i>
-                    <h4>Data Saat Ini</h4>
+            
+            <!-- Harga Real Management -->
+             <div class="card-body">
                     <div class="row">
-                      <div class="col-6">
-                        <h3 class="text-success">
-                          {{ stats_tanah[0] if stats_tanah and stats_tanah[0]
-                          else 0 }}
-                        </h3>
-                        <small class="text-muted">Data Tanah</small>
+                      <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                          <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-map me-2"></i>Harga Real Tanah</h5>
+                          </div>
+                          <div class="card-body">
+                            <p class="text-muted">Tetapkan harga real untuk aset tanah setelah hasil prediksi</p>
+                            <a href="{{ url_for('harga_real.manajemen_harga_real_tanah') }}" class="btn btn-success">
+                              <i class="fas fa-edit me-2"></i>Kelola Harga Real Tanah
+                            </a>
+                          </div>
+                        </div>
                       </div>
-                      <div class="col-6">
-                        <h3 class="text-danger">
-                          {{ stats_bangunan[0] if stats_bangunan and
-                          stats_bangunan[0] else 0 }}
-                        </h3>
-                        <small class="text-muted">Data Bangunan</small>
+                      <div class="col-md-6">
+                        <div class="card border-danger mb-3">
+                          <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Harga Real Bangunan+Tanah</h5>
+                          </div>
+                          <div class="card-body">
+                            <p class="text-muted">Tetapkan harga real untuk aset bangunan setelah hasil prediksi</p>
+                            <a href="{{ url_for('harga_real.manajemen_harga_real_bangunan_tanah') }}" class="btn btn-danger">
+                              <i class="fas fa-edit me-2"></i>Kelola Harga Real Bangunan
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="card text-center shadow-sm border-0 h-100 bg-light">
-                  <div class="card-body">
-                    <i class="fas fa-cogs text-dark mb-2 display-6"></i>
-                    <h4>Operasi CRUD</h4>
-                    <p class="text-success"><strong>Sistem Aktif</strong></p>
-                    <p class="text-muted">Create, Read, Update, Delete</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- CRUD Operations -->
-            <div class="row g-4 mb-4">
-              <div class="col-md-6">
-                <div
-                  class="card text-center shadow-sm border-0 h-100 border-success"
-                >
-                  <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                      <i class="fas fa-plus-circle me-2"></i>CREATE - Tambah
-                      Data
-                    </h5>
-                  </div>
-                  <div class="card-body">
-                    <p class="text-muted">
-                      Tambahkan data prediksi baru dengan form validasi
-                    </p>
-                    <div class="d-grid gap-2">
-                      <a
-                        href="{{ url_for('main.tambah_tanah') }}"
-                        class="btn btn-success"
-                      >
-                        <i class="fas fa-map me-2"></i>Tambah Data Tanah
-                      </a>
-                      <a
-                        href="{{ url_for('main.tambah_bangunan') }}"
-                        class="btn btn-success"
-                      >
-                        <i class="fas fa-building me-2"></i>Tambah Data Bangunan
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div
-                  class="card text-center shadow-sm border-0 h-100 border-danger"
-                >
-                  <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">
-                      <i class="fas fa-eye me-2"></i>READ, UPDATE & DELETE
-                    </h5>
-                  </div>
-                  <div class="card-body">
-                    <p class="text-muted">
-                      Lihat, edit, dan hapus data dengan tabel interaktif
-                    </p>
-                    <div class="d-grid gap-2">
-                      <a
-                        href="{{ url_for('main.total_properti') }}"
-                        class="btn btn-danger"
-                      >
-                        <i class="fas fa-table me-2"></i>Lihat Semua Data
-                      </a>
-                      <a
-                        href="{{ url_for('main.manajemen_aset') }}"
-                        class="btn btn-outline-danger"
-                      >
-                        <i class="fas fa-list me-2"></i>Halaman Manajemen
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Quick Access -->
-            <div class="text-center">
-              <div class="alert alert-success border-2">
-                <i class="fas fa-check-circle me-2"></i>
-                <strong>Sistem CRUD Aktif!</strong> Anda dapat mengelola data
-                aset sesuai dengan struktur tabel database.
-              </div>
-              <a
-                href="{{ url_for('main.manajemen_aset') }}"
-                class="btn btn-lg btn-danger me-3"
-              >
-                <i class="fas fa-cogs me-2"></i>Halaman Manajemen Lengkap
-              </a>
-              <a
-                href="{{ url_for('main.total_properti') }}"
-                class="btn btn-lg btn-outline-danger"
-              >
-                <i class="fas fa-database me-2"></i>Lihat Semua Data
-              </a>
-            </div>
           </div>
         </section>
         <!-- Notifikasi -->
@@ -1342,7 +1321,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Custom Dashboard JS -->
     <script src="{{ url_for('static', filename='js/dashAdmin.js') }}"></script>
-    <!-- Visualization JS (Simplified version) -->
-    <script src="{{ url_for('static', filename='js/simple_visualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/visualization_handler.js') }}"></script>
   </body>
 </html>
