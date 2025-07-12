@@ -356,7 +356,26 @@ class TanahDataProcessor:
     def __init__(self, csv_path: str = None):
         """Initialize the processor with land CSV data"""
         if csv_path is None:
-            csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'dataset_tanah_njop_surabaya_sertifikat.csv')
+            # Try multiple possible dataset files for land data
+            possible_files = [
+                'Dataset_Tanah_Surabaya.csv',
+                'Dataset_Tanah_Surabaya_Final_Revisi_.csv',
+                'dataset_tanah_njop_surabaya_sertifikat.csv'
+            ]
+            
+            base_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
+            csv_path = None
+            
+            for filename in possible_files:
+                full_path = os.path.join(base_path, filename)
+                if os.path.exists(full_path):
+                    csv_path = full_path
+                    print(f"✅ Using land dataset: {filename}")
+                    break
+            
+            if csv_path is None:
+                csv_path = os.path.join(base_path, 'Dataset_Tanah_Surabaya.csv')
+                print(f"⚠️ No land dataset file found, defaulting to {csv_path}")
         
         self.csv_path = csv_path
         self.df = None

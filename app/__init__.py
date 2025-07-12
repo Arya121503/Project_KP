@@ -25,9 +25,9 @@ def create_app():
 
     # Register blueprints
     from .routes import main
-    from .routes_harga_real import harga_real
+    from .routes_user_features import user_features
     app.register_blueprint(main)
-    app.register_blueprint(harga_real)
+    app.register_blueprint(user_features)
 
     # Initialize DB tables
     with app.app_context():

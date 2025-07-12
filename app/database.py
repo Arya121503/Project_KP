@@ -37,31 +37,31 @@ def init_mysql_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
         
-        # Create harga_tanah_real table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS harga_tanah_real (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                prediksi_id INT NOT NULL,
-                harga_real DECIMAL(20,2) NOT NULL,
-                catatan TEXT,
-                updated_by VARCHAR(100) NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_prediksi_id (prediksi_id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        """)
+        # Harga tanah real table removed - feature no longer used
+        # cur.execute("""
+        #     CREATE TABLE IF NOT EXISTS harga_tanah_real (
+        #         id INT AUTO_INCREMENT PRIMARY KEY,
+        #         prediksi_id INT NOT NULL,
+        #         harga_real DECIMAL(20,2) NOT NULL,
+        #         catatan TEXT,
+        #         updated_by VARCHAR(100) NOT NULL,
+        #         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        #         INDEX idx_prediksi_id (prediksi_id)
+        #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        # """)
         
-        # Create harga_bangunan_tanah_real table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS harga_bangunan_tanah_real (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                prediksi_id INT NOT NULL,
-                harga_real DECIMAL(20,2) NOT NULL,
-                catatan TEXT,
-                updated_by VARCHAR(100) NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_prediksi_id (prediksi_id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        """)
+        # Harga bangunan tanah real table removed - feature no longer used
+        # cur.execute("""
+        #     CREATE TABLE IF NOT EXISTS harga_bangunan_tanah_real (
+        #         id INT AUTO_INCREMENT PRIMARY KEY,
+        #         prediksi_id INT NOT NULL,
+        #         harga_real DECIMAL(20,2) NOT NULL,
+        #         catatan TEXT,
+        #         updated_by VARCHAR(100) NOT NULL,
+        #         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        #         INDEX idx_prediksi_id (prediksi_id)
+        #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        # """)
 
         # Create default admin if none exists
         cur.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')

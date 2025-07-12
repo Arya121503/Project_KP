@@ -611,38 +611,21 @@
           </div>
         </div>
         
-        <!-- Tabel Histori -->
+        <!-- Histori List -->
         <div class="card shadow-sm border-0">
           <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-list me-2"></i>Daftar Histori Sewa
             </h5>
           </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>No</th>
-                    <th>Aset</th>
-                    <th>Jenis</th>
-                    <th>Periode Sewa</th>
-                    <th>Harga/Bulan</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="historiSewaTableBody">
-                  <tr>
-                    <td colspan="7" class="text-center py-4">
-                      <div class="spinner-border text-danger" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                      </div>
-                      <p class="mt-2 mb-0 text-muted">Memuat data histori sewa...</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="card-body">
+            <div id="historiContainer" class="row g-3">
+              <div class="col-12 text-center">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Memuat histori sewa...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -970,9 +953,7 @@
                 <div class="h6 text-danger mb-2">
                   Rp ${formatCurrency(aset.harga_sewa || 0)}/bulan
                 </div>
-                <small class="text-muted d-block mb-3">
-                  <span class="badge bg-info text-white">Harga Real: Rp ${formatCurrency(aset.harga_real || 0)}</span>
-                </small>
+                <small class="text-muted d-block mb-3"></small>
                 <div class="btn-group btn-group-sm w-100">
                   <button class="btn btn-outline-info" onclick="showAsetDetail(${aset.id}, '${aset.jenis}')">
                     <i class="fas fa-eye me-1"></i>Detail
@@ -2080,48 +2061,6 @@
     }
   }
 
-  // Clear all favorites
-  async function clearAllFavorites() {
-    if (!confirm('Hapus semua aset dari favorit?')) return;
-    
-    try {
-      const response = await fetch('/api/favorit-aset/clear', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('Pengajuan sewa berhasil dikirim!\n\n' + result.message);
-        document.getElementById('rentalModal').querySelector('.btn-close').click();
-      } else {
-        alert('Gagal mengirim pengajuan: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error submitting rental:', error);
-      alert('Terjadi kesalahan saat mengirim pengajuan');
-    }
-  }
-
-  function formatCurrency(number) {
-    return new Intl.NumberFormat('id-ID').format(number);
-  }
-
-  function showError(message) {
-    const container = document.getElementById('asetContainer');
-    container.innerHTML = `
-      <div class="col-12">
-        <div class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          ${message}
-        </div>
-      </div>
-    `;
-  }
-
   // ===== HISTORI SEWA FUNCTIONS =====
 
   async function loadHistoriData() {
@@ -2529,135 +2468,15 @@
     }, 1000);
   });
 
-  // ===== FAVORIT FUNCTIONS =====
+  // ===== FAVORITE FUNCTIONALITY =====
 
-  async function loadFavoritData() {
-    try {
-      const filterJenis = document.getElementById('filterJenisFavorit').value;
-      const filterKecamatan = document.getElementById('filterKecamatanFavorit').value;
-      
-      const params = new URLSearchParams();
-      if (filterJenis) params.append('jenis', filterJenis);
-      if (filterKecamatan) params.append('kecamatan', filterKecamatan);
-      
-      const response = await fetch(`/api/favorit-aset?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        displayFavoritData(data.data);
-        updateFavoritBadge(data.total || 0);
-      } else {
-        showFavoritError('Gagal memuat favorit');
-      }
-    } catch (error) {
-      console.error('Error loading favorit:', error);
-      showFavoritError('Terjadi kesalahan saat memuat favorit');
-    }
-  }
-
-  function displayFavoritData(favoritList) {
-    const container = document.getElementById('favoritContainer');
-    const countElement = document.getElementById('favoritCount');
-    
-    countElement.textContent = favoritList.length;
-    
-    if (favoritList.length === 0) {
-      container.innerHTML = `
-        <div class="col-12 text-center py-5">
-          <i class="fas fa-heart-broken text-muted mb-3" style="font-size: 3rem;"></i>
-          <h5 class="text-muted">Belum ada aset favorit</h5>
-          <p class="text-muted">Klik icon ❤️ pada aset yang Anda sukai untuk menambahkannya ke favorit</p>
-          <a href="#" class="btn btn-outline-danger menu-link" data-target="dashboard-home">
-            <i class="fas fa-search me-2"></i>Jelajahi Aset
-          </a>
-        </div>
-      `;
-      return;
-    }
-    
-    let html = '';
-    favoritList.forEach(favorit => {
-      html += `
-        <div class="col-md-6 col-lg-4">
-          <div class="card favorite-item h-100 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="badge bg-${favorit.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
-                  ${favorit.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
-                </span>
-                <div class="d-flex gap-2">
-                  <span class="badge bg-warning text-dark rounded-pill">
-                    ${favorit.status || 'Tersedia'}
-                  </span>
-                  <i class="fas fa-heart favorite-heart favorited" 
-                     onclick="removeFavorite(${favorit.aset_id}, this)" 
-                     title="Hapus dari Favorit"
-                     data-aset-id="${favorit.aset_id}"></i>
-                </div>
-              </div>
-              
-              <h6 class="card-title text-truncate">${favorit.alamat || 'Alamat tidak tersedia'}</h6>
-              
-              <div class="mb-2">
-                <small class="text-muted">
-                  <i class="fas fa-map-marker-alt me-1"></i>
-                  ${favorit.kecamatan || 'Kecamatan tidak tersedia'}
-                </small>
-              </div>
-              
-              <div class="row text-center mb-3">
-                <div class="col-6">
-                  <small class="text-muted d-block">Luas Tanah</small>
-                  <strong>${favorit.luas_tanah || 0} m²</strong>
-                </div>
-                ${favorit.jenis === 'tanah_bangunan' ? `
-                <div class="col-6">
-                  <small class="text-muted d-block">Luas Bangunan</small>
-                  <strong>${favorit.luas_bangunan || 0} m²</strong>
-                </div>` : '<div class="col-6"></div>'}
-              </div>
-              
-              ${favorit.catatan ? `
-              <div class="mb-3">
-                <small class="text-muted d-block">Catatan:</small>
-                <p class="small text-secondary mb-0">${favorit.catatan}</p>
-              </div>` : ''}
-              
-              <div class="text-center">
-                <div class="h6 text-danger mb-2">
-                  Rp ${formatCurrency(favorit.harga_sewa || 0)}/bulan
-                </div>
-                <div class="btn-group btn-group-sm w-100">
-                  <button class="btn btn-outline-danger" onclick="showAsetDetail(${favorit.aset_id})">
-                    <i class="fas fa-eye me-1"></i>Detail
-                  </button>
-                  <button class="btn btn-outline-secondary" onclick="editFavoriteNote(${favorit.id}, '${favorit.catatan || ''}')">
-                    <i class="fas fa-edit me-1"></i>Edit
-                  </button>
-                </div>
-              </div>
-              
-              <div class="mt-2">
-                <small class="text-muted">
-                  <i class="fas fa-calendar me-1"></i>
-                  Ditambahkan ${getTimeAgo(favorit.created_at)}
-                </small>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  }
-
+  // Toggle favorite status for an asset
   async function toggleFavorite(asetId, element) {
     try {
       const isFavorited = element.classList.contains('favorited');
       const action = isFavorited ? 'remove' : 'add';
       
-      const response = await fetch('/api/favorit-toggle', {
+      const response = await fetch('/api/favorit-aset/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -2680,86 +2499,97 @@
           element.title = 'Tambah ke Favorit';
           showFavoritSuccess('Aset dihapus dari favorit');
         }
-        loadFavoritCount(); // Update badge
+        updateFavoritBadge(data.total || 0);
+        document.getElementById('totalFavorit').textContent = data.total || 0;
       } else {
-        showFavoritError(data.error || 'Gagal mengubah status favorit');
+        showError(data.message || 'Gagal mengubah status favorit');
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      showFavoritError('Terjadi kesalahan');
+      showError('Terjadi kesalahan saat memperbarui favorit');
     }
   }
 
-  async function removeFavorite(asetId, element) {
-    if (!confirm('Hapus aset ini dari favorit?')) return;
+  // Update the favorite count badge
+  function updateFavoritBadge(count) {
+    const badge = document.getElementById('favoriteBadge');
+    const totalFavorit = document.getElementById('totalFavorit');
+    
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    
+    if (totalFavorit) {
+      totalFavorit.textContent = count;
+    }
+  }
+
+  // Load favorite status for current assets
+  async function loadFavoriteStatus() {
+    try {
+      // Get all favorite hearts on the page
+      const favoriteHearts = document.querySelectorAll('.favorite-heart');
+      if (favoriteHearts.length === 0) return;
+      
+      // Get asset IDs
+      const assetIds = Array.from(favoriteHearts).map(el => el.dataset.asetId);
+      if (assetIds.length === 0) return;
+      
+      // Check favorite status for each asset
+      for (const asetId of assetIds) {
+        const response = await fetch(`/api/favorit-aset/check?aset_id=${asetId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Find all hearts with this asset ID
+          const hearts = document.querySelectorAll(`.favorite-heart[data-aset-id="${asetId}"]`);
+          hearts.forEach(heart => {
+            if (data.is_favorite) {
+              heart.classList.add('favorited');
+              heart.title = 'Hapus dari Favorit';
+            } else {
+              heart.classList.remove('favorited');
+              heart.title = 'Tambah ke Favorit';
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading favorite status:', error);
+    }
+  }
+
+  // Load favorite count for the badge
+  async function loadFavoritCount() {
+    try {
+      const response = await fetch('/api/favorit-aset?per_page=1');
+      const data = await response.json();
+      
+      if (data.success) {
+        updateFavoritBadge(data.total || 0);
+      }
+    } catch (error) {
+      console.error('Error loading favorite count:', error);
+    }
+  }
+
+  // Clear all favorites
+  async function clearAllFavorites() {
+    if (!confirm('Hapus semua aset dari favorit?')) return;
     
     try {
-      const response = await fetch('/api/favorit-toggle', {
+      const response = await fetch('/api/favorit-aset/clear', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          aset_id: asetId,
-          action: 'remove'
-        })
+        }
       });
       
       const data = await response.json();
       
       if (data.success) {
-        showFavoritSuccess('Aset dihapus dari favorit');
-        loadFavoritData(); // Reload favorit list
-      } else {
-        showFavoritError(data.error || 'Gagal menghapus favorit');
-      }
-    } catch (error) {
-      console.error('Error removing favorite:', error);
-      showFavoritError('Terjadi kesalahan');
-    }
-  }
-
-  async function editFavoriteNote(favoritId, currentNote) {
-    const newNote = prompt('Edit catatan untuk aset favorit ini:', currentNote);
-    if (newNote === null) return; // User canceled
-    
-    try {
-      const response = await fetch(`/api/favorit-note/${favoritId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          catatan: newNote
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showFavoritSuccess('Catatan berhasil diperbarui');
-        loadFavoritData(); // Reload favorit list
-      } else {
-        showFavoritError(data.error || 'Gagal memperbarui catatan');
-      }
-    } catch (error) {
-      console.error('Error updating note:', error);
-      showFavoritError('Terjadi kesalahan');
-    }
-  }
-
-  async function clearAllFavorites() {
-    if (!confirm('Hapus semua aset favorit? Tindakan ini tidak dapat dibatalkan.')) return;
-    
-    try {
-      const response = await fetch('/api/favorit-clear-all', {
-        method: 'DELETE'
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showFavoritSuccess('Semua favorit telah dihapus');
+        showFavoritSuccess('Semua favorit berhasil dihapus');
         loadFavoritData();
         updateFavoritBadge(0);
       } else {
@@ -2767,70 +2597,7 @@
       }
     } catch (error) {
       console.error('Error clearing favorites:', error);
-      showFavoritError('Terjadi kesalahan');
-    }
-  }
-
-  async function loadFavoriteStatus() {
-    // Load favorite status for aset displayed in main dashboard
-    try {
-      const response = await fetch('/api/favorit-status');
-      const data = await response.json();
-      
-      if (data.success) {
-        const favoritedIds = data.favorited_ids || [];
-        
-        // Update heart icons
-        document.querySelectorAll('.favorite-heart').forEach(heart => {
-          const asetId = parseInt(heart.getAttribute('data-aset-id'));
-          if (favoritedIds.includes(asetId)) {
-            heart.classList.add('favorited');
-            heart.title = 'Hapus dari Favorit';
-          } else {
-            heart.classList.remove('favorited');
-            heart.title = 'Tambah ke Favorit';
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error loading favorite status:', error);
-    }
-  }
-
-  async function loadFavoritCount() {
-    try {
-      const response = await fetch('/api/favorit-count');
-      const data = await response.json();
-      
-      if (data.success) {
-        updateFavoritBadge(data.count || 0);
-      }
-    } catch (error) {
-      console.error('Error loading favorit count:', error);
-    }
-  }
-
-  function updateFavoritBadge(count) {
-    const badge = document.getElementById('favoriteBadge');
-    if (count > 0) {
-      badge.textContent = count > 99 ? '99+' : count;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  function showFavoritError(message) {
-    const container = document.getElementById('favoritContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            ${message}
-          </div>
-        </div>
-      `;
+      showError('Terjadi kesalahan saat menghapus favorit');
     }
   }
 
@@ -2840,6 +2607,510 @@
     toast.className = 'alert alert-success position-fixed';
     toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
     toast.innerHTML = `<i class="fas fa-heart me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // ===========================================
+  // FAVORIT ASET FUNCTIONS
+  // ===========================================
+
+  async function loadFavoritData() {
+    try {
+      const response = await fetch('/api/favorit/list');
+      const data = await response.json();
+      
+      if (data.success) {
+        displayFavoritData(data.data);
+        updateFavoritBadge(data.data.length);
+      } else {
+        showError('Gagal memuat data favorit: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error loading favorit data:', error);
+      showError('Terjadi kesalahan saat memuat data favorit');
+    }
+  }
+
+  function displayFavoritData(favoritList) {
+    const container = document.getElementById('favoritContainer');
+    
+    if (favoritList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-heart text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada aset favorit</h5>
+          <p class="text-muted">Mulai menambahkan aset ke favorit untuk memudahkan akses nanti.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    favoritList.forEach(favorit => {
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${favorit.jenis === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${favorit.jenis === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFromFavorit(${favorit.aset_id})">
+                  <i class="fas fa-heart-broken"></i>
+                </button>
+              </div>
+              
+              <h6 class="card-title text-truncate">${favorit.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${favorit.kecamatan || 'Kecamatan tidak tersedia'}${favorit.kelurahan ? ', ' + favorit.kelurahan : ''}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${favorit.luas_tanah || 0} m²</strong>
+                </div>
+                ${favorit.jenis === 'tanah_bangunan' && favorit.luas_bangunan ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${favorit.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              ${favorit.catatan ? `
+              <div class="mb-2">
+                <small class="text-muted d-block">Catatan Personal:</small>
+                <p class="small text-secondary mb-0" style="font-style: italic;">${favorit.catatan}</p>
+              </div>` : ''}
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(favorit.harga_sewa || 0)}/bulan
+                </div>
+                <small class="text-muted d-block mb-3">
+                  Ditambahkan: ${formatDate(favorit.created_at)}
+                </small>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-info" onclick="showAsetDetail(${favorit.aset_id}, '${favorit.jenis}')">
+                    <i class="fas fa-eye me-1"></i>Detail
+                  </button>
+                  <button class="btn btn-danger" onclick="showRentalForm(${favorit.aset_id}, '${favorit.jenis}')">
+                    <i class="fas fa-handshake me-1"></i>Sewa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async function addToFavorit(asetId, catatan = '') {
+    try {
+      const response = await fetch('/api/favorit/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId,
+          catatan: catatan
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Aset berhasil ditambahkan ke favorit');
+        loadFavoriteStatus();
+        updateFavoritBadge();
+      } else {
+        showError(data.message || 'Gagal menambahkan ke favorit');
+      }
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      showError('Terjadi kesalahan saat menambahkan ke favorit');
+    }
+  }
+
+  async function removeFromFavorit(asetId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus aset ini dari favorit?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/favorit/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          aset_id: asetId
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Aset berhasil dihapus dari favorit');
+        loadFavoritData();
+        loadFavoriteStatus();
+      } else {
+        showError(data.message || 'Gagal menghapus dari favorit');
+      }
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+      showError('Terjadi kesalahan saat menghapus dari favorit');
+    }
+  }
+
+  async function clearAllFavorites() {
+    if (!confirm('Apakah Anda yakin ingin menghapus SEMUA aset dari favorit? Tindakan ini tidak dapat dibatalkan.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/favorit/clear', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showFavoritSuccess('Semua favorit berhasil dihapus');
+        loadFavoritData();
+        updateFavoritBadge(0);
+      } else {
+        showError(data.message || 'Gagal menghapus favorit');
+      }
+    } catch (error) {
+      console.error('Error clearing favorites:', error);
+      showError('Terjadi kesalahan saat menghapus favorit');
+    }
+  }
+
+  // ===========================================
+  // NOTIFIKASI FUNCTIONS
+  // ===========================================
+
+  async function loadNotifikasiData() {
+    try {
+      const response = await fetch('/api/notifikasi/list');
+      const data = await response.json();
+      
+      if (data.success) {
+        displayNotifikasiData(data.data);
+        updateNotifikasiBadge(data.data.filter(n => !n.is_read).length);
+      } else {
+        showError('Gagal memuat notifikasi: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error loading notifikasi data:', error);
+      showError('Terjadi kesalahan saat memuat notifikasi');
+    }
+  }
+
+  function displayNotifikasiData(notifikasiList) {
+    const container = document.getElementById('notifikasiContainer');
+    
+    if (notifikasiList.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="fas fa-bell text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada notifikasi</h5>
+          <p class="text-muted">Notifikasi akan muncul di sini ketika ada pembaruan.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    notifikasiList.forEach(notif => {
+      const jenisIcon = {
+        'kontrak': 'fas fa-file-contract',
+        'pembayaran': 'fas fa-money-bill-wave',
+        'sistem': 'fas fa-cog',
+        'promo': 'fas fa-tags'
+      };
+      
+      const jenisBadge = {
+        'kontrak': 'bg-primary',
+        'pembayaran': 'bg-success',
+        'sistem': 'bg-info',
+        'promo': 'bg-warning'
+      };
+      
+      html += `
+        <div class="list-group-item ${notif.is_read ? '' : 'list-group-item-light'} border-0 border-bottom">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-start">
+              <div class="me-3">
+                <i class="${jenisIcon[notif.jenis] || 'fas fa-bell'} text-muted"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <h6 class="mb-0 ${notif.is_read ? 'text-muted' : 'text-dark'}">${notif.judul}</h6>
+                  <small class="text-muted">${formatDate(notif.created_at)}</small>
+                </div>
+                <p class="mb-1 ${notif.is_read ? 'text-muted' : 'text-secondary'}">${notif.pesan}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="badge ${jenisBadge[notif.jenis] || 'bg-secondary'} rounded-pill">${notif.jenis}</span>
+                  <div class="btn-group btn-group-sm">
+                    ${!notif.is_read ? `
+                    <button class="btn btn-outline-primary btn-sm" onclick="markAsRead(${notif.id})">
+                      <i class="fas fa-check"></i> Tandai Dibaca
+                    </button>` : ''}
+                    ${notif.action_url ? `
+                    <button class="btn btn-outline-info btn-sm" onclick="window.location.href='${notif.action_url}'">
+                      <i class="fas fa-external-link-alt"></i> Lihat
+                    </button>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async function markAsRead(notificationId) {
+    try {
+      const response = await fetch('/api/notifikasi/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          notification_id: notificationId
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        updateNotifikasiBadge();
+      } else {
+        showError(data.message || 'Gagal menandai sebagai telah dibaca');
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+      showError('Terjadi kesalahan saat menandai sebagai telah dibaca');
+    }
+  }
+
+  async function markAllAsRead() {
+    try {
+      const response = await fetch('/api/notifikasi/mark-all-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        loadNotifikasiData();
+        updateNotifikasiBadge(0);
+        showSuccess('Semua notifikasi telah ditandai sebagai dibaca');
+      } else {
+        showError(data.message || 'Gagal menandai semua sebagai telah dibaca');
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      showError('Terjadi kesalahan saat menandai semua sebagai telah dibaca');
+    }
+  }
+
+  // ===========================================
+  // HISTORI SEWA FUNCTIONS
+  // ===========================================
+
+  async function loadHistoriData() {
+    try {
+      const response = await fetch('/api/histori/list');
+      const data = await response.json();
+      
+      if (data.success) {
+        displayHistoriData(data.data);
+      } else {
+        showError('Gagal memuat histori sewa: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error loading histori data:', error);
+      showError('Terjadi kesalahan saat memuat histori sewa');
+    }
+  }
+
+  function displayHistoriData(historiList) {
+    const container = document.getElementById('historiContainer');
+    
+    if (historiList.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-5">
+          <i class="fas fa-history text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Belum ada histori sewa</h5>
+          <p class="text-muted">Histori sewa akan muncul di sini setelah Anda menyewa aset.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    historiList.forEach(histori => {
+      const statusBadge = {
+        'aktif': 'bg-success',
+        'berakhir': 'bg-secondary',
+        'dibatalkan': 'bg-danger'
+      };
+      
+      html += `
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-${histori.jenis_aset === 'tanah' ? 'success' : 'primary'} rounded-pill">
+                  ${histori.jenis_aset === 'tanah' ? 'Tanah' : 'Tanah + Bangunan'}
+                </span>
+                <span class="badge ${statusBadge[histori.status_sewa] || 'bg-secondary'} rounded-pill">
+                  ${histori.status_sewa}
+                </span>
+              </div>
+              
+              <h6 class="card-title text-truncate">${histori.alamat || 'Alamat tidak tersedia'}</h6>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  ${histori.kecamatan || 'Kecamatan tidak tersedia'}${histori.kelurahan ? ', ' + histori.kelurahan : ''}
+                </small>
+              </div>
+              
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Tanah</small>
+                  <strong>${histori.luas_tanah || 0} m²</strong>
+                </div>
+                ${histori.jenis_aset === 'tanah_bangunan' && histori.luas_bangunan ? `
+                <div class="col-6">
+                  <small class="text-muted d-block">Luas Bangunan</small>
+                  <strong>${histori.luas_bangunan || 0} m²</strong>
+                </div>` : '<div class="col-6"></div>'}
+              </div>
+              
+              <div class="mb-2">
+                <small class="text-muted d-block">Periode Sewa:</small>
+                <p class="small text-secondary mb-0">
+                  ${formatDate(histori.tanggal_mulai)} - ${formatDate(histori.tanggal_berakhir)}
+                </p>
+              </div>
+              
+              <div class="text-center">
+                <div class="h6 text-danger mb-2">
+                  Rp ${formatCurrency(histori.harga_sewa || 0)}/bulan
+                </div>
+                <small class="text-muted d-block mb-3">
+                  Disewa: ${formatDate(histori.created_at)}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  // ===========================================
+  // HELPER FUNCTIONS
+  // ===========================================
+
+  function updateFavoritBadge(count = null) {
+    const badge = document.getElementById('favoritCount');
+    if (badge) {
+      if (count !== null) {
+        badge.textContent = count;
+      } else {
+        // Fetch current count
+        fetch('/api/favorit/count')
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              badge.textContent = data.count;
+            }
+          });
+      }
+    }
+  }
+
+  function updateNotifikasiBadge(count = null) {
+    const badge = document.getElementById('notifCount');
+    if (badge) {
+      if (count !== null) {
+        badge.textContent = count;
+      } else {
+        // Fetch current unread count
+        fetch('/api/notifikasi/unread-count')
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              badge.textContent = data.count;
+            }
+          });
+      }
+    }
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('id-ID').format(amount);
+  }
+
+  function showSuccess(message) {
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-check me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  function showError(message) {
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    toast.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
     document.body.appendChild(toast);
     
     setTimeout(() => {

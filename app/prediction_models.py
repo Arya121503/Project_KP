@@ -148,12 +148,11 @@ class PrediksiPropertiTanah:
             cur.execute("""
                 SELECT p.id, p.kecamatan, p.kelurahan, p.luas_tanah_m2, p.njop_tanah_per_m2, 
                        p.zona_nilai_tanah, p.kelas_tanah, p.jenis_sertifikat, 
-                       COALESCE(r.harga_real, p.harga_prediksi_tanah) as harga_display, 
+                       p.harga_prediksi_tanah as harga_display, 
                        p.harga_prediksi_tanah, p.harga_per_m2_tanah, p.model_predictor, 
                        p.confidence_score, p.created_at,
-                       r.harga_real IS NOT NULL as has_real_price
+                       FALSE as has_real_price
                 FROM prediksi_properti_tanah p
-                LEFT JOIN harga_tanah_real r ON p.id = r.prediksi_id
                 ORDER BY p.created_at DESC 
                 LIMIT %s OFFSET %s
             """, (limit, offset))
@@ -415,12 +414,11 @@ class PrediksiPropertiBangunanTanah:
                        p.jumlah_kamar_mandi, p.jumlah_lantai, p.tahun_dibangun, p.daya_listrik,
                        p.sertifikat, p.kondisi_properti, p.tingkat_keamanan, p.aksesibilitas,
                        p.tipe_iklan, p.njop_per_m2, p.rasio_bangunan_tanah, p.umur_bangunan,
-                       COALESCE(r.harga_real, p.harga_prediksi_total) as harga_display,
+                       p.harga_prediksi_total as harga_display,
                        p.harga_prediksi_total, p.harga_prediksi_tanah, p.harga_prediksi_bangunan,
                        p.harga_per_m2_bangunan, p.model_predictor, p.confidence_score, p.created_at,
-                       r.harga_real IS NOT NULL as has_real_price
+                       FALSE as has_real_price
                 FROM prediksi_properti_bangunan_tanah p
-                LEFT JOIN harga_bangunan_tanah_real r ON p.id = r.prediksi_id
                 ORDER BY p.created_at DESC 
                 LIMIT %s OFFSET %s
             """, (limit, offset))

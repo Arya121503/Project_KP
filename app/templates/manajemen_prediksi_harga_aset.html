@@ -1,0 +1,677 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!-- Custom Telkom Color Scheme -->
+<style>
+    :root {
+        --telkom-red: #DC143C;
+        --telkom-dark-red: #8B0000;
+        --telkom-gray: #6c757d;
+        --telkom-light-gray: #f8f9fa;
+        --telkom-dark-gray: #343a40;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+        border-bottom: 2px solid var(--telkom-red);
+        background: var(--telkom-light-gray);
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--telkom-gray);
+        font-weight: 600;
+        padding: 15px 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--telkom-red);
+        background: rgba(220, 20, 60, 0.1);
+    }
+    
+    .nav-tabs .nav-link.active {
+        background: var(--telkom-red);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+    }
+    
+    /* Form Styling */
+    .form-group label {
+        font-weight: 600;
+        color: var(--telkom-dark-gray);
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--telkom-red);
+        box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+    }
+    
+    /* Button Styling */
+    .btn-primary {
+        background: var(--telkom-red);
+        border-color: var(--telkom-red);
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: var(--telkom-dark-red);
+        border-color: var(--telkom-dark-red);
+        transform: translateY(-1px);
+    }
+    
+    .btn-success, .btn-info, .btn-warning {
+        font-weight: 600;
+        padding: 8px 20px;
+        border-radius: 6px;
+    }
+    
+    /* Card Styling */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--telkom-red), var(--telkom-dark-red));
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 20px;
+        border: none;
+    }
+    
+    .card-body {
+        padding: 25px;
+    }
+    
+    /* Table Styling */
+    .table th {
+        background: var(--telkom-red);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 15px;
+    }
+    
+    .table td {
+        padding: 12px 15px;
+        border-color: #f8f9fa;
+        vertical-align: middle;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(220, 20, 60, 0.05);
+    }
+    
+    /* Statistics Cards */
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        border-left: 4px solid var(--telkom-red);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--telkom-red);
+    }
+    
+    .stat-label {
+        color: var(--telkom-gray);
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    /* Prediction Results */
+    .prediction-results {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .prediction-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--telkom-red);
+    }
+    
+    .prediction-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--telkom-red);
+    }
+    
+    .prediction-confidence {
+        font-size: 0.9rem;
+        color: var(--telkom-gray);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        opacity: 0.5;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state p {
+        line-height: 1.6;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .nav-tabs .nav-link {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Back Button -->
+<a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary mb-3">
+    <i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard
+</a>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Manajemen Prediksi Harga Aset - UPDATED
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Rental Prediction Content -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-calendar-alt me-2"></i>
+                                                Prediksi Harga Sewa Bulanan
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Property Type Selection -->
+                                            <div class="row mb-4">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Jenis Properti</label>
+                                                    <select class="form-select" id="rentalPropertyType">
+                                                        <option value="bangunan">Tanah + Bangunan</option>
+                                                        <option value="tanah">Tanah Saja</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Rental Prediction Form -->
+                                            <form id="rentalPredictionForm">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kecamatan</label>
+                                                            <select class="form-select" id="rentalKecamatan" required>
+                                                                <option value="">Pilih Kecamatan</option>
+                                                                <option value="Asemrowo">Asemrowo</option>
+                                                                <option value="Benowo">Benowo</option>
+                                                                <option value="Bubutan">Bubutan</option>
+                                                                <option value="Bulak">Bulak</option>
+                                                                <option value="Dukuh Pakis">Dukuh Pakis</option>
+                                                                <option value="Gayungan">Gayungan</option>
+                                                                <option value="Genteng">Genteng</option>
+                                                                <option value="Gubeng">Gubeng</option>
+                                                                <option value="Gunung Anyar">Gunung Anyar</option>
+                                                                <option value="Jambangan">Jambangan</option>
+                                                                <option value="Karang Pilang">Karang Pilang</option>
+                                                                <option value="Kenjeran">Kenjeran</option>
+                                                                <option value="Krembangan">Krembangan</option>
+                                                                <option value="Lakarsantri">Lakarsantri</option>
+                                                                <option value="Mulyorejo">Mulyorejo</option>
+                                                                <option value="Pabean Cantian">Pabean Cantian</option>
+                                                                <option value="Pakal">Pakal</option>
+                                                                <option value="Rungkut">Rungkut</option>
+                                                                <option value="Sambikerep">Sambikerep</option>
+                                                                <option value="Sawahan">Sawahan</option>
+                                                                <option value="Semampir">Semampir</option>
+                                                                <option value="Simokerto">Simokerto</option>
+                                                                <option value="Sukolilo">Sukolilo</option>
+                                                                <option value="Sukomanunggal">Sukomanunggal</option>
+                                                                <option value="Tambaksari">Tambaksari</option>
+                                                                <option value="Tandes">Tandes</option>
+                                                                <option value="Tegalsari">Tegalsari</option>
+                                                                <option value="Tenggilis Mejoyo">Tenggilis Mejoyo</option>
+                                                                <option value="Wiyung">Wiyung</option>
+                                                                <option value="Wonocolo">Wonocolo</option>
+                                                                <option value="Wonokromo">Wonokromo</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kelurahan</label>
+                                                            <input type="text" class="form-control" id="rentalKelurahan" placeholder="Masukkan nama kelurahan">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Luas Tanah (m²)</label>
+                                                            <input type="number" class="form-control" id="rentalLuasTanah" min="1" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6" id="rentalLuasBangunanGroup">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Luas Bangunan (m²)</label>
+                                                            <input type="number" class="form-control" id="rentalLuasBangunan" min="1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row" id="rentalBangunanFields">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kamar Tidur</label>
+                                                            <input type="number" class="form-control" id="rentalKamarTidur" min="1" max="10">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kamar Mandi</label>
+                                                            <input type="number" class="form-control" id="rentalKamarMandi" min="1" max="10">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Jumlah Lantai</label>
+                                                            <input type="number" class="form-control" id="rentalJumlahLantai" min="1" max="5">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">NJOP per m² (Rp)</label>
+                                                            <input type="number" class="form-control" id="rentalNJOP" min="1" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6" id="rentalDayaListrikGroup">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Daya Listrik (Watt)</label>
+                                                            <select class="form-select" id="rentalDayaListrik">
+                                                                <option value="900">900</option>
+                                                                <option value="1300">1300</option>
+                                                                <option value="2200">2200</option>
+                                                                <option value="3500">3500</option>
+                                                                <option value="5500">5500</option>
+                                                                <option value="7700">7700</option>
+                                                                <option value="10600">10600</option>
+                                                                <option value="16500">16500</option>
+                                                                <option value="23000">23000</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Sertifikat</label>
+                                                            <select class="form-select" id="rentalSertifikat">
+                                                                <option value="SHM - Sertifikat Hak Milik">SHM - Sertifikat Hak Milik</option>
+                                                                <option value="HGB - Hak Guna Bangunan">HGB - Hak Guna Bangunan</option>
+                                                                <option value="Lainnya (PPJB,Girik,Adat,dll)">Lainnya (PPJB,Girik,Adat,dll)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kondisi Properti</label>
+                                                            <select class="form-select" id="rentalKondisiProperti">
+                                                                <option value="Bagus">Bagus</option>
+                                                                <option value="Baru">Baru</option>
+                                                                <option value="Sudah Renovasi">Sudah Renovasi</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Tingkat Keamanan</label>
+                                                            <select class="form-select" id="rentalTingkatKeamanan">
+                                                                <option value="Tinggi">Tinggi</option>
+                                                                <option value="Rendah">Rendah</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Aksesibilitas</label>
+                                                            <select class="form-select" id="rentalAksesibilitas">
+                                                                <option value="Baik">Baik</option>
+                                                                <option value="Buruk">Buruk</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <button type="submit" class="btn btn-primary btn-lg">
+                                                            <i class="fas fa-calculator me-2"></i>
+                                                            Prediksi Harga Sewa Bulanan
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Rental Prediction Results -->
+                            <div class="row" id="rentalPredictionResults" style="display: none;">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                Hasil Prediksi Harga Sewa
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <div class="card text-center">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">Random Forest</h6>
+                                                            <h4 class="text-success" id="rentalRfResult">-</h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card text-center">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">XGBoost</h6>
+                                                            <h4 class="text-info" id="rentalXgbResult">-</h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card text-center">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">CatBoost</h6>
+                                                            <h4 class="text-warning" id="rentalCatResult">-</h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card text-center border-primary">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">Ensemble</h6>
+                                                            <h4 class="text-primary" id="rentalEnsembleResult">-</h4>
+                                                            <small class="text-muted">Confidence: <span id="rentalConfidence">-</span></small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mt-4">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-success btn-lg" id="saveRentalPrediction">
+                                                        <i class="fas fa-save me-2"></i>Simpan & Sewakan ke Pelanggan
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+</div>
+
+<script>
+let rentalPredictionData = null;
+
+// Handle property type change for rental prediction
+document.getElementById('rentalPropertyType').addEventListener('change', function() {
+    const propertyType = this.value;
+    const bangunanFields = document.getElementById('rentalBangunanFields');
+    const luasBangunanGroup = document.getElementById('rentalLuasBangunanGroup');
+    const dayaListrikGroup = document.getElementById('rentalDayaListrikGroup');
+    
+    if (propertyType === 'tanah') {
+        bangunanFields.style.display = 'none';
+        luasBangunanGroup.style.display = 'none';
+        dayaListrikGroup.style.display = 'none';
+        
+        // Clear building-related fields
+        document.getElementById('rentalLuasBangunan').value = '';
+        document.getElementById('rentalKamarTidur').value = '';
+        document.getElementById('rentalKamarMandi').value = '';
+        document.getElementById('rentalJumlahLantai').value = '';
+        document.getElementById('rentalDayaListrik').value = '900';
+    } else {
+        bangunanFields.style.display = 'block';
+        luasBangunanGroup.style.display = 'block';
+        dayaListrikGroup.style.display = 'block';
+    }
+});
+
+// Handle rental prediction form submission
+document.getElementById('rentalPredictionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const propertyType = document.getElementById('rentalPropertyType').value;
+    const formData = new FormData(this);
+    
+    // Prepare data for API
+    const predictionData = {
+        'Kecamatan': document.getElementById('rentalKecamatan').value,
+        'Kelurahan': document.getElementById('rentalKelurahan').value || '',
+        'Luas Tanah': parseFloat(document.getElementById('rentalLuasTanah').value),
+        'NJOP_per_m2': parseFloat(document.getElementById('rentalNJOP').value),
+        'Sertifikat': document.getElementById('rentalSertifikat').value,
+        'Kondisi Properti': document.getElementById('rentalKondisiProperti').value,
+        'Tingkat Keamanan': document.getElementById('rentalTingkatKeamanan').value,
+        'Aksesibilitas': document.getElementById('rentalAksesibilitas').value
+    };
+    
+    // Add building-specific fields if property type is building
+    if (propertyType === 'bangunan') {
+        predictionData['Luas Bangunan'] = parseFloat(document.getElementById('rentalLuasBangunan').value);
+        predictionData['Kamar Tidur'] = parseInt(document.getElementById('rentalKamarTidur').value);
+        predictionData['Kamar Mandi'] = parseInt(document.getElementById('rentalKamarMandi').value);
+        predictionData['Lantai'] = parseInt(document.getElementById('rentalJumlahLantai').value);
+        predictionData['Daya Listrik'] = parseInt(document.getElementById('rentalDayaListrik').value);
+    }
+    
+    // Choose appropriate API endpoint
+    const endpoint = propertyType === 'tanah' ? '/api/predict-tanah-all-models' : '/api/predict-bangunan-all-models';
+    
+    // Show loading
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses Prediksi...';
+    submitButton.disabled = true;
+    
+    // Make API call
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(predictionData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayRentalPredictionResults(data.prediction, predictionData);
+            rentalPredictionData = {
+                ...predictionData,
+                prediction: data.prediction,
+                propertyType: propertyType
+            };
+        } else {
+            alert('Gagal melakukan prediksi: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat melakukan prediksi');
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+});
+
+function displayRentalPredictionResults(result, formData) {
+    const resultsDiv = document.getElementById('rentalPredictionResults');
+    
+    // Update result values
+    document.getElementById('rentalRfResult').textContent = 'Rp ' + (result.random_forest?.toLocaleString('id-ID') || 'N/A');
+    document.getElementById('rentalXgbResult').textContent = 'Rp ' + (result.xgboost?.toLocaleString('id-ID') || 'N/A');
+    document.getElementById('rentalCatResult').textContent = 'Rp ' + (result.catboost?.toLocaleString('id-ID') || 'N/A');
+    
+    // Calculate ensemble (average)
+    const ensemble = (result.random_forest + result.xgboost + result.catboost) / 3;
+    document.getElementById('rentalEnsembleResult').textContent = 'Rp ' + ensemble.toLocaleString('id-ID');
+    
+    // Show confidence (placeholder)
+    document.getElementById('rentalConfidence').textContent = '85%';
+    
+    // Show results
+    resultsDiv.style.display = 'block';
+    
+    // Scroll to results
+    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Handle save rental prediction
+document.getElementById('saveRentalPrediction').addEventListener('click', function() {
+    if (!rentalPredictionData) {
+        alert('Silakan lakukan prediksi terlebih dahulu');
+        return;
+    }
+    
+    const saveData = {
+        kecamatan: rentalPredictionData.Kecamatan,
+        kelurahan: rentalPredictionData.Kelurahan,
+        alamat: rentalPredictionData.Kelurahan + ', ' + rentalPredictionData.Kecamatan,
+        luas_tanah_m2: rentalPredictionData['Luas Tanah'],
+        luas_bangunan_m2: rentalPredictionData['Luas Bangunan'] || 0,
+        kamar_tidur: rentalPredictionData['Kamar Tidur'] || 0,
+        kamar_mandi: rentalPredictionData['Kamar Mandi'] || 0,
+        lantai: rentalPredictionData['Lantai'] || 0,
+        daya_listrik: rentalPredictionData['Daya Listrik'] || 0,
+        njop_per_m2: rentalPredictionData['NJOP_per_m2'],
+        sertifikat: rentalPredictionData['Sertifikat'],
+        kondisi_properti: rentalPredictionData['Kondisi Properti'],
+        tingkat_keamanan: rentalPredictionData['Tingkat Keamanan'],
+        aksesibilitas: rentalPredictionData['Aksesibilitas'],
+        harga_prediksi: (rentalPredictionData.prediction.random_forest + 
+                        rentalPredictionData.prediction.xgboost + 
+                        rentalPredictionData.prediction.catboost) / 3,
+        harga_sewa: (rentalPredictionData.prediction.random_forest + 
+                    rentalPredictionData.prediction.xgboost + 
+                    rentalPredictionData.prediction.catboost) / 3,
+        model_used: 'Ensemble (RF+XGB+CAT)',
+        status: 'available'
+    };
+    
+    // Show loading
+    const saveButton = this;
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+    saveButton.disabled = true;
+    
+    // Make API call to save
+    const endpoint = rentalPredictionData.propertyType === 'tanah' ? 
+                    '/api/save-tanah-prediction' : '/api/save-bangunan-prediction';
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Prediksi berhasil disimpan dan aset tersedia untuk disewa!');
+            // Reset form
+            document.getElementById('rentalPredictionForm').reset();
+            document.getElementById('rentalPredictionResults').style.display = 'none';
+            rentalPredictionData = null;
+        } else {
+            alert('Gagal menyimpan prediksi: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menyimpan prediksi');
+    })
+    .finally(() => {
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+    });
+});
+
+// Initialize rental prediction tab
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default values
+    document.getElementById('rentalPropertyType').value = 'bangunan';
+    document.getElementById('rentalDayaListrik').value = '2200';
+    document.getElementById('rentalSertifikat').value = 'SHM - Sertifikat Hak Milik';
+    document.getElementById('rentalKondisiProperti').value = 'Bagus';
+    document.getElementById('rentalTingkatKeamanan').value = 'Tinggi';
+    document.getElementById('rentalAksesibilitas').value = 'Baik';
+});
+</script>
+{% endblock %}
